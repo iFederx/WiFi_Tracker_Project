@@ -1,0 +1,5 @@
+*.cache
+*.exe
+*.pdb
+*.exe.config
+Debug/
