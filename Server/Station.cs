@@ -12,6 +12,7 @@ namespace Server
         String NameMAC;
         DateTime lastHearthbeat;
         DateTime addedAt;
+        int Room;
         public enum Status {Alive,Zombie};
         Status stat;
     }

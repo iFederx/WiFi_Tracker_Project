@@ -6,7 +6,7 @@ I vari thread del server ricevono insiemi di pacchetti ad intervalli regolari. E
 essa permette di:
 	-Ottenere un pacchetto, dato il suo hash e senderMAC, in stile HashMap
 	-Accedere ai pacchetti per ordine di ricezione (dal più lontano al più vicino nel tempo)
-Quando un singolo pacchetto è stato ricevuto da tutte le stazioni, oppure quando è in coda da più di tot, viene rimosso dalla struttura ed inviato a sendToAnalysisQueue().
+Quando un singolo pacchetto è stato ricevuto da tutte le stazioni della sua stanza (la stanza viene determinata per voto di maggioranza, ovvero se il pacchetto è stato ricevuto da 2 stazioni della stanza L e 1 della stanza P, il pachetto sarà per il momento considerato della stanza L), oppure quando è in coda da più di tot, viene rimosso dalla struttura ed inviato a sendToAnalysisQueue().
 
 Punti pericolosi lato thread safeness:
 	-Inserzione in lista delle ricezioni- la lista non è threadsafe, ma si può passare ad una lista di quel tipo

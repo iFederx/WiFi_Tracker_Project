@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -15,7 +16,7 @@ namespace Server
         {
             analysEngine = anEngine;
         }
-        Int32 numberOfAliveStations = 0;
+        ArrayList numberOfAliveStationsPerRoom = new ArrayList();
         public void addStation(Station s)
         {
 
