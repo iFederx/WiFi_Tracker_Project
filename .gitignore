@@ -3,3 +3,8 @@
 *.pdb
 *.exe.config
 Debug/
+*.ide-wal
+*.ide-shm
+*.ide
+*.lock
+Server/.vs/Server/v15/.suo
