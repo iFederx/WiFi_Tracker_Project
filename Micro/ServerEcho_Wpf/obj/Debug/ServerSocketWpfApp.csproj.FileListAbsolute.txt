@@ -1,0 +1,68 @@
+c:\users\houssem dellai\documents\visual studio 2012\Projects\WpfApplication1\ServerSocketWpfApp\obj\Debug\ServerSocketWpfApp.csprojResolveAssemblyReference.cache
+c:\users\houssem dellai\documents\visual studio 2012\Projects\WpfApplication1\ServerSocketWpfApp\obj\Debug\MainWindow.baml
+c:\users\houssem dellai\documents\visual studio 2012\Projects\WpfApplication1\ServerSocketWpfApp\obj\Debug\MainWindow.g.cs
+c:\users\houssem dellai\documents\visual studio 2012\Projects\WpfApplication1\ServerSocketWpfApp\obj\Debug\App.g.cs
+c:\users\houssem dellai\documents\visual studio 2012\Projects\WpfApplication1\ServerSocketWpfApp\obj\Debug\ServerSocketWpfApp_MarkupCompile.cache
+c:\users\houssem dellai\documents\visual studio 2012\Projects\WpfApplication1\ServerSocketWpfApp\obj\Debug\ServerSocketWpfApp.g.resources
+c:\users\houssem dellai\documents\visual studio 2012\Projects\WpfApplication1\ServerSocketWpfApp\obj\Debug\ServerSocketWpfApp.Properties.Resources.resources
+c:\users\houssem dellai\documents\visual studio 2012\Projects\WpfApplication1\ServerSocketWpfApp\obj\Debug\ServerSocketWpfApp.csproj.GenerateResource.Cache
+c:\users\houssem dellai\documents\visual studio 2012\Projects\WpfApplication1\ServerSocketWpfApp\bin\Debug\ServerSocketWpfApp.exe.config
+c:\users\houssem dellai\documents\visual studio 2012\Projects\WpfApplication1\ServerSocketWpfApp\bin\Debug\ServerSocketWpfApp.exe
+c:\users\houssem dellai\documents\visual studio 2012\Projects\WpfApplication1\ServerSocketWpfApp\bin\Debug\ServerSocketWpfApp.pdb
+c:\users\houssem dellai\documents\visual studio 2012\Projects\WpfApplication1\ServerSocketWpfApp\obj\Debug\ServerSocketWpfApp.exe
+c:\users\houssem dellai\documents\visual studio 2012\Projects\WpfApplication1\ServerSocketWpfApp\obj\Debug\ServerSocketWpfApp.pdb
+C:\Users\Houssem Dellai\Documents\Visual Studio 2012\Projects\WpfApplication1 - Copy\ServerSocketWpfApp\bin\Debug\ServerSocketWpfApp.exe.config
+C:\Users\Houssem Dellai\Documents\Visual Studio 2012\Projects\WpfApplication1 - Copy\ServerSocketWpfApp\obj\Debug\ServerSocketWpfApp.exe
+C:\Users\Houssem Dellai\Documents\Visual Studio 2012\Projects\WpfApplication1 - Copy\ServerSocketWpfApp\obj\Debug\ServerSocketWpfApp.pdb
+C:\Users\Houssem Dellai\Documents\Visual Studio 2012\Projects\WpfApplication1 - Copy\ServerSocketWpfApp\bin\Debug\ServerSocketWpfApp.exe
+C:\Users\Houssem Dellai\Documents\Visual Studio 2012\Projects\WpfApplication1 - Copy\ServerSocketWpfApp\bin\Debug\ServerSocketWpfApp.pdb
+C:\Users\Houssem Dellai\Documents\Visual Studio 2012\Projects\WpfApplication1 - Copy\ServerSocketWpfApp\obj\Debug\ServerSocketWpfApp.csprojResolveAssemblyReference.cache
+C:\Users\Houssem Dellai\Documents\Visual Studio 2012\Projects\WpfApplication1 - Copy\ServerSocketWpfApp\obj\Debug\MainWindow.baml
+C:\Users\Houssem Dellai\Documents\Visual Studio 2012\Projects\WpfApplication1 - Copy\ServerSocketWpfApp\obj\Debug\MainWindow.g.cs
+C:\Users\Houssem Dellai\Documents\Visual Studio 2012\Projects\WpfApplication1 - Copy\ServerSocketWpfApp\obj\Debug\App.g.cs
+C:\Users\Houssem Dellai\Documents\Visual Studio 2012\Projects\WpfApplication1 - Copy\ServerSocketWpfApp\obj\Debug\ServerSocketWpfApp_MarkupCompile.cache
+C:\Users\Houssem Dellai\Documents\Visual Studio 2012\Projects\WpfApplication1 - Copy\ServerSocketWpfApp\obj\Debug\ServerSocketWpfApp.g.resources
+C:\Users\Houssem Dellai\Documents\Visual Studio 2012\Projects\WpfApplication1 - Copy\ServerSocketWpfApp\obj\Debug\ServerSocketWpfApp.Properties.Resources.resources
+C:\Users\Houssem Dellai\Documents\Visual Studio 2012\Projects\WpfApplication1 - Copy\ServerSocketWpfApp\obj\Debug\ServerSocketWpfApp.csproj.GenerateResource.Cache
+C:\Users\cekke\source\repos\ServerSocketWpfApp\bin\Debug\ServerSocketWpfApp.exe.config
+C:\Users\cekke\source\repos\ServerSocketWpfApp\bin\Debug\ServerSocketWpfApp.exe
+C:\Users\cekke\source\repos\ServerSocketWpfApp\bin\Debug\ServerSocketWpfApp.pdb
+C:\Users\cekke\source\repos\ServerSocketWpfApp\obj\Debug\ServerSocketWpfApp.csprojAssemblyReference.cache
+C:\Users\cekke\source\repos\ServerSocketWpfApp\obj\Debug\MainWindow.baml
+C:\Users\cekke\source\repos\ServerSocketWpfApp\obj\Debug\MainWindow.g.cs
+C:\Users\cekke\source\repos\ServerSocketWpfApp\obj\Debug\App.g.cs
+C:\Users\cekke\source\repos\ServerSocketWpfApp\obj\Debug\ServerSocketWpfApp_MarkupCompile.cache
+C:\Users\cekke\source\repos\ServerSocketWpfApp\obj\Debug\ServerSocketWpfApp.g.resources
+C:\Users\cekke\source\repos\ServerSocketWpfApp\obj\Debug\ServerSocketWpfApp.Properties.Resources.resources
+C:\Users\cekke\source\repos\ServerSocketWpfApp\obj\Debug\ServerSocketWpfApp.csproj.GenerateResource.cache
+C:\Users\cekke\source\repos\ServerSocketWpfApp\obj\Debug\ServerSocketWpfApp.csproj.CoreCompileInputs.cache
+C:\Users\cekke\source\repos\ServerSocketWpfApp\obj\Debug\ServerSocketWpfApp.exe
+C:\Users\cekke\source\repos\ServerSocketWpfApp\obj\Debug\ServerSocketWpfApp.pdb
+C:\Users\cekke\source\repos\ServerEcho_Wpf\bin\Debug\ServerSocketWpfApp.exe.config
+C:\Users\cekke\source\repos\ServerEcho_Wpf\bin\Debug\ServerSocketWpfApp.exe
+C:\Users\cekke\source\repos\ServerEcho_Wpf\bin\Debug\ServerSocketWpfApp.pdb
+C:\Users\cekke\source\repos\ServerEcho_Wpf\obj\Debug\ServerSocketWpfApp.csprojAssemblyReference.cache
+C:\Users\cekke\source\repos\ServerEcho_Wpf\obj\Debug\MainWindow.baml
+C:\Users\cekke\source\repos\ServerEcho_Wpf\obj\Debug\MainWindow.g.cs
+C:\Users\cekke\source\repos\ServerEcho_Wpf\obj\Debug\App.g.cs
+C:\Users\cekke\source\repos\ServerEcho_Wpf\obj\Debug\ServerSocketWpfApp_MarkupCompile.cache
+C:\Users\cekke\source\repos\ServerEcho_Wpf\obj\Debug\ServerSocketWpfApp.g.resources
+C:\Users\cekke\source\repos\ServerEcho_Wpf\obj\Debug\ServerSocketWpfApp.Properties.Resources.resources
+C:\Users\cekke\source\repos\ServerEcho_Wpf\obj\Debug\ServerSocketWpfApp.csproj.GenerateResource.cache
+C:\Users\cekke\source\repos\ServerEcho_Wpf\obj\Debug\ServerSocketWpfApp.csproj.CoreCompileInputs.cache
+C:\Users\cekke\source\repos\ServerEcho_Wpf\obj\Debug\ServerSocketWpfApp.exe
+C:\Users\cekke\source\repos\ServerEcho_Wpf\obj\Debug\ServerSocketWpfApp.pdb
+Y:\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\bin\Debug\ServerSocketWpfApp.exe.config
+Y:\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\bin\Debug\ServerSocketWpfApp.exe
+Y:\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\bin\Debug\ServerSocketWpfApp.pdb
+Y:\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Debug\ServerSocketWpfApp.csprojAssemblyReference.cache
+Y:\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Debug\MainWindow.baml
+Y:\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Debug\MainWindow.g.cs
+Y:\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Debug\App.g.cs
+Y:\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Debug\ServerSocketWpfApp_MarkupCompile.cache
+Y:\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Debug\ServerSocketWpfApp.g.resources
+Y:\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Debug\ServerSocketWpfApp.Properties.Resources.resources
+Y:\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Debug\ServerSocketWpfApp.csproj.GenerateResource.cache
+Y:\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Debug\ServerSocketWpfApp.csproj.CoreCompileInputs.cache
+Y:\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Debug\ServerSocketWpfApp.exe
+Y:\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Debug\ServerSocketWpfApp.pdb
