@@ -1,0 +1,15 @@
+﻿<Window x:Class="ServerSocketWpfApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Server Socket" Height="529.432" Width="541.963" Icon="icon (2).ico">
+    <Grid Background="#FFD7CBFD" Margin="0,0,2,0">
+        <TextBox Name="tbMsgReceived" HorizontalAlignment="Left" Height="286" Margin="60,122,0,0" TextWrapping="Wrap" Text=""  VerticalAlignment="Top" Width="412" BorderThickness="3" VerticalScrollBarVisibility="Auto"/>
+        <Button x:Name="Start_Button" Content="Start server" HorizontalAlignment="Left" Margin="60,23,0,0" VerticalAlignment="Top" Width="120" Click="Start_Click" Background="Black" Foreground="White"/>
+        <TextBlock x:Name="tbStatus" HorizontalAlignment="Left" Margin="209,23,0,0" TextWrapping="Wrap" Text="Not connected yet !" VerticalAlignment="Top" Width="263" Height="20"/>
+        <Button Name="Close_Button" Content="Close connection" HorizontalAlignment="Left" Margin="80,448,0,0" VerticalAlignment="Top" Width="165" Click="Close_Click" Background="Black" Foreground="White"/>
+        <Button Name="StartListen_Button" Content="Start listening" HorizontalAlignment="Left" Margin="60,59,0,0" VerticalAlignment="Top" Width="120" Click="Listen_Click" Background="Black" Foreground="White"/>
+        <TextBlock HorizontalAlignment="Left" Margin="60,101,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="176" Height="16"><Run Text="Message to receive from client"/><LineBreak/><Run/></TextBlock>
+        <Button x:Name="Clean_Button" Content="Clean" HorizontalAlignment="Left" Margin="276,448,0,0" VerticalAlignment="Top" Width="165" Background="Black" Foreground="White" IsCancel="True" Click="Clean_Click"/>
+
+    </Grid>
+</Window>
