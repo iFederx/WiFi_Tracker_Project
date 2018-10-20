@@ -1,11 +1,15 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workbench ActiveDocument="App.xaml.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Packet.cs">
     <Files>
-      <File FileName="MainWindow.xaml.cs" Line="1" Column="1" />
       <File FileName="App.xaml.cs" Line="1" Column="1" />
+      <File FileName="Station.cs" Line="1" Column="1" />
+      <File FileName="MainWindow.xaml" Line="1" Column="1" />
+      <File FileName="MainWindow.xaml.cs" Line="23" Column="28" />
+      <File FileName="Position.cs" Line="1" Column="1" />
+      <File FileName="Packet.cs" Line="23" Column="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>
-  <MonoDevelop.Ide.Workspace />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
