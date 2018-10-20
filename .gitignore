@@ -1,4 +1,9 @@
 
+<<<<<<< HEAD
 Server/.vs/Server/xs/UserPrefs.xml
 Micro/ServerEcho_Wpf/.vs/ServerSocketWpfApp/xs/UserPrefs.xml
 Server/.vs/Server/xs/UserPrefs.xml
+=======
+Server/.vs/Server/v15/Server/sqlite3/storage.ide-shm
+Server/.vs/Server/v15/Server/sqlite3/storage.ide-wal
+>>>>>>> d46888abc542d598bde7859c5c946a12aac243f9
