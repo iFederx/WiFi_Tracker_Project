@@ -210,7 +210,7 @@ namespace ServerSocketWpfApp
             {
                 if (sListener.Connected)
                 {
-                    sListener.Shutdown(SocketShutdown.Receive);
+                    sListener.Shutdown(SocketShutdown.Receive); //non basta fare close?
                     sListener.Close();
                 }
 
