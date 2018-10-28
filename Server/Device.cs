@@ -9,10 +9,10 @@ namespace Server
 {
     class Device
     {
-        String MAC;
-        DateTime firstSeen=DateTime.MinValue;
-        DateTime lastSeen=DateTime.MinValue;
-        ArrayList positions = new ArrayList();
-        HashSet<String> requestedSSIDs = new HashSet<string>();
+        internal String MAC;
+        internal DateTime firstSeen =DateTime.MinValue;
+        internal DateTime lastSeen =DateTime.MinValue;
+        internal ArrayList positions = new ArrayList();
+        internal HashSet<String> requestedSSIDs = new HashSet<string>();
     }
 }

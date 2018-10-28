@@ -8,15 +8,15 @@ namespace Server
 {
     class Packet
     {
-        public class Reception
+        internal class Reception
         {
             Station ReceivingStation;
             double RSSI;
         }
-        List<Reception> Receivings = new List<Reception>();
-        String SendingMAC;
-        String RequestedSSID;//null if no requested SSID
-        DateTime Timestamp;
-        String Hash;
+        internal List<Reception> Receivings = new List<Reception>();
+        internal String SendingMAC;
+        internal String RequestedSSID;//null if no requested SSID
+        internal DateTime Timestamp;
+        internal String Hash;
     }
 }
