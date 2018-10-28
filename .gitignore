@@ -7,5 +7,6 @@ Debug/
 *.ide-shm
 *.ide
 *.lock
+*.suo
 Server/.vs/Server/v15/.suo
 Server/.vs/Server/xs/UserPrefs.xml

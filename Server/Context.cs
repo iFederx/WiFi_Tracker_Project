@@ -12,11 +12,12 @@ namespace Server
     {
         Dictionary<String,Station> stations = new Dictionary<String,Station>();
         AnalysisEngine analysEngine;
+        Dictionary<int,int> numberOfAliveStationsPerRoom = new Dictionary<int,int>();
+
         public Context(AnalysisEngine anEngine)
         {
             analysEngine = anEngine;
         }
-        ArrayList numberOfAliveStationsPerRoom = new ArrayList();
         public void addStation(Station s)
         {
 
