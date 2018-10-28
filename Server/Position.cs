@@ -11,5 +11,7 @@ namespace Server
         int x;
         int y;
         int uncertainity;
+        int Room;
+        DateTime positionDate;
     }
 }

@@ -15,7 +15,7 @@ namespace Server
         }
         List<Reception> Receivings = new List<Reception>();
         String SendingMAC;
-        String RequestedSSID;
+        String RequestedSSID;//null if no requested SSID
         DateTime Timestamp;
         String Hash;
     }
