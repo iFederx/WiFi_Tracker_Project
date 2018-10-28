@@ -8,5 +8,6 @@ Debug/
 *.ide
 *.lock
 *.suo
+*.csproj
 Server/.vs/Server/v15/.suo
 Server/.vs/Server/xs/UserPrefs.xml

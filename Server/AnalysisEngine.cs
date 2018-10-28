@@ -12,7 +12,9 @@ namespace Server
     {
         ConcurrentQueue<Packet> AnalysisQueue = new ConcurrentQueue<Packet>();
         EventWaitHandle condVar = new EventWaitHandle(false, EventResetMode.AutoReset);
-        Dictionary<String, Device> deviceMap = new Dictionary<string, Device>();
+        InsertionSortedConcurrentDictionary<String, Device> deviceMap = new InsertionSortedConcurrentDictionary<String, Device>();
+        volatile bool killed = false;
+        int anPack = 0;
         public class AnalysisResult
         {
 
@@ -27,14 +29,67 @@ namespace Server
             AnalysisQueue.Enqueue(p);
             condVar.Set();            
         }
-        private void analyzePacket()
+        private void analyzePacket(Packet p)
         {
-            Packet p;
-            if(AnalysisQueue.TryDequeue(out p))
+            Device d;
+            bool anew;
+            if (anew=!deviceMap.getKey(p.SendingMAC, out d))
             {
-
+                d = new Device();
+                d.MAC = p.SendingMAC;
+                d.firstSeen = p.Timestamp;
             }
-            return;
+            d.lastSeen = p.Timestamp;
+            d.dirty = true;
+            if(p.RequestedSSID!=null)
+            {
+                d.requestedSSIDs.Add(p.RequestedSSID);
+            }
+            triangulate(d, p);
+            if (anew)
+            {
+                deviceMap.update(d.MAC, d);
+            }
+        }
+        private void triangulate(Device d,Packet p)
+        { }
+        public void kill()
+        {
+            killed = true;
+            condVar.Dispose();
+        }
+        private void analyzerProcess()
+        {
+            while(!killed)
+            {
+                Packet p;
+                bool success;
+                try
+                {
+                    if (success=AnalysisQueue.TryDequeue(out p))
+                    {
+                        analyzePacket(p);
+                        anPack++;
+                    }
+                    if(!success||(anPack&1024)==0)
+                    {
+                        updateLongTerm();
+                        anPack = 0;
+                    }
+                    if(!success)
+                    {
+                        condVar.WaitOne();
+                    }
+                }
+               catch(ObjectDisposedException)//fatal
+                {
+                    killed = true;
+                }
+            }           
+        }
+        private void updateLongTerm()
+        {
+
         }
     }
 }
