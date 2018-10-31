@@ -66,3 +66,17 @@ Y:\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Debug\ServerSo
 Y:\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Debug\ServerSocketWpfApp.csproj.CoreCompileInputs.cache
 Y:\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Debug\ServerSocketWpfApp.exe
 Y:\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Debug\ServerSocketWpfApp.pdb
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\bin\Debug\ServerSocketWpfApp.exe.config
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\bin\Debug\ServerSocketWpfApp.exe
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\bin\Debug\ServerSocketWpfApp.pdb
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Debug\ServerSocketWpfApp.csprojAssemblyReference.cache
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Debug\MainWindow.baml
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Debug\MainWindow.g.cs
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Debug\App.g.cs
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Debug\ServerSocketWpfApp_MarkupCompile.cache
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Debug\ServerSocketWpfApp.g.resources
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Debug\ServerSocketWpfApp.Properties.Resources.resources
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Debug\ServerSocketWpfApp.csproj.GenerateResource.cache
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Debug\ServerSocketWpfApp.csproj.CoreCompileInputs.cache
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Debug\ServerSocketWpfApp.exe
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Debug\ServerSocketWpfApp.pdb

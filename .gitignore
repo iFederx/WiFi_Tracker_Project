@@ -7,4 +7,37 @@ Server/.vs/Server/xs/UserPrefs.xml
 Server/.vs/Server/v15/Server/sqlite3/storage.ide-shm
 Server/.vs/Server/v15/Server/sqlite3/storage.ide-wal
 >>>>>>> d46888abc542d598bde7859c5c946a12aac243f9
+<<<<<<< HEAD
 ArchitectureFede.md
+=======
+Micro/ServerEcho_Wpf/obj/Debug/ServerSocketWpfApp_MarkupCompile.cache
+Micro/ServerEcho_Wpf/obj/Debug/ServerSocketWpfApp.pdb
+Micro/ServerEcho_Wpf/obj/Debug/ServerSocketWpfApp.exe
+Micro/ServerEcho_Wpf/obj/Debug/ServerSocketWpfApp.csproj.GenerateResource.cache
+Micro/ServerEcho_Wpf/obj/Debug/ServerSocketWpfApp.csproj.FileListAbsolute.txt
+Micro/ServerEcho_Wpf/obj/Debug/ServerSocketWpfApp.csproj.CoreCompileInputs.cache
+Micro/ServerEcho_Wpf/bin/Debug/ServerSocketWpfApp.pdb
+Micro/ServerEcho_Wpf/bin/Debug/ServerSocketWpfApp.exe
+Micro/ServerEcho_Wpf/.vs/ServerSocketWpfApp/v15/Server/sqlite3/storage.ide-wal
+Micro/ServerEcho_Wpf/.vs/ServerSocketWpfApp/v15/Server/sqlite3/storage.ide-shm
+Micro/ServerEcho_Wpf/.vs/ServerSocketWpfApp/v15/ipch/AutoPCH/5e9f1d2a5c81a7b0/CLIENT_SENDER.ipch
+Micro/ServerEcho_Wpf/.vs/ServerSocketWpfApp/v15/Browse.VC.db
+Micro/ServerEcho_Wpf/.vs/ServerSocketWpfApp/v15/.suo
+Micro/ServerEcho_Wpf/.vs/ServerSocketWpfApp/v15/.suo
+Micro/ServerEcho_Wpf/.vs/ServerSocketWpfApp/v15/Browse.VC.db
+Micro/ServerEcho_Wpf/.vs/ServerSocketWpfApp/v15/Server/sqlite3/storage.ide-shm
+Micro/ServerEcho_Wpf/.vs/ServerSocketWpfApp/v15/Server/sqlite3/storage.ide-wal
+Micro/ServerEcho_Wpf/bin/Debug/ServerSocketWpfApp.exe
+Micro/ServerEcho_Wpf/bin/Debug/ServerSocketWpfApp.pdb
+Micro/ServerEcho_Wpf/obj/Debug/ServerSocketWpfApp.csproj.CoreCompileInputs.cache
+Micro/ServerEcho_Wpf/obj/Debug/ServerSocketWpfApp.csproj.FileListAbsolute.txt
+Micro/ServerEcho_Wpf/obj/Debug/ServerSocketWpfApp.csproj.GenerateResource.cache
+Micro/ServerEcho_Wpf/obj/Debug/ServerSocketWpfApp.exe
+Micro/ServerEcho_Wpf/obj/Debug/ServerSocketWpfApp.pdb
+Micro/ServerEcho_Wpf/obj/Debug/ServerSocketWpfApp_MarkupCompile.cache
+*.cache
+*.exe
+*.db
+*.ide-shm
+*.ide-wal
+>>>>>>> d2bbb9c3c4dda9539aeb5e25798e969be584bb5a
