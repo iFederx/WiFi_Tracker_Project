@@ -12,7 +12,7 @@ namespace Server
     {
         ConcurrentQueue<Packet> AnalysisQueue = new ConcurrentQueue<Packet>();
         EventWaitHandle condVar = new EventWaitHandle(false, EventResetMode.AutoReset);
-        InsertionSortedConcurrentDictionary<String, Device> deviceMap = new InsertionSortedConcurrentDictionary<String, Device>();
+        ConcurrentDictionaryStack<String, Device> deviceMap = new ConcurrentDictionaryStack<String, Device>();
         volatile bool killed = false;
         int anPack = 0;
         public class AnalysisResult
@@ -48,7 +48,7 @@ namespace Server
             triangulate(d, p);
             if (anew)
             {
-                deviceMap.update(d.MAC, d);
+                deviceMap.upsert(d.MAC, d,(old,cur)=> { return cur; });//single thread safe only
             }
         }
         private void triangulate(Device d,Packet p)
