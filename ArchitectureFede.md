@@ -2,8 +2,9 @@ Architettura della mia parte
 
 
 //congigurazione
-Innanzitutto, all'avvio del software, c'è la fase di configurazione: vengono gestite una per una le schedine e salvate con la loro posizione e stanza, come oggetti Station.
-Le schedine richiedono di essere registrate al server tramite una richiesta al socket passivo.
+Innanzitutto c'è la fase di configurazione: vengono gestite una per una le schedine e salvate con la loro posizione e stanza, come oggetti Station. Vediamo nei dettagli.
+Le schedine richiedono di essere registrate al server tramite una richiesta al socket passivo, noto.
+Ogni schedina manda un messaggio REGISTER, per registrarsi al server. Il server crea un socket.
 
 
 
