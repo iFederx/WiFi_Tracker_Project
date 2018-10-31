@@ -11,3 +11,4 @@ Debug/
 *.csproj
 Server/.vs/Server/v15/.suo
 Server/.vs/Server/xs/UserPrefs.xml
+Micro/ServerEcho_Wpf/.vs/ServerSocketWpfApp/xs/UserPrefs.xml
