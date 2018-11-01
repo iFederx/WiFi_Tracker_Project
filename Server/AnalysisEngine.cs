@@ -13,6 +13,8 @@ namespace Server
         ConcurrentQueue<Packet> AnalysisQueue = new ConcurrentQueue<Packet>();
         EventWaitHandle condVar = new EventWaitHandle(false, EventResetMode.AutoReset);
         ConcurrentDictionaryStack<String, Device> deviceMap = new ConcurrentDictionaryStack<String, Device>();
+        ConcurrentDictionary<String, Byte> anoniDevices = new ConcurrentDictionary<string, byte>();
+
         volatile bool killed = false;
         int anPack = 0;
         /// <summary>
@@ -41,11 +43,12 @@ namespace Server
                     if (!success || (anPack & 1024) == 0)
                     {
                         updateLongTerm();
+                        coalesceAnonymous();
                         anPack = 0;
                     }
                     if (!success)
                     {
-                        condVar.WaitOne();
+                        condVar.WaitOne(3000);
                     }
                 }
                 catch (ObjectDisposedException)//fatal
@@ -58,7 +61,6 @@ namespace Server
         {
             Device d;
             bool anew;
-            //check aliases of anonymous, and if corresponds set p.sendingMAC all'alias con cui è registrato
             if (anew=!deviceMap.getKey(p.SendingMAC, out d))
             {
                 d = new Device();
@@ -66,6 +68,7 @@ namespace Server
                 if(isMACLocal(p.SendingMAC))
                 {
                     d.anonymous = true;
+                    anoniDevices.TryAdd(p.SendingMAC, 0);
                 }
                 d.firstSeen = p.Timestamp;
             }
@@ -75,30 +78,45 @@ namespace Server
             {
                 d.requestedSSIDs.Add(p.RequestedSSID);
             }
-            triangulate(d, p);
+            locate(d, p);
             if (anew)
             {
-                if (d.anonymous)
-                    d = coalesce(d);
                 deviceMap.upsert(d.MAC, d,(old,cur)=> { return cur; });//single thread safe only
             }
         }
 
-        private Device coalesce(Device d)
+        private void coalesceAnonymous()
         {
-            //try to see if the Device has a previous version of itself, and return the old version, adding the new fields and the new mac to the aliases
-            //add alias to the table
-            //if impossible to fuse, generate
+            //scansiona la tabella anonimous, provando a confrontare tutti gli elementi a due a due per verificare se possono essere lo stesso.
+            //se c'è un pairing, elimina la vecchia identità da anoniDevices, 
+            //abbi inoltre cura di unire i due oggetti in uno solo, salvato sotto il nuovo mac, ed elimina la entry con il vecchio MAC da mapDevices
             throw new NotImplementedException();
         }
-
+       
         private bool isMACLocal(string sendingMAC)
         {
             throw new NotImplementedException();
         }
+        private void locate(Device d,Packet p)
+        {
+            if (d.lastPositionSaving.AddSeconds(5).CompareTo(DateTime.Now) <= 0)
+            {
+                d.positionHistory.Push(d.lastPosition);
+                d.lastPositionSaving = d.lastPosition.positionDate;
+            }
+            d.lastPositions.put(triangulate(p.Receivings));
+            d.lastPosition = averagePosition(d.lastPositions);
+        }
 
-        private void triangulate(Device d,Packet p)
-        { }
+        private Position averagePosition(ConcurrentCircular<Position> lastPositions)
+        {
+            throw new NotImplementedException();
+        }
+
+        private Position triangulate(List<Packet.Reception> receivings)
+        {
+            throw new NotImplementedException();
+        }
         public void kill()
         {
             killed = true;
@@ -107,7 +125,8 @@ namespace Server
         
         private void updateLongTerm()
         {
-
+            //elimina da tabella deviceMap i vecchi dispositivi, avendo cura di eliminarlo anche da anoniDevices, e salvali nel db
+            throw new NotImplementedException();
         }
     }
 }

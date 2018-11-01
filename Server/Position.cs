@@ -8,10 +8,10 @@ namespace Server
 {
     public struct Position
     {
-        int x;
-        int y;
-        int uncertainity;
-        int Room;
-        DateTime positionDate;
+        internal int x;
+        internal int y;
+        internal int uncertainity;
+        internal int Room;
+        internal DateTime positionDate;
     }
 }

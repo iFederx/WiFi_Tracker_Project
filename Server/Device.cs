@@ -16,6 +16,7 @@ namespace Server
         internal ConcurrentCircular<Position> lastPositions = new ConcurrentCircular<Position>(16);
         internal ConcurrentStack<Position> positionHistory = new ConcurrentStack<Position>();
         internal Position lastPosition;
+        internal DateTime lastPositionSaving=DateTime.MinValue;
         internal HashSet<String> requestedSSIDs = new HashSet<string>();
         internal bool dirty = false;
         internal bool anonymous = false;
