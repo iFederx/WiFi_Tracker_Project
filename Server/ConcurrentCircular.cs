@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Server
@@ -11,6 +12,7 @@ namespace Server
         UInt32 bitmask;
         UInt32 head = 0; //empty head
         Boolean wrapped = false;
+        SpinLock sl = new SpinLock(false);
         T[] storage;
         public ConcurrentCircular(UInt32 dimension)
         {
@@ -32,24 +34,44 @@ namespace Server
         public T get(UInt32 i)
         {
             T retval;
+            bool lockTaken = false;
             if (i > bitmask)
                 retval = default(T);
             else
             {
-                i = (head + bitmask - i) & bitmask;
-                if (i >= head && !wrapped)
-                    retval = default(T);
-                else
-                    retval = storage[i];
+                try
+                {
+                    sl.Enter(ref lockTaken);
+                    i = (head + bitmask - i) & bitmask;
+                    if (i >= head && !wrapped)
+                        retval = default(T);
+                    else
+                        retval = storage[i];
+                }
+                finally
+                {
+                    if (lockTaken)
+                        sl.Exit();
+                }
             }
             return retval;
         }
 
         public void put(T value)
         {
-            storage[head] = value;
-            head = (head + 1) & bitmask;
-            wrapped = (head == 0)|wrapped;
+            bool lockTaken = false;
+            try
+            {
+                sl.Enter(ref lockTaken);
+                storage[head] = value;
+                head = (head + 1) & bitmask;
+                wrapped = (head == 0)|wrapped;
+            }
+            finally
+            {
+                if (lockTaken)
+                    sl.Exit();
+            }
         }
     }
 }
