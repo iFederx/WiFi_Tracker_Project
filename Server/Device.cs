@@ -11,9 +11,14 @@ namespace Server
         internal String MAC;
         internal DateTime firstSeen =DateTime.MinValue;
         internal DateTime lastSeen = DateTime.MinValue;
-        internal ArrayList lastPositions = new ArrayList();//keep the positions of the last 30 seconds to average
-        internal ConcurrentStack<Position> positions = new ConcurrentStack<Position>();
+        /*keep the last positions to average (sliding weighted average up to when too old - 10 seconds ago-) save in lastPosition the last computed.
+        If the position that was there was older than 5 seconds put it into positionHistory*/
+        internal ConcurrentCircular<Position> lastPositions = new ConcurrentCircular<Position>(16);
+        internal ConcurrentStack<Position> positionHistory = new ConcurrentStack<Position>();
+        internal Position lastPosition;
         internal HashSet<String> requestedSSIDs = new HashSet<string>();
         internal bool dirty = false;
+        internal bool anonymous = false;
+        internal List<string> aliases = new List<string>();
     }
 }
