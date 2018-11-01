@@ -11,13 +11,7 @@ Debug/
 *.csproj
 Server/.vs/Server/v15/.suo
 Server/.vs/Server/xs/UserPrefs.xml
-<<<<<<< HEAD
-<<<<<<< HEAD
 Server/Server.csproj
 Server/.vs/Server/v14/.suo
-=======
 Micro/ServerEcho_Wpf/.vs/ServerSocketWpfApp/xs/UserPrefs.xml
->>>>>>> a5e4b3a0388a08acabf7320ad89695b4df51dbdc
-=======
-Micro/ServerEcho_Wpf/.vs/ServerSocketWpfApp/xs/UserPrefs.xml
->>>>>>> 1fc5de316e2467de5d1ad8f7b7a2aed4bb0ae8bd
+*.sln
