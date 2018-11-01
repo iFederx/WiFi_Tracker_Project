@@ -8,12 +8,9 @@ Debug/
 *.ide
 *.lock
 *.suo
-*.csproj
+*.sln
 Server/.vs/Server/v15/.suo
 Server/.vs/Server/xs/UserPrefs.xml
-<<<<<<< HEAD
-Server/Server.csproj
 Server/.vs/Server/v14/.suo
-=======
 Micro/ServerEcho_Wpf/.vs/ServerSocketWpfApp/xs/UserPrefs.xml
->>>>>>> a5e4b3a0388a08acabf7320ad89695b4df51dbdc
+
