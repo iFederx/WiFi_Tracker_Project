@@ -6,12 +6,16 @@ using System.Threading.Tasks;
 
 namespace Server
 {
-    public struct Position
+    public class Position: Point
     {
-        internal int x;
-        internal int y;
         internal int uncertainity;
         internal int Room;
         internal DateTime positionDate;
+
+        public Position(Point p)
+        {
+            this.X = p.X;
+            this.Y = p.Y;
+        }
     }
 }

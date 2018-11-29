@@ -8,13 +8,12 @@ using System.Threading.Tasks;
 
 namespace Server
 {
-    class AnalysisEngine
+    class AnalysisEngine:Analyzer
     {
-        ConcurrentQueue<Packet> AnalysisQueue = new ConcurrentQueue<Packet>();
-        EventWaitHandle condVar = new EventWaitHandle(false, EventResetMode.AutoReset);
+        BlockingCollection<Packet> AnalysisQueue = new BlockingCollection<Packet>(new ConcurrentQueue<Packet>());
         ConcurrentDictionaryStack<String, Device> deviceMap = new ConcurrentDictionaryStack<String, Device>();
         ConcurrentDictionary<String, Byte> anoniDevices = new ConcurrentDictionary<string, byte>();
-
+        CancellationTokenSource t = new CancellationTokenSource();
         volatile bool killed = false;
         int anPack = 0;
         /// <summary>
@@ -24,34 +23,27 @@ namespace Server
         /// <param name="c">Contesto</param>
         public void sendToAnalysisQueue(Packet p)
         {
-            AnalysisQueue.Enqueue(p);
-            condVar.Set();            
+            AnalysisQueue.Add(p);
         }
         private void analyzerProcess()
         {
             while (!killed)
             {
                 Packet p;
-                bool success;
                 try
                 {
-                    if (success = AnalysisQueue.TryDequeue(out p))
-                    {
-                        analyzePacket(p);
-                        anPack++;
-                    }
-                    if (!success || (anPack & 1024) == 0)
+                    p = AnalysisQueue.Take(t.Token);
+                    analyzePacket(p);
+                    anPack++;
+                   
+                    if (anPack == 64)
                     {
                         updateLongTerm();
                         coalesceAnonymous();
                         anPack = 0;
                     }
-                    if (!success)
-                    {
-                        condVar.WaitOne(3000);
-                    }
                 }
-                catch (ObjectDisposedException)//fatal
+                catch (Exception)//fatal
                 {
                     killed = true;
                 }
@@ -115,12 +107,27 @@ namespace Server
 
         private Position triangulate(List<Packet.Reception> receivings)
         {
+            //https://stackoverflow.com/questions/9747227/2d-trilateration?answertab=active#tab-top
             throw new NotImplementedException();
+        }
+        private Position triangulate(Circle a,Circle b,Circle c)
+        {
+            Point ex = b.Subtract(a);
+            ex = ex.DivideScalar(ex.Module());
+            double i = ex.Dot(c.Subtract(a));
+            Point ey = (c.Subtract(a).Subtract(ex.MultiplyScalar(i)));
+            ey.DivideScalar(ey.Module());
+            double d = b.Subtract(a).Module();
+            double j = ey.Dot(c.Subtract(a));
+            double x = (a.R * a.R - b.R * b.R + d * d) / (2 * d);
+            double y = (a.R * a.R - c.R * c.R + i * i + j * j) / (2 * j) - i * x / j;
+            return new Position(a.Add(ex.MultiplyScalar(x)).Add(ey.MultiplyScalar(y)));
+
         }
         public void kill()
         {
             killed = true;
-            condVar.Dispose();
+            t.Cancel();
         }
         
         private void updateLongTerm()

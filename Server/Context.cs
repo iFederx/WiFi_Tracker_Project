@@ -11,13 +11,23 @@ namespace Server
     class Context
     {
         Dictionary<String,Station> stations = new Dictionary<String,Station>();
-        AnalysisEngine analysEngine;
+        volatile bool inCalibration;
+        AnalysisEngine analyzer = new AnalysisEngine();
+        Calibrator calibrator = new Calibrator();
         Dictionary<int,int> numberOfAliveStationsPerRoom = new Dictionary<int,int>();
-
-        public Context(AnalysisEngine anEngine)
+       
+        public Analyzer getAnalyzer()
         {
-            analysEngine = anEngine;
+            if (inCalibration)
+                return calibrator;
+            else
+                return analyzer;
         }
+        public void switchCalibration(bool calibrate)
+        {
+            inCalibration = calibrate;
+        }
+        
         public void addStation(Station s)
         {
 
