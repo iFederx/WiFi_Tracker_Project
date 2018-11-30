@@ -10,8 +10,8 @@ namespace Server
     {
         internal class Reception
         {
-            Station ReceivingStation;
-            double RSSI;
+            internal Station ReceivingStation;
+            internal double RSSI;
         }
         internal List<Reception> Receivings = new List<Reception>();
         internal String SendingMAC;

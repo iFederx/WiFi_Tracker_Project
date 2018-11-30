@@ -91,39 +91,10 @@ namespace Server
         }
         private void locate(Device d,Packet p)
         {
-            if (d.lastPositionSaving.AddSeconds(5).CompareTo(DateTime.Now) <= 0)
-            {
-                d.positionHistory.Push(d.lastPosition);
-                d.lastPositionSaving = d.lastPosition.positionDate;
-            }
-            d.lastPositions.put(triangulate(p.Receivings));
-            d.lastPosition = averagePosition(d.lastPositions);
-        }
-
-        private Position averagePosition(ConcurrentCircular<Position> lastPositions)
-        {
             throw new NotImplementedException();
         }
 
-        private Position triangulate(List<Packet.Reception> receivings)
-        {
-            //https://stackoverflow.com/questions/9747227/2d-trilateration?answertab=active#tab-top
-            throw new NotImplementedException();
-        }
-        private Position triangulate(Circle a,Circle b,Circle c)
-        {
-            Point ex = b.Subtract(a);
-            ex = ex.DivideScalar(ex.Module());
-            double i = ex.Dot(c.Subtract(a));
-            Point ey = (c.Subtract(a).Subtract(ex.MultiplyScalar(i)));
-            ey.DivideScalar(ey.Module());
-            double d = b.Subtract(a).Module();
-            double j = ey.Dot(c.Subtract(a));
-            double x = (a.R * a.R - b.R * b.R + d * d) / (2 * d);
-            double y = (a.R * a.R - c.R * c.R + i * i + j * j) / (2 * j) - i * x / j;
-            return new Position(a.Add(ex.MultiplyScalar(x)).Add(ey.MultiplyScalar(y)));
-
-        }
+             
         public void kill()
         {
             killed = true;

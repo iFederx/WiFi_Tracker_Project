@@ -20,7 +20,7 @@ namespace Server
     /// </summary>
     public partial class MainWindow : Window
     {
-        public static double c(double[] p,object p2)
+        public static double cost(double[] p,object p2)
         {
             double[][] p2x=(double[][])p2;
             double sum = 0;
@@ -42,22 +42,41 @@ namespace Server
         public MainWindow()
         {
             InitializeComponent();
-            double[] pt = new double[5];
-            double[][] pt2 = new double[5][];
-            for(int i=0;i<pt2.Length;i++)
-            {
-                pt2[i] = new double[6];
-                for(int j=0;j<5;j++)
-                {
-                    pt2[i][j] = Math.Pow(2*i, 5-j-1);
-                }
-                pt2[i][5] = 4*i*i;
+            List<Packet.Reception> recv = new List<Packet.Reception>();
+            Station s1;
+            Packet.Reception r1;
 
-            }
-            double[] ris = GrandientDescender.minimize(c, 1000, pt2,pt,0.000000001);
-            double err = Math.Sqrt(c(ris,pt2));
-            int a = 1;
-            a++;
+            s1 = new Station();
+            r1 = new Packet.Reception();
+            r1.ReceivingStation = s1;
+            s1.location = new PositionTools.Position(0,0);
+            r1.RSSI =1;
+            recv.Add(r1);
+
+            s1 = new Station();
+            r1 = new Packet.Reception();
+            r1.ReceivingStation = s1;
+            s1.location = new PositionTools.Position(4, 4);
+            r1.RSSI = 2;
+            recv.Add(r1);
+
+            s1 = new Station();
+            r1 = new Packet.Reception();
+            r1.ReceivingStation = s1;
+            s1.location = new PositionTools.Position(2, 0);
+            r1.RSSI = 1.08;
+            recv.Add(r1);
+
+            s1 = new Station();
+            r1 = new Packet.Reception();
+            r1.ReceivingStation = s1;
+            s1.location = new PositionTools.Position(0, 2);
+            r1.RSSI = 1.08;
+            recv.Add(r1);
+
+            PositionTools.Position pz=PositionTools.triangulate(recv);
+            int z = 0;
+            z++;
         }
     }
 }

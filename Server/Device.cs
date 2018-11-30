@@ -13,9 +13,9 @@ namespace Server
         internal DateTime lastSeen = DateTime.MinValue;
         /*keep the last positions to average (sliding weighted average up to when too old - 10 seconds ago-) save in lastPosition the last computed.
         If the position that was there was older than 5 seconds put it into positionHistory*/
-        internal ConcurrentCircular<Position> lastPositions = new ConcurrentCircular<Position>(16);
-        internal ConcurrentStack<Position> positionHistory = new ConcurrentStack<Position>();
-        internal Position lastPosition;
+        internal ConcurrentCircular<PositionTools.Position> lastPositions = new ConcurrentCircular<PositionTools.Position>(16);
+        internal ConcurrentStack<PositionTools.Position> positionHistory = new ConcurrentStack<PositionTools.Position>();
+        internal PositionTools.Position lastPosition;
         internal DateTime lastPositionSaving=DateTime.MinValue;
         internal HashSet<String> requestedSSIDs = new HashSet<string>();
         internal bool dirty = false;
