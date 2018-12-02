@@ -8,11 +8,10 @@ namespace Server
 {
     class Station
     {
-        Position p;
-        String NameMAC;
-        DateTime lastHearthbeat;
-        DateTime addedAt;
-        int Room;
+        internal PositionTools.Position location; //contains also Room info
+        internal String NameMAC;
+        internal DateTime lastHearthbeat;
+        internal DateTime addedAt;
         public enum Status {Alive,Zombie};
         Status stat;
     }

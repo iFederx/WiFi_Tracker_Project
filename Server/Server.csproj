@@ -55,10 +55,17 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Analyzer.cs" />
+    <Compile Include="Calibrator.cs" />
+    <Compile Include="ConcurrentCircular.cs" />
+    <Compile Include="ConcurrentDictionaryStack.cs" />
     <Compile Include="Context.cs" />
+    <Compile Include="Device.cs" />
+    <Compile Include="GrandientDescender.cs" />
     <Compile Include="Packet.cs" />
-    <Compile Include="Position.cs" />
+    <Compile Include="PositionTools.cs" />
     <Compile Include="Station.cs" />
+    <Compile Include="User.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

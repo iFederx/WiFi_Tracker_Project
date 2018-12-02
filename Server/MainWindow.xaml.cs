@@ -20,9 +20,63 @@ namespace Server
     /// </summary>
     public partial class MainWindow : Window
     {
+        public static double cost(double[] p,object p2)
+        {
+            double[][] p2x=(double[][])p2;
+            double sum = 0;
+            double sumsum = 0;
+            for(int i=0;i<p2x.Length;i++)
+            {
+                sumsum = 0;
+                for (int j = 0; j < p.Length; j++)
+                {
+                    sumsum += (p2x[i][j] * p[j]);
+                }
+                sumsum -= (p2x[i][p.Length]);
+                sum += Math.Pow(sumsum, 2);
+            }
+            return sum;
+
+        }
+      
         public MainWindow()
         {
             InitializeComponent();
+            List<Packet.Reception> recv = new List<Packet.Reception>();
+            Station s1;
+            Packet.Reception r1;
+
+            s1 = new Station();
+            r1 = new Packet.Reception();
+            r1.ReceivingStation = s1;
+            s1.location = new PositionTools.Position(0,0);
+            r1.RSSI =1;
+            recv.Add(r1);
+
+            s1 = new Station();
+            r1 = new Packet.Reception();
+            r1.ReceivingStation = s1;
+            s1.location = new PositionTools.Position(4, 4);
+            r1.RSSI = 2;
+            recv.Add(r1);
+
+            s1 = new Station();
+            r1 = new Packet.Reception();
+            r1.ReceivingStation = s1;
+            s1.location = new PositionTools.Position(2, 0);
+            r1.RSSI = 1.08;
+            recv.Add(r1);
+
+            s1 = new Station();
+            r1 = new Packet.Reception();
+            r1.ReceivingStation = s1;
+            s1.location = new PositionTools.Position(0, 2);
+            r1.RSSI = 1.08;
+            recv.Add(r1);
+
+            PositionTools.Position pz=PositionTools.triangulate(recv);
+            int z = 0;
+            z++;
         }
     }
 }
