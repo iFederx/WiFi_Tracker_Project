@@ -42,11 +42,28 @@ namespace Server
         public MainWindow()
         {
             InitializeComponent();
-            List<Packet.Reception> recv = new List<Packet.Reception>();
+            /*List<Packet.Reception> recv = new List<Packet.Reception>();
             Station s1;
             Packet.Reception r1;
-
             s1 = new Station();
+            r1 = new Packet.Reception();
+            r1.ReceivingStation = s1;
+            s1.location = new PositionTools.Position(0, 0);
+            r1.RSSI = 2;
+            recv.Add(r1);
+            s1 = new Station();
+            r1 = new Packet.Reception();
+            r1.ReceivingStation = s1;
+            s1.location = new PositionTools.Position(3, 0);
+            r1.RSSI = 2;
+            recv.Add(r1);
+            s1 = new Station();
+            r1 = new Packet.Reception();
+            r1.ReceivingStation = s1;
+            s1.location = new PositionTools.Position(1.5, 1);
+            r1.RSSI = 3;
+            recv.Add(r1);
+            /*s1 = new Station();
             r1 = new Packet.Reception();
             r1.ReceivingStation = s1;
             s1.location = new PositionTools.Position(0,0);
@@ -72,9 +89,13 @@ namespace Server
             r1.ReceivingStation = s1;
             s1.location = new PositionTools.Position(0, 2);
             r1.RSSI = 1.08;
-            recv.Add(r1);
+            recv.Add(r1);*/
 
-            PositionTools.Position pz=PositionTools.triangulate(recv);
+            //PositionTools.Position pz=PositionTools.triangulate(recv);
+            double[] x = { 3.3, 2.5, 1.6, 1.1 };
+            double[] y = { 0, 1, 5, 20 };
+            Interpolator i =new Interpolators.Lagrangian(x, y);
+            
             int z = 0;
             z++;
         }

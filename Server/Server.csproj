@@ -62,6 +62,7 @@
     <Compile Include="Context.cs" />
     <Compile Include="Device.cs" />
     <Compile Include="GrandientDescender.cs" />
+    <Compile Include="Interpolators.cs" />
     <Compile Include="Packet.cs" />
     <Compile Include="PositionTools.cs" />
     <Compile Include="Station.cs" />

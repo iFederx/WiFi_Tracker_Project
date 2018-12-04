@@ -110,8 +110,7 @@ namespace Server
                 while (p == null && safety < 20);
                 if (p == null)
                     p = new Position(0, 0);
-                if (circles.Length > 3)
-                    p = findBetterMinimum(circles, p);
+                p = findBetterMinimum(circles, p);
             }
             else
                 p.uncertainity = double.MaxValue;
@@ -146,7 +145,7 @@ namespace Server
                 {
                     Point ediff = circles[j].Subtract(pos);
                     double d = ediff.Module() - circles[j].R;
-                    diff = diff.Add(ediff.Normalize(false).MultiplyScalar(Math.Sign(d)*Math.Min(1,Math.Abs(d))));
+                    diff = diff.Add(ediff.Normalize(false).MultiplyScalar(Math.Sign(d)*Math.Min(4,Math.Abs(d))));
                 }
                 pos = pos.Add(diff.MultiplyScalar(0.25));
             }
@@ -155,7 +154,11 @@ namespace Server
 
         private static double Rssi2Dis(Station receivingStation, double RSSI)
         {
-            return RSSI;
+            RSSI = -1.0 / RSSI;
+            double distance = receivingStation.primaryInterpolator.calc(RSSI);
+            if (double.IsNaN(distance))
+                distance = receivingStation.fallbackInterpolator.calc(RSSI);
+            return distance;
         }
 
         private static Position triangulate(Circle a, Circle b, Circle c)
