@@ -138,26 +138,32 @@ namespace Server
         {
             Point diff;
             Point pos = new Point(p);
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < 20; i++)
             {
                 diff = new Point(0, 0);
                 for (int j = 0; j < circles.Length; j++)
                 {
                     Point ediff = circles[j].Subtract(pos);
                     double d = ediff.Module() - circles[j].R;
-                    diff = diff.Add(ediff.Normalize(false).MultiplyScalar(Math.Sign(d)*Math.Min(4,Math.Abs(d))));
+                    diff = diff.Add(ediff.Normalize(false).MultiplyScalar(Math.Sign(d)*Math.Min(2.5,Math.Abs(d))));
                 }
                 pos = pos.Add(diff.MultiplyScalar(0.25));
+                if (diff.Module() < 0.40)
+                    break;
             }
             return new Position(pos);
         }
 
+        internal static double normalizeRSSI(double RSSI)
+        {
+            return -1.0 / RSSI;
+        }
         private static double Rssi2Dis(Station receivingStation, double RSSI)
         {
-            RSSI = -1.0 / RSSI;
-            double distance = receivingStation.primaryInterpolator.calc(RSSI);
+            RSSI = normalizeRSSI(RSSI);
+            double distance = receivingStation.shortInterpolator.calc(RSSI);
             if (double.IsNaN(distance))
-                distance = receivingStation.fallbackInterpolator.calc(RSSI);
+                distance = receivingStation.longInterpolator.calc(RSSI);
             return distance;
         }
 
