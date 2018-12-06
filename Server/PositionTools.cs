@@ -63,7 +63,7 @@ namespace Server
         public class Position : Point
         {
             internal double uncertainity;
-            internal int Room;
+            internal String Room;
             internal DateTime positionDate;
             public Position(double x, double y) : base(x, y)
             {
