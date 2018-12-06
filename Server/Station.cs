@@ -11,7 +11,7 @@ namespace Server
         internal PositionTools.Position location; //contains also Room info
         internal String NameMAC;
         internal DateTime lastHearthbeat;
-        public Interpolator shortInterpolator;
-        public Interpolator longInterpolator;
+        public Interpolator shortInterpolator=null;
+        public Interpolator longInterpolator=null;
     }
 }
