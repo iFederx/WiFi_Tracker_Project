@@ -8,6 +8,7 @@ namespace Server
 {
     class Device
     {
+        internal String identifier; //equal to MAC if not anonymous, a casual value else
         internal String MAC;
         internal DateTime firstSeen =DateTime.MinValue;
         internal DateTime lastSeen = DateTime.MinValue;
@@ -16,9 +17,7 @@ namespace Server
         //internal ConcurrentCircular<PositionTools.Position> lastPositions = new ConcurrentCircular<PositionTools.Position>(16); //possibily deprecated: probe requests are not so frequent
         internal ConcurrentStack<PositionTools.Position> positionHistory = new ConcurrentStack<PositionTools.Position>();
         internal PositionTools.Position lastPosition;
-        internal DateTime lastPositionSaving=DateTime.MinValue;
         internal HashSet<String> requestedSSIDs = new HashSet<string>();
-        internal bool dirty = false;
         internal bool anonymous = false;
         internal List<string> aliases = new List<string>();
     }

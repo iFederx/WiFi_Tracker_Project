@@ -65,6 +65,7 @@
     <Compile Include="Interpolators.cs" />
     <Compile Include="Packet.cs" />
     <Compile Include="PositionTools.cs" />
+    <Compile Include="Publisher.cs" />
     <Compile Include="Station.cs" />
     <Compile Include="User.cs" />
     <Page Include="MainWindow.xaml">
