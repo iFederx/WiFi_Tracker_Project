@@ -19,14 +19,14 @@ namespace Server
         Calibrator calibrator;
         Dictionary<PositionTools.Room, List<Station>> stationsPerRoom;
         ReaderWriterLockSlim locker = new ReaderWriterLockSlim();
-        DatabaseInterface databaseInt;
+        DatabasePublisher databaseInt;
         public Context()
         {
             stations = new ConcurrentDictionary<String, Station>();
             rooms = new ConcurrentDictionary<String, PositionTools.Room>();
             stationsPerRoom = new Dictionary<PositionTools.Room, List<Station>>();
             List<Publisher> pb = new List<Publisher>();
-            databaseInt = new DatabaseInterface();
+            databaseInt = new DatabasePublisher();
             GuiInterface guiInt = new GuiInterface();
             pb.Add(databaseInt);
             pb.Add(guiInt);

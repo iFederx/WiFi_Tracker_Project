@@ -133,6 +133,17 @@ namespace Server
                 p.uncertainity = double.MaxValue;
             p.room = receivings[0].ReceivingStation.location.room;
             p.positionDate = DateTime.Now;
+            if(p.uncertainity!=double.MaxValue)
+            {
+                if (p.X < 0)
+                    p.X = 0;
+                else if (p.X > p.room.xlength)
+                    p.X = p.room.xlength;
+                if (p.Y < 0)
+                    p.Y = 0;
+                else if (p.Y > p.room.ylength)
+                    p.Y = p.room.ylength;
+            }
             return p;
         }
         private static int[] genCombinatorialIndex(int[] pi, int i, int l)
@@ -178,8 +189,7 @@ namespace Server
         private static double Rssi2Dis(Station receivingStation, double RSSI)
         {
             RSSI = normalizeRSSI(RSSI);
-            double distance;
-            distance = receivingStation.shortInterpolator.calc(RSSI);
+            double distance = receivingStation.shortInterpolator.calc(RSSI);
             if (double.IsNaN(distance))
                 distance = receivingStation.longInterpolator.calc(RSSI);
             return distance*distance;//simulate ^4 power with 3 point interpolator
