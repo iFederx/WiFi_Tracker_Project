@@ -155,7 +155,7 @@ namespace Server
         {
             Point diff;
             Point pos = new Point(p);
-            for (int i = 0; i < 20; i++)
+            for (int i = 0; i < 30; i++)
             {
                 diff = new Point(0, 0);
                 for (int j = 0; j < circles.Length; j++)
@@ -164,8 +164,8 @@ namespace Server
                     double d = ediff.Module() - circles[j].R;
                     diff = diff.Add(ediff.Normalize(false).MultiplyScalar(Math.Sign(d)*Math.Min(2.5,Math.Abs(d))));
                 }
-                pos = pos.Add(diff.MultiplyScalar(0.25));
-                if (diff.Module() < 0.40)
+                pos = pos.Add(diff.MultiplyScalar(0.45));
+                if (diff.Module() < 0.2)
                     break;
             }
             return new Position(pos);
@@ -178,7 +178,8 @@ namespace Server
         private static double Rssi2Dis(Station receivingStation, double RSSI)
         {
             RSSI = normalizeRSSI(RSSI);
-            double distance = receivingStation.shortInterpolator.calc(RSSI);
+            double distance;
+            distance = receivingStation.shortInterpolator.calc(RSSI);
             if (double.IsNaN(distance))
                 distance = receivingStation.longInterpolator.calc(RSSI);
             return distance*distance;//simulate ^4 power with 3 point interpolator

@@ -58,7 +58,6 @@ namespace Server
             double[] xp;
             double[] yp;
             double[] m;
-            Boolean reversedX = false;
             public MonotoneCubicHermite(double[] x, double[] y) : base(x, y)
             {
                 double dpre=0;
@@ -100,40 +99,30 @@ namespace Server
                         }
                     }
                 }
-                if (x[0] > x[1])
-                    reversedX = true;
-
-
-
             }
             public override double calc(double x)
             {
-                int i;
-                int d;
-                int d2;
-                if(!reversedX)
-                {
-                    if (x < xp[0])
-                        return yp[0];
-                    if (x > xp[xp.Length - 1])
-                        return double.NaN;
-                    for (i = 1; x > xp[i]; i++) ;
-                    d = -1;
-                    d2 = 0;
-                }
-                else
-                {
-                    if (x > xp[0])
-                        return yp[0];
-                    if (x < xp[xp.Length - 1])
-                        return double.NaN;
-                    for (i = 1; x < xp[i]; i++) ;
-                    d = 0;
-                    d2 = -1;
-                }
-                double h = (xp[i+d2] - xp[i +d]);
-                double t = (x - xp[i +d]) / h;
-                return yp[i + d] * (2 * t * t * t - 3 * t * t + 1) + h * m[i + d] * (t * t * t - 2 * t * t + t) + yp[i+d2] * (-2 * t * t * t + 3 * t * t) + h * m[i+d2] * (t * t * t - t * t);
+                double ymin=0;
+                double xmin=0;
+                double mmin = 0;
+                double ymax = 0;
+                double xmax = 0;
+                double mmax = 0;
+                if (x <= xp[0])
+                    return double.NaN;
+                if (x >= xp[xp.Length - 1])
+                    return yp[xp.Length-1];
+                int i = 0;
+                for (i = 1; x > xp[i]; i++) ;
+                xmax = xp[i];
+                ymax = yp[i];
+                mmax = m[i];
+                xmin = xp[i + 1];
+                ymin = yp[i+1];
+                mmin = m[i+1];
+                double h = (xmax - xmin);
+                double t = (x - xmin) / h;
+                return ymin * (2 * t * t * t - 3 * t * t + 1) + h * mmin * (t * t * t - 2 * t * t + t) + ymax * (-2 * t * t * t + 3 * t * t) + h * mmax * (t * t * t - t * t);
             }
         }
 
