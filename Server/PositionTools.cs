@@ -60,10 +60,27 @@ namespace Server
                 return new Point(X / mod, Y / mod);
             }
         }
+
+        public class Room
+        {
+            internal String roomName;
+            internal Double xlength;
+            internal Double ylength;
+            public override bool Equals(object obj)
+            {
+                Room other = (Room)obj;
+                return other.roomName == this.roomName;
+            }
+
+            public override int GetHashCode()
+            {
+                return roomName.GetHashCode();
+            }
+        }
         public class Position : Point
         {
             internal double uncertainity;
-            internal String Room;
+            internal Room room;
             internal DateTime positionDate;
             public Position(double x, double y) : base(x, y)
             {
@@ -114,7 +131,7 @@ namespace Server
             }
             else
                 p.uncertainity = double.MaxValue;
-            p.Room = receivings[0].ReceivingStation.location.Room;
+            p.room = receivings[0].ReceivingStation.location.room;
             p.positionDate = DateTime.Now;
             return p;
         }
@@ -154,7 +171,7 @@ namespace Server
             return new Position(pos);
         }
 
-        internal static double normalizeRSSI(double RSSI)
+        private static double normalizeRSSI(double RSSI)
         {
             return -1.0 / RSSI;
         }
@@ -164,8 +181,36 @@ namespace Server
             double distance = receivingStation.shortInterpolator.calc(RSSI);
             if (double.IsNaN(distance))
                 distance = receivingStation.longInterpolator.calc(RSSI);
-            return distance;
+            return distance*distance;//simulate ^4 power with 3 point interpolator
         }
+
+        internal static void calibrateInterpolator(double[] dist, double[] rssi, Station s)
+        {
+            //normalize
+            double[] distance=new double[dist.Length];
+            double[] RSSI=new double[dist.Length];
+            Array.Copy(dist, distance, dist.Length);
+            Array.Copy(rssi, RSSI, dist.Length);
+            for (int i=0;i<distance.Length;i++)
+            {
+                if (distance[i] == 0)
+                    distance[i] = 0.1;
+                distance[i] = Math.Sqrt(distance[i]);
+                RSSI[i] = normalizeRSSI(RSSI[i]);
+            }
+            Array.Sort(RSSI, distance);
+            //check monotone
+            for(int i=1;i<distance.Length;i++)
+            {
+                //normalized RSSI should be increasing -> distance should be decreasing
+                if (distance[i] > distance[i - 1])
+                    throw new Exception("Distances not monotonic");
+            }
+            s.shortInterpolator = new Interpolators.MonotoneCubicHermite(RSSI, distance);
+            s.longInterpolator = new Interpolators.Lagrangian(RSSI, distance);
+        }
+
+
 
         private static Position triangulate(Circle a, Circle b, Circle c)
         {

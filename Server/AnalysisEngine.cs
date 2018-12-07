@@ -10,18 +10,16 @@ namespace Server
 {
     class AnalysisEngine:Analyzer
     {
-        ConcurrentDictionaryStack<String, Device> deviceMap; //id, corresponding device
+        ConcurrentDictionaryStack<String, Device> deviceMap=new ConcurrentDictionaryStack<string, Device>(); //id, corresponding device
         BlockingCollection<Packet> AnalysisQueue = new BlockingCollection<Packet>(new ConcurrentQueue<Packet>());
         Dictionary<String, String> anoniDevices = new Dictionary<string, string>(); //mac, corresponding id
-        ConcurrentDictionary<String, ConcurrentDictionary<Device,Byte>> peoplePerRoom; 
-        CancellationTokenSource t = new CancellationTokenSource();
+        Dictionary<PositionTools.Room, int> peoplePerRoom=new Dictionary<PositionTools.Room, int>();
+        volatile CancellationTokenSource t;
         volatile bool killed = false;
-        DateTime lastCleaning = DateTime.Now.AddSeconds(5);
-
-        public AnalysisEngine(ConcurrentDictionaryStack<String, Device> DeviceMap, ConcurrentDictionary<String, ConcurrentDictionary<Device, Byte>> PeoplePerRoom)
+        List<Publisher> publishers;
+        public AnalysisEngine(List<Publisher> pb)
         {
-            deviceMap = DeviceMap;
-            peoplePerRoom = PeoplePerRoom;
+            publishers = pb;
         }
         /// <summary>
         /// Lanciare questo metodo ogni qual volta un pacchetto è "maturo" (ovvero ricevuto da tutte le stazioni o andato in timeout).
@@ -32,25 +30,23 @@ namespace Server
         {
             AnalysisQueue.Add(p);
         }
-        private void analyzerProcess()
+        public void analyzerProcess()
         {
+            t = new CancellationTokenSource(10000);
             while (!killed)
             {
                 Packet p;
                 try
                 {
                     p = AnalysisQueue.Take(t.Token);
-                    analyzePacket(p);
-                    if (lastCleaning.AddSeconds(2) < DateTime.Now)
-                    {
-                        coalesceAnonymous();
-                        householdCleaning();
-                        lastCleaning = DateTime.Now;
-                    }
+                    System.Diagnostics.Debug.Print("Packet popped");
+                    analyzePacket(p);                    
                 }
-                catch (Exception)//fatal
+                catch (OperationCanceledException)
                 {
-                    killed = true;
+                    coalesceAnonymous();
+                    householdCleaning();
+                    t = new CancellationTokenSource(10000);
                 }
             }
         }
@@ -73,21 +69,15 @@ namespace Server
                     d.identifier = "ANON-" +DateTime.Now.ToShortDateString()+"."+DateTime.Now.ToShortTimeString()+"-"+ d.MAC.GetHashCode().ToString("X").Substring(0,4);
                     anoniDevices.Add(p.SendingMAC, d.identifier);
                 }
-                d.firstSeen = p.Timestamp;
             }
             if (p.RequestedSSID != null)
             {
-                d.requestedSSIDs.Add(p.RequestedSSID);
+                d.requestedSSIDs.TryAdd(p.RequestedSSID,0);
             }
-            if (d.lastSeen.AddSeconds(10) > p.Timestamp)
+            if (d.lastPosition!=null&&d.lastPosition.positionDate.AddSeconds(10) > p.Timestamp)
                 return;
-            d.lastSeen = p.Timestamp;
-            d.dirty = Int32.MaxValue;
-            locate(d, p);
-            if (anew)
-            {
-                deviceMap.upsert(d.identifier, d,(old,cur)=> { return cur; });//single thread safe only. To make it multithread i should also copy other fields
-            }
+            locateAndPublish(d, p);
+            deviceMap.upsert(d.identifier, d, (old, cur) => { return cur; });//single thread safe only. To make it multithread i should also copy other fields
         }
 
         private void coalesceAnonymous()
@@ -108,7 +98,7 @@ namespace Server
                 {
                      deviceMap.getKey(anoni[j], out B);
                     curpoint = 0;
-                    if(A.firstSeen>B.firstSeen)
+                    if(A.firstPosition.positionDate>B.firstPosition.positionDate)
                     {
                         second = A;
                         first = B;
@@ -118,12 +108,11 @@ namespace Server
                         first = A;
                         second = B;
                     }
-                    if (first.lastSeen.AddMinutes(3) > DateTime.Now || first.lastSeen > second.firstSeen ||first.lastPosition.Room!=second.firstPosition.Room)
+                    if (first.lastPosition.positionDate.AddMinutes(3) > DateTime.Now || first.lastPosition.positionDate > second.firstPosition.positionDate || first.lastPosition.room!=second.firstPosition.room)
                         continue;
-                    curpoint += Math.Max(0, 70 - (int)second.firstSeen.Subtract(first.lastSeen).TotalSeconds);
-                    if (first.lastPosition == null || second.positionHistory.Count < 1)
-                        continue;
-                    curpoint += Math.Max(0, 40 - 7 * (int)first.lastPosition.Subtract(second.firstPosition).Module());
+                    curpoint += Math.Max(0, 70 - (int)second.firstPosition.positionDate.Subtract(first.lastPosition.positionDate).TotalSeconds);
+                    if(first.lastPosition.uncertainity!=double.MaxValue&&second.firstPosition.uncertainity!=double.MaxValue)
+                        curpoint += Math.Max(0, 40 - 7 * (int)first.lastPosition.Subtract(second.firstPosition).Module());
                     if (Math.Abs(Convert.ToInt64(first.MAC, 16) - Convert.ToInt64(second.MAC, 16)) < 2)
                         curpoint += 100;                    
                     if (curpoint>maxpoint)
@@ -135,23 +124,25 @@ namespace Server
                 if(maxpoint>40)
                 {
                     B = bestMatch;
-                    if(A.firstSeen>bestMatch.firstSeen)
+                    if(A.firstPosition.positionDate>bestMatch.firstPosition.positionDate)
                     {
                         B = A;
                         A = bestMatch;
                     }
-                    placeInRoom(A.lastPosition.Room, -1);
-                    B.firstSeen = A.firstSeen;
-                    B.aliases.AddRange(A.aliases);
-                    B.aliases.Add(new Device.Alias(A.MAC, maxpoint));
-                    B.requestedSSIDs.UnionWith(B.requestedSSIDs);
-                    A.positionHistory.PushRange(B.positionHistory.ToArray());
-                    B.positionHistory = A.positionHistory;
+                    placeInRoomAndPublish(A.lastPosition.room,A,Publisher.EventType.Disappear);
+                    B.firstPosition = A.firstPosition;
+                    B.aliases.PushRange(A.aliases.ToArray());
+                    B.aliases.Push(new Device.Alias(A.MAC, maxpoint));
+                    foreach (String ssid in A.requestedSSIDs.Keys)
+                        B.requestedSSIDs.TryAdd(ssid, 0);
                     deviceMap.remove(B.identifier);
+                    foreach (Publisher pb in publishers)
+                        pb.publishRename(B.identifier, A.identifier);
                     B.identifier = A.identifier;
                     deviceMap.upsert(B.identifier,B,(d1,d2)=> { return d2; });
                     anoniDevices.Remove(A.MAC);
                     anoniDevices[B.MAC]= B.identifier;
+                    
                 }
             }
         }
@@ -161,32 +152,40 @@ namespace Server
             long mac = Convert.ToInt64(sendingMAC, 16);
             return (mac & 0x020000000000) > 0;
         }
-        private void locate(Device d,Packet p)
+        private void locateAndPublish(Device d,Packet p)
         {
-            PositionTools.Position newPosition = PositionTools.triangulate(p.Receivings);
-            if(d.lastPosition==null)
-            {
-                placeInRoom(newPosition.Room, 1);
-                d.firstPosition = newPosition;
-            }
-            else if(d.lastPosition.Room!=newPosition.Room)
-            {
-                placeInRoom(d.lastPosition.Room, -1);
-                placeInRoom(newPosition.Room, 1);
-            }
-            d.lastPosition = newPosition;
+            PositionTools.Room oldRoom =(d.lastPosition!=null)?d.lastPosition.room:null;
+            d.lastPosition = PositionTools.triangulate(p.Receivings);
             d.lastPosition.positionDate = p.Timestamp;
-            d.positionHistory.Push(d.lastPosition);
+            Publisher.EventType e = Publisher.EventType.Update;
+            if (oldRoom==null)
+            {
+                d.firstPosition = d.lastPosition;
+                e = Publisher.EventType.Appear;
+            }
+            else if(oldRoom!=d.lastPosition.room)
+            {
+                placeInRoomAndPublish(oldRoom,d,Publisher.EventType.MoveOut);
+                e = Publisher.EventType.MoveIn;
+            }
+            placeInRoomAndPublish(d.lastPosition.room, d, e);
+
         }
 
-        private void placeInRoom(String room, int v)
+        private void placeInRoomAndPublish(PositionTools.Room room, Device d, Publisher.EventType action)
         {
             //optionally here insert to update only if device has more than 5 minutes of history
-            int val = 0;
-            if (!peoplePerRoom.TryGetValue(room, out val))
-                val = 0;
-            val += v;
-            peoplePerRoom[room] = val;
+            if (!peoplePerRoom.ContainsKey(room))
+                peoplePerRoom[room] = 0;
+            if (action==Publisher.EventType.Appear||action==Publisher.EventType.MoveIn)
+                peoplePerRoom[room]++;
+            else if(action!=Publisher.EventType.Update)
+                peoplePerRoom[room]--;
+            foreach (Publisher pb in publishers)
+            {
+                pb.publishPosition(d, action);
+                pb.publishStat(peoplePerRoom[room], room, Publisher.StatType.InstantaneousPeopleCount);
+            }
         }
 
         public void kill()
@@ -198,11 +197,11 @@ namespace Server
         private void householdCleaning()
         {
             Device removed;
-            while (deviceMap.popConditional((Device d)=>{ return d.lastSeen.AddMinutes(5) < DateTime.Now; },(Device d)=> { return d.identifier; },out removed))
+            while (deviceMap.popConditional((Device d)=>{ return d.lastPosition.positionDate.AddMinutes(5) < DateTime.Now; },(Device d)=> { return d.identifier; },out removed))
             {
                 if (removed.anonymous)
                     anoniDevices.Remove(removed.MAC);
-                placeInRoom(removed.lastPosition.Room, -1);
+                placeInRoomAndPublish(removed.lastPosition.room,removed,Publisher.EventType.Disappear);
             }
         }
     }

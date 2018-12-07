@@ -8,9 +8,26 @@ namespace Server
 {
     class Calibrator : Analyzer
     {
+        private AnalysisEngine analyzer;
+
+        public Calibrator(AnalysisEngine analyzer)
+        {
+            this.analyzer = analyzer;
+        }
+
         void Analyzer.sendToAnalysisQueue(Packet p)
         {
-            throw new NotImplementedException();
+            //TODO
+        }
+
+        internal void calibratorProcess()
+        {
+            //TODO
+        }
+
+        public void kill()
+        {
+            //TODO
         }
     }
 }

@@ -9,5 +9,6 @@ namespace Server
     interface Analyzer
     {
         void sendToAnalysisQueue(Packet p);
+        void kill();
     }
 }
