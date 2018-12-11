@@ -10,16 +10,19 @@ namespace Server
 {
     class AnalysisEngine:Analyzer
     {
-        ConcurrentDictionaryStack<String, Device> deviceMap=new ConcurrentDictionaryStack<string, Device>(); //id, corresponding device
+        ConcurrentDictionaryStack<String, Device> deviceMap; //id, corresponding device
         BlockingCollection<Packet> AnalysisQueue = new BlockingCollection<Packet>(new ConcurrentQueue<Packet>());
         Dictionary<String, String> anoniDevices = new Dictionary<string, string>(); //mac, corresponding id
-        Dictionary<PositionTools.Room, int> peoplePerRoom=new Dictionary<PositionTools.Room, int>();
+        ConcurrentDictionary<PositionTools.Room, ConcurrentDictionary<Device,byte>> peoplePerRoom;
         volatile CancellationTokenSource t;
         volatile bool killed = false;
         List<Publisher> publishers;
-        public AnalysisEngine(List<Publisher> pb)
+        public AnalysisEngine(List<Publisher> pb, ConcurrentDictionary<PositionTools.Room, ConcurrentDictionary<Device,byte>> ppr, ConcurrentDictionaryStack<String, Device> dm)
         {
             publishers = pb;
+            peoplePerRoom = ppr;
+            deviceMap = dm;
+
         }
         /// <summary>
         /// Lanciare questo metodo ogni qual volta un pacchetto è "maturo" (ovvero ricevuto da tutte le stazioni o andato in timeout).
@@ -174,17 +177,16 @@ namespace Server
 
         private void placeInRoomAndPublish(PositionTools.Room room, Device d, Publisher.EventType action)
         {
+            byte dummy;
             //optionally here insert to update only if device has more than 5 minutes of history
-            if (!peoplePerRoom.ContainsKey(room))
-                peoplePerRoom[room] = 0;
-            if (action==Publisher.EventType.Appear||action==Publisher.EventType.MoveIn)
-                peoplePerRoom[room]++;
+           if (action==Publisher.EventType.Appear||action==Publisher.EventType.MoveIn)
+                peoplePerRoom[room].TryAdd(d,0);
             else if(action!=Publisher.EventType.Update)
-                peoplePerRoom[room]--;
+                peoplePerRoom[room].TryRemove(d,out dummy);
             foreach (Publisher pb in publishers)
             {
                 pb.publishPosition(d, action);
-                pb.publishStat(peoplePerRoom[room], room, Publisher.StatType.InstantaneousPeopleCount);
+                pb.publishStat(peoplePerRoom[room].Keys.Count, room, Publisher.StatType.InstantaneousPeopleCount);
             }
         }
 
