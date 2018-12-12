@@ -13,3 +13,4 @@ Server/.vs/Server/v15/.suo
 Server/.vs/Server/xs/UserPrefs.xml
 Server/.vs/Server/v14/.suo
 Micro/ServerEcho_Wpf/.vs/ServerSocketWpfApp/xs/UserPrefs.xml
+*.ipch
