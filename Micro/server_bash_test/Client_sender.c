@@ -5,7 +5,7 @@
  *      - LINE/ORIENTED:
  *        > continuously reads lines from keyboard
  *        > sends each line to the server
- *        > waits for response and diaplays it
+ *        > waits for response and displays it
  *      - Terminates when the "close" or "stop" line is entered
  */
 
@@ -28,8 +28,8 @@ char *prog_name;
 
 int main(int argc, char *argv[])
 {
-    char     	   buf[BUFLEN];		/* transmission buffer */
-    char	   rbuf[BUFLEN];	/* reception buffer */
+    char		buf[BUFLEN];		/* transmission buffer */
+    char		rbuf[BUFLEN];	/* reception buffer */
 
     uint16_t	   tport_n, tport_h;	/* server port number (net/host ord) */
 

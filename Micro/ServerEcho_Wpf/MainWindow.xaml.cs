@@ -22,6 +22,7 @@ namespace ServerSocketWpfApp
         public MainWindow()
         {
             InitializeComponent();
+            this.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             tbAux.SelectionChanged += tbAux_SelectionChanged;
 
             Start_Button.IsEnabled = true;

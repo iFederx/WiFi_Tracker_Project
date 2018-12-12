@@ -1,0 +1,15 @@
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Server\bin\Debug\Server.exe.config
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Server\bin\Debug\Server.exe
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Server\bin\Debug\Server.pdb
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Server\obj\Debug\Server.csprojAssemblyReference.cache
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Server\obj\Debug\MainWindow.g.cs
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Server\obj\Debug\App.g.cs
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Server\obj\Debug\Server_MarkupCompile.cache
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Server\obj\Debug\Server_MarkupCompile.lref
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Server\obj\Debug\MainWindow.baml
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Server\obj\Debug\Server.g.resources
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Server\obj\Debug\Server.Properties.Resources.resources
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Server\obj\Debug\Server.csproj.GenerateResource.cache
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Server\obj\Debug\Server.csproj.CoreCompileInputs.cache
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Server\obj\Debug\Server.exe
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Server\obj\Debug\Server.pdb
