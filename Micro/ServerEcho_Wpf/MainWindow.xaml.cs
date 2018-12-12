@@ -73,17 +73,18 @@ namespace ServerSocketWpfApp
                     SocketType.Stream,
                     ProtocolType.Tcp
                     );
+                sListener.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
 
                 // Associates a Socket with a local endpoint 
                 sListener.Bind(ipEndPoint);
 
-                tbStatus.Text = "Server started at: "+ipAddr.ToString();
+                tbStatus.Text = "Server started at: " + ipAddr.ToString();
 
                 Start_Button.IsEnabled = false;
                 StartListen_Button.IsEnabled = true;
                 Close_Button.IsEnabled = true;
             }
-            catch (Exception exc) { MessageBox.Show(exc.ToString()); }
+            catch (Exception exc) { MessageBox.Show(exc.ToString() + "\n ciaone 5"); }
         }
 
         private void Listen_Click(object sender, RoutedEventArgs e)
@@ -102,7 +103,7 @@ namespace ServerSocketWpfApp
 
                 StartListen_Button.IsEnabled = false;
             }
-            catch (Exception exc) { MessageBox.Show(exc.ToString()); }
+            catch (Exception exc) { MessageBox.Show(exc.ToString() + "\n ciaone 4"); }
         }
 
         public void AcceptCallback(IAsyncResult ar)
@@ -142,7 +143,7 @@ namespace ServerSocketWpfApp
                 AsyncCallback aCallback = new AsyncCallback(AcceptCallback);
                 listener.BeginAccept(aCallback, listener);
             }
-            catch (Exception exc) { MessageBox.Show(exc.ToString()); }
+            catch (Exception exc) { MessageBox.Show(exc.ToString() + "\n ciaone 3"); }
         }
 
         public void ReceiveCallback(IAsyncResult ar)
@@ -202,7 +203,7 @@ namespace ServerSocketWpfApp
                     );
                 }
             }
-            catch (Exception exc) { MessageBox.Show(exc.ToString()); }
+            catch (Exception exc) { MessageBox.Show(exc.ToString() + "\n ciaone 2"); }
         }
 
         private void Close_Click(object sender, RoutedEventArgs e)
@@ -217,7 +218,7 @@ namespace ServerSocketWpfApp
 
                 Close_Button.IsEnabled = false;
             }
-            catch (Exception exc) { MessageBox.Show(exc.ToString()); }
+            catch (Exception exc) { MessageBox.Show(exc.ToString()+"\n ciaone 1"); }
             Start_Button.IsEnabled = true;
         }
 
