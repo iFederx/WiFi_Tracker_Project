@@ -29,5 +29,7 @@ namespace Server
         internal ConcurrentDictionary<String,byte> requestedSSIDs = new ConcurrentDictionary<string,byte>();
         internal bool anonymous = false;
         internal ConcurrentStack<Alias> aliases = new ConcurrentStack<Alias>();
+        internal String HTCapabilities;
+
     }
 }

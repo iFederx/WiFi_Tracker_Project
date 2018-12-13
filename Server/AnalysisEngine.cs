@@ -66,6 +66,7 @@ namespace Server
                 d = new Device();
                 d.MAC = p.SendingMAC;
                 d.identifier = d.MAC;
+                d.HTCapabilities = p.HTCapabilities;
                 if(isMACLocal(p.SendingMAC))
                 {
                     d.anonymous = true;
@@ -99,7 +100,7 @@ namespace Server
                 maxpoint = 0;
                 for(int j=i+1;j<anoni.Count;j++)
                 {
-                     deviceMap.getKey(anoni[j], out B);
+                    deviceMap.getKey(anoni[j], out B);
                     curpoint = 0;
                     if(A.firstPosition.positionDate>B.firstPosition.positionDate)
                     {
@@ -117,14 +118,16 @@ namespace Server
                     if(first.lastPosition.uncertainity!=double.MaxValue&&second.firstPosition.uncertainity!=double.MaxValue)
                         curpoint += Math.Max(0, 40 - 7 * (int)first.lastPosition.Subtract(second.firstPosition).Module());
                     if (Math.Abs(Convert.ToInt64(first.MAC, 16) - Convert.ToInt64(second.MAC, 16)) < 2)
-                        curpoint += 100;                    
+                        curpoint += 100;
+                    if (first.HTCapabilities != null && first.HTCapabilities == second.HTCapabilities)
+                        curpoint += 30;
                     if (curpoint>maxpoint)
                     {
                         maxpoint = Math.Min(100,curpoint);
                         bestMatch = B;
                     }
                 }
-                if(maxpoint>40)
+                if(maxpoint>50)
                 {
                     B = bestMatch;
                     if(A.firstPosition.positionDate>bestMatch.firstPosition.positionDate)

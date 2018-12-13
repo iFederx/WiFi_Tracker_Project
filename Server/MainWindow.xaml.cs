@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -39,65 +40,56 @@ namespace Server
 
         }
       
+        public double dist2RSSI(double dist)
+        {
+            if (dist < 1)
+                return -30;
+            return -30 * (Math.Log(dist, 5) + 1);
+        }
         public MainWindow()
         {
             InitializeComponent();
-            /*List<Packet.Reception> recv = new List<Packet.Reception>();
-            Station s1;
-            Packet.Reception r1;
-            s1 = new Station();
-            r1 = new Packet.Reception();
-            r1.ReceivingStation = s1;
-            s1.location = new PositionTools.Position(0, 0);
-            r1.RSSI = 2;
-            recv.Add(r1);
-            s1 = new Station();
-            r1 = new Packet.Reception();
-            r1.ReceivingStation = s1;
-            s1.location = new PositionTools.Position(3, 0);
-            r1.RSSI = 2;
-            recv.Add(r1);
-            s1 = new Station();
-            r1 = new Packet.Reception();
-            r1.ReceivingStation = s1;
-            s1.location = new PositionTools.Position(1.5, 1);
-            r1.RSSI = 3;
-            recv.Add(r1);
-            /*s1 = new Station();
-            r1 = new Packet.Reception();
-            r1.ReceivingStation = s1;
-            s1.location = new PositionTools.Position(0,0);
-            r1.RSSI =1;
-            recv.Add(r1);
-
-            s1 = new Station();
-            r1 = new Packet.Reception();
-            r1.ReceivingStation = s1;
-            s1.location = new PositionTools.Position(4, 4);
-            r1.RSSI = 2;
-            recv.Add(r1);
-
-            s1 = new Station();
-            r1 = new Packet.Reception();
-            r1.ReceivingStation = s1;
-            s1.location = new PositionTools.Position(2, 0);
-            r1.RSSI = 1.08;
-            recv.Add(r1);
-
-            s1 = new Station();
-            r1 = new Packet.Reception();
-            r1.ReceivingStation = s1;
-            s1.location = new PositionTools.Position(0, 2);
-            r1.RSSI = 1.08;
-            recv.Add(r1);*/
-
-            //PositionTools.Position pz=PositionTools.triangulate(recv);
-            double[] x = { 3.3, 2.5, 1.6, 1.1 };
-            double[] y = { 0, 1, 5, 20 };
-            Interpolator i =new Interpolators.Lagrangian(x, y);
             
-            int z = 0;
-            z++;
+            double[] x = { dist2RSSI(0), dist2RSSI(10), dist2RSSI(20), dist2RSSI(30), dist2RSSI(40)};
+            double[] y = { 0, 10,20, 30, 40 };
+            Context ctx = new Context();
+            Thread backgroundProcessManager = new Thread(new ThreadStart(ctx.orchestrate));
+            backgroundProcessManager.Start();
+
+            PositionTools.Room r=ctx.createRoom("TestRoom", 25, 25,false);
+            Station s1=ctx.createStation(r, "0.0", 0, 0);
+            PositionTools.calibrateInterpolator(y, x, s1);
+            Station s2 = ctx.createStation(r, "25.0", 25, 0);
+            PositionTools.calibrateInterpolator(y, x, s2);
+            Station s3 = ctx.createStation(r, "0.25", 0, 25);
+            PositionTools.calibrateInterpolator(y, x, s3);
+
+            Packet p = new Packet("abcde928", "Alice33Test",DateTime.Now,"","",0);
+            p.received(s1, dist2RSSI(12.5));
+            p.received(s2, dist2RSSI(12.5));
+            p.received(s3, dist2RSSI(Math.Sqrt(12.5 * 12.5 + 25 * 25)));
+            ctx.getAnalyzer().sendToAnalysisQueue(p);
+
+            Thread.Sleep(12000);
+
+            ctx.switchCalibration(true, r);
+
+            p = new Packet("abcde928", "Fastweb25Test", DateTime.Now, "", "", 0);
+            p.received(s1, dist2RSSI(25));
+            p.received(s2, dist2RSSI(Math.Sqrt(25 * 25 + 25 * 25)));
+            p.received(s3, dist2RSSI(0));
+            ctx.getAnalyzer().sendToAnalysisQueue(p);
+
+            ctx.switchCalibration(false,r);
+
+            p = new Packet("abcde929", "Polito", DateTime.Now, "", "", 0);
+            p.received(s1, dist2RSSI(0));
+            p.received(s2, dist2RSSI(25));
+            p.received(s3, dist2RSSI(25));
+            ctx.getAnalyzer().sendToAnalysisQueue(p);
+
+            Thread.Sleep(2000);
+            ctx.getAnalyzer().kill();
         }
     }
 }

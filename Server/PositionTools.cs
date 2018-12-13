@@ -59,6 +59,12 @@ namespace Server
                     mod *= -1;
                 return new Point(X / mod, Y / mod);
             }
+
+            public void import(Point p)
+            {
+                this.X = p.X;
+                this.Y = p.Y;
+            }
         }
 
         public class Room
@@ -82,12 +88,25 @@ namespace Server
             internal double uncertainity;
             internal Room room;
             internal DateTime positionDate;
-            public Position(double x, double y) : base(x, y)
+            public Position(double x, double y, Room r) : base(x, y)
             {
+                room = r;
+            }
+            public Position(double x, double y, Room r,Double u) : base(x, y)
+            {
+                room = r;
+                uncertainity=u;
             }
 
-            public Position(Point a) : base(a)
+            public Position(Point a, Room r) : base(a)
             {
+                room = r;
+            }
+
+            public Position(Point a,Room r, Double u):base(a)
+            {
+                room = r;
+                uncertainity = u;
             }
         }
         class Circle : Point
@@ -105,7 +124,8 @@ namespace Server
         }
         internal static Position triangulate(List<Packet.Reception> receivings)
         {
-            Position p = new Position(Double.NaN, Double.NaN);
+            Position p = new Position(0, 0, receivings[0].ReceivingStation.location.room);
+            p.positionDate = DateTime.Now;
             if (receivings.Count() > 2)
             {
                 Circle[] circles = new Circle[receivings.Count];
@@ -121,18 +141,16 @@ namespace Server
                         p = null;
                         break;
                     }
-                    p = triangulate(circles[ri[0]], circles[ri[1]], circles[ri[2]]);
+                    p.import(triangulate(circles[ri[0]], circles[ri[1]], circles[ri[2]]));
                     safety++;
                 }
                 while (p == null && safety < 20);
                 if (p == null)
-                    p = new Position(0, 0);
-                p = findBetterMinimum(circles, p);
+                    p.import(new Point(0, 0));
+                p=findBetterMinimum(circles, p);
             }
             else
                 p.uncertainity = double.MaxValue;
-            p.room = receivings[0].ReceivingStation.location.room;
-            p.positionDate = DateTime.Now;
             if(p.uncertainity!=double.MaxValue)
             {
                 if (p.X < 0)
@@ -164,7 +182,7 @@ namespace Server
 
         private static Position findBetterMinimum(Circle[] circles, Position p)
         {
-            Point diff;
+            Point diff=new Point(100,100);
             Point pos = new Point(p);
             for (int i = 0; i < 30; i++)
             {
@@ -179,7 +197,7 @@ namespace Server
                 if (diff.Module() < 0.2)
                     break;
             }
-            return new Position(pos);
+            return new Position(pos,p.room,diff.Module());
         }
 
         private static double normalizeRSSI(double RSSI)
@@ -223,7 +241,7 @@ namespace Server
 
 
 
-        private static Position triangulate(Circle a, Circle b, Circle c)
+        private static Point triangulate(Circle a, Circle b, Circle c)
         {
 
             Point col1 = a.Subtract(b).Normalize(true);
@@ -239,7 +257,7 @@ namespace Server
             double j = ey.Dot(c.Subtract(a));
             double x = (a.R * a.R - b.R * b.R + d * d) / (2 * d);
             double y = (a.R * a.R - c.R * c.R + i * i + j * j) / (2 * j) - i * x / j;
-            return new Position(a.Add(ex.MultiplyScalar(x)).Add(ey.MultiplyScalar(y)));
+            return new Point(a.Add(ex.MultiplyScalar(x)).Add(ey.MultiplyScalar(y)));
 
         }
     }
