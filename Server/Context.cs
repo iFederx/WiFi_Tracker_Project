@@ -46,6 +46,7 @@ namespace Server
             Thread databaseT = new Thread(new ThreadStart(databaseInt.databaseProcess));
             databaseT.Start();
             analyzerT.Join();
+            calibrator.kill(); //should not be necessary
             //if analyzer completes, kill everything: to shutdown application, kill analyzer!
             databaseInt.kill();
             databaseT.Join();
@@ -74,33 +75,74 @@ namespace Server
             }
             return ris;
         }
-        public void tryAddStation(String NameMAC)
+        public Station tryAddStation(String NameMAC, Object LedBlinkHandle, bool AllowAsynchronous) //Replace Object with the relevant type
         {
-            //TODO_FEDE: search file, if exists load it and call createStation (and load & attach the interpolators to the created station), if not open GUI, get info, then from that guiThread call createStation
+            Station s=loadStation(NameMAC);
+            if(s==null&&AllowAsynchronous) //this is already the check if a configuration for the station exists or not
+            {
+                //TODO_FEDE: open GUI, get info, then from that guiThread call createStation
+                return null;
+            }
+            return s;
         }
+
+        public void loadRooms()
+        {
+            //TODO_FEDE
+            return;
+        }
+
+        public bool saveRoom(PositionTools.Room room)
+        {
+            //TODO_FEDE
+            return false;
+        }
+
+        public Station loadStation(String NameMAC)
+        {
+            //TODO_FEDE: check if conf file for NameMAC Exists. If not, return null
+            Station s=new Station();
+            s.lastHearthbeat = DateTime.Now;
+            s.NameMAC = NameMAC;
+            //TODO_FEDE: load Room name, position in the room
+            String roomName=null; //replace with loaded value
+            double x=101; //replace with loaded value
+            double y=101; //replace with loaded value
+            PositionTools.Room room=getRoom(roomName);
+            s.location = new PositionTools.Position(x,y,room);
+            //TODO_FEDE: load the interpolators for this station
+            s.shortInterpolator=null; //replace with loaded value
+            s.longInterpolator=null; //replace with loaded value
+            locker.EnterWriteLock();
+            stationsPerRoom[room].Add(s);
+            stations[s.NameMAC] = s;
+            locker.ExitWriteLock();
+            return s;
+        }
+
+        public Station saveStation(Station s)
+        {
+            //TODO_FEDE
+            // important: for the station.location.room do not save the object but the name of the room
+            // Interpolators are serializable values, so saving and loading should be quick, no specific code needed
+            return null;
+        }
+
         public Station createStation(PositionTools.Room room, String NameMAC, double X, double Y)
         {
             Station s = new Station();
             s.lastHearthbeat = DateTime.Now;
             s.NameMAC = NameMAC;
             s.location = new PositionTools.Position(X, Y, room);
+            s.shortInterpolator=Calibrator.stdShort;
+            s.longInterpolator=Calibrator.stdLong;
             locker.EnterWriteLock();
             stationsPerRoom[room].Add(s);
             stations[s.NameMAC] = s;
-            Boolean mustCalibrate = false;
-            foreach(Station st in stationsPerRoom[room])
-            {
-                if(st.shortInterpolator==null||st.longInterpolator==null)
-                {
-                    mustCalibrate = true;
-                }
-            }
-            mustCalibrate = mustCalibrate && stationsPerRoom[room].Count >= 3;
             locker.ExitWriteLock();
-            if (mustCalibrate)
-                switchCalibration(true, room);
             return s;
         }
+
         public Station getStation(String NameMAC)
         {
             return stations[NameMAC];
@@ -108,6 +150,16 @@ namespace Server
         public PositionTools.Room getRoom(String name)
         {
             return rooms[name];
+        }
+        public void removeStation(String NameMAC)
+        {
+            Station s;
+            stations.TryRemove(NameMAC,out s);
+            PositionTools.Room room=s.location.room;
+            locker.EnterWriteLock();
+            List<Station> st = stationsPerRoom[room];
+            st.Remove(s);
+            locker.ExitWriteLock();
         }
         public bool checkStationAliveness(PositionTools.Room room)
         {
@@ -119,9 +171,7 @@ namespace Server
                 if (st[i].lastHearthbeat.AddMinutes(5)<DateTime.Now)
                 {
                     ris = false;
-                    locker.EnterWriteLock();
-                    st.RemoveAt(i);
-                    locker.ExitWriteLock();
+                    removeStation(st[i].NameMAC);
                     break;
                 }
             }
@@ -137,6 +187,15 @@ namespace Server
             locker.ExitReadLock();
             return count;
         }
+
+        public IEnumerable<Station> getStationsInRoom(PositionTools.Room room)
+        {
+            Station[] ris;
+            locker.EnterReadLock();
+            ris = stationsPerRoom[room].ToArray();
+            locker.ExitReadLock();
+            return ris;
+        }
         
         /// <summary>
         /// 
@@ -146,7 +205,7 @@ namespace Server
         /// <param name="yl"></param>
         /// <param name="saveToFile"></param>
         /// <returns>The created/instanciated Room object, null if it already exists</returns>
-        public PositionTools.Room createRoom(String name, double xl, double yl, bool saveToFile)
+        public PositionTools.Room createRoom(String name, double xl, double yl)
         {
             //init station per room, user per room
             PositionTools.Room r = new PositionTools.Room();
@@ -165,10 +224,6 @@ namespace Server
             locker.ExitWriteLock();
             if(r!=null)
                 peoplePerRoom.TryAdd(r, new ConcurrentDictionary<Device,byte>());
-            if (saveToFile)
-            {
-                //TODO_FEDE: save the room info to file
-            }
             return r;
         }
 

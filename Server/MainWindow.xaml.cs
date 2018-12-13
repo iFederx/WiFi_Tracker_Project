@@ -56,7 +56,7 @@ namespace Server
             Thread backgroundProcessManager = new Thread(new ThreadStart(ctx.orchestrate));
             backgroundProcessManager.Start();
 
-            PositionTools.Room r=ctx.createRoom("TestRoom", 25, 25,false);
+            PositionTools.Room r=ctx.createRoom("TestRoom", 25, 25);
             Station s1=ctx.createStation(r, "0.0", 0, 0);
             PositionTools.calibrateInterpolator(y, x, s1);
             Station s2 = ctx.createStation(r, "25.0", 25, 0);

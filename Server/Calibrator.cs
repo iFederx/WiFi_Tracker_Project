@@ -20,6 +20,10 @@ namespace Server
         DateTime PositionReady = DateTime.MaxValue;
         PositionTools.Point CalibratingPosition = null;
         Int16 Round = 0;
+        private static double[] stdDist={0.25,1,4,8,16,32,64};
+        private static double[] stdRssi={-30,-50,-70,-80,-90,-100,-110};
+        internal static Interpolator stdShort=new Interpolators.MonotoneCubicHermite(stdDist,stdRssi);
+        internal static Interpolator stdLong=new Interpolators.Lagrangian(stdDist,stdRssi);
         internal bool inCalibration
         {
             get
@@ -81,7 +85,6 @@ namespace Server
                     //7: Increment Round. If Round <4, goto to point #3
                     //8: Set PositionReady to DateTime.MaxValue, set Rount to zero;
                     //9: For every station st, call PositionTools.calibrateInterpolator([st].dist,[st].rssi,st). It may throw an exception if the calibration data makes no sense, so catch it and start again
-                    //10: For every station st, save the two interpolators (they are serializable values, so should be quick) to a file from where they can be loaded next startup
                 }
                 catch (OperationCanceledException)
                 {
@@ -94,7 +97,15 @@ namespace Server
         public void kill()
         {
             killed = true;
-            t.Cancel();
+            if(t!=null)
+            {
+                try
+                {
+                    t.Cancel();
+                }
+                catch(Exception e)
+                {}
+            }
         }
     }
 }
