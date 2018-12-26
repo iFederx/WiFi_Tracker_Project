@@ -74,9 +74,12 @@ namespace Server
                     anoniDevices.Add(p.SendingMAC, d.identifier);
                 }
             }
-            if (p.RequestedSSID != null)
+            if (p.RequestedSSID != null && !d.requestedSSIDs.ContainsKey(p.RequestedSSID))
             {
                 d.requestedSSIDs.TryAdd(p.RequestedSSID,0);
+                foreach (Publisher pb in publishers)
+                    if (pb.supportsOperation(Publisher.DisplayableType.SSID))
+                        pb.publishSSID(d,p.RequestedSSID);
             }
             if (d.lastPosition!=null&&d.lastPosition.positionDate.AddSeconds(10) > p.Timestamp)
                 return;
@@ -143,7 +146,8 @@ namespace Server
                         B.requestedSSIDs.TryAdd(ssid, 0);
                     deviceMap.remove(B.identifier);
                     foreach (Publisher pb in publishers)
-                        pb.publishRename(B.identifier, A.identifier);
+                        if(pb.supportsOperation(Publisher.DisplayableType.Rename))
+                            pb.publishRename(B.identifier, A.identifier);
                     B.identifier = A.identifier;
                     deviceMap.upsert(B.identifier,B,(d1,d2)=> { return d2; });
                     anoniDevices.Remove(A.MAC);
@@ -188,8 +192,10 @@ namespace Server
                 peoplePerRoom[room].TryRemove(d,out dummy);
             foreach (Publisher pb in publishers)
             {
-                pb.publishPosition(d, action);
-                pb.publishStat(peoplePerRoom[room].Keys.Count, room, Publisher.StatType.InstantaneousPeopleCount);
+                if(pb.supportsOperation(Publisher.DisplayableType.DeviceDevicePosition))
+                    pb.publishPosition(d, action);
+                if(pb.supportsOperation(Publisher.DisplayableType.Stat))
+                    pb.publishStat(peoplePerRoom[room].Keys.Count, room, Publisher.StatType.InstantaneousPeopleCount);
             }
         }
 

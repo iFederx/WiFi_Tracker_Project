@@ -61,6 +61,7 @@
     <Compile Include="ConcurrentCircular.cs" />
     <Compile Include="ConcurrentDictionaryStack.cs" />
     <Compile Include="Context.cs" />
+    <Compile Include="DatabaseInterface.cs" />
     <Compile Include="DatabasePublisher.cs" />
     <Compile Include="Device.cs" />
     <Compile Include="GuiInterface.cs" />
@@ -69,6 +70,7 @@
     <Compile Include="PositionTools.cs" />
     <Compile Include="Publisher.cs" />
     <Compile Include="Station.cs" />
+    <Compile Include="StationHandler.cs" />
     <Compile Include="User.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>

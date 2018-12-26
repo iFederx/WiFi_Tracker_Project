@@ -7,19 +7,18 @@ using System.Xml.Serialization;
 
 namespace Server
 {
-    [Serializable()]
-    [XmlInclude(typeof(Interpolators.Lagrangian))]
-    [XmlInclude(typeof(Interpolators.MonotoneCubicHermite))]
     public abstract class Interpolator
     {
         public Interpolator(double[] x, double[] y) { }
+        protected internal Interpolator(){ }
         public abstract double calc(double x);
     }
     class Interpolators
     {
         public class Lagrangian : Interpolator
         {
-            double[] interpolator;
+            protected internal double[] interpolator;
+            protected internal Lagrangian() { }
             public Lagrangian(double[] x, double[] y) : base(x, y)
             {
                 interpolator = new double[x.Length];
@@ -55,9 +54,10 @@ namespace Server
 
         public class MonotoneCubicHermite : Interpolator
         {
-            double[] xp;
-            double[] yp;
-            double[] m;
+            protected internal double[] xp;
+            protected internal double[] yp;
+            protected internal double[] m;
+            protected internal MonotoneCubicHermite() { }
             public MonotoneCubicHermite(double[] x, double[] y) : base(x, y)
             {
                 double dpre=0;
@@ -125,6 +125,71 @@ namespace Server
                 return ymin * (2 * t * t * t - 3 * t * t + 1) + h * mmin * (t * t * t - 2 * t * t + t) + ymax * (-2 * t * t * t + 3 * t * t) + h * mmax * (t * t * t - t * t);
             }
         }
-
+        private static void DoubleArrayToByteArray(byte[] ByteArr, int offset, double[] DoubleArr)
+        {
+            for (int j = 0; j < DoubleArr.Length; j++)
+            {
+                Array.Copy(BitConverter.GetBytes(DoubleArr[j]), 0, ByteArr, sizeof(double) * j + offset, sizeof(double));
+            }
+        }
+        private static void ByteArrayToDoubleArray(double[] DoubleArr, int length, byte[] ByteArr, int offset)
+        {
+            for(int j=0;j<length;j++)
+            {
+                DoubleArr[j] = BitConverter.ToDouble(ByteArr, offset);
+                offset += sizeof(double);
+            }
+        }
+        public static byte[] serialize(Interpolator i)
+        {
+            byte[] ris;
+            if (i is Lagrangian)
+            {
+                Lagrangian l = (Lagrangian)i;
+                if (l.interpolator.Length > 255)
+                    throw new InsufficientMemoryException();
+                ris = new byte[2 + l.interpolator.Length * sizeof(double)];
+                ris[0] = (byte)'L';
+                ris[1] = (byte)l.interpolator.Length;
+                DoubleArrayToByteArray(ris, 2, l.interpolator);
+            }
+            else if(i is MonotoneCubicHermite)
+            {
+                MonotoneCubicHermite m = (MonotoneCubicHermite)i;
+                if (m.xp.Length > 255)
+                    throw new InsufficientMemoryException();
+                ris = new byte[2 + 3 * m.xp.Length * sizeof(double)];
+                ris[0] = (byte)'M';
+                ris[1] = (byte) m.xp.Length;
+                DoubleArrayToByteArray(ris, 2, m.xp);
+                DoubleArrayToByteArray(ris, 2 + m.xp.Length * sizeof(double), m.yp);
+                DoubleArrayToByteArray(ris, 2 + 2 * m.xp.Length * sizeof(double), m.m);
+            }
+            else
+                throw new NotSupportedException();
+            return ris;
+        }
+        public static Interpolator deserialize(byte[] arr)
+        {
+            switch((char)arr[0])
+            {
+                case 'L':
+                    Lagrangian ris = new Lagrangian();
+                    ris.interpolator = new double[arr[1]];
+                    ByteArrayToDoubleArray(ris.interpolator, ris.interpolator.Length, arr, 2);
+                    return ris;
+                case 'M':
+                    MonotoneCubicHermite r = new MonotoneCubicHermite();
+                    r.xp = new double[arr[1]];
+                    r.yp = new double[arr[1]];
+                    r.m = new double[arr[1]];
+                    ByteArrayToDoubleArray(r.xp, r.xp.Length, arr, 2);
+                    ByteArrayToDoubleArray(r.yp, r.xp.Length, arr, 2 + r.xp.Length*sizeof(double));
+                    ByteArrayToDoubleArray(r.m, r.xp.Length, arr, 2 + 2 * r.xp.Length * sizeof(double));
+                    return r;
+                default:
+                    throw new NotSupportedException();
+            }
+        }
     }
 }

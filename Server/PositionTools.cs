@@ -8,6 +8,10 @@ namespace Server
 {
     class PositionTools
     {
+        private static double[] stdDist = { normalizeDistance(0.25), normalizeDistance(1), normalizeDistance(4), normalizeDistance(8), normalizeDistance(16), normalizeDistance(32), normalizeDistance(64)};
+        private static double[] stdRssi = { normalizeRSSI(-30), normalizeRSSI(-50), normalizeRSSI(-70), normalizeRSSI(-80), normalizeRSSI(-90), normalizeRSSI(-100), normalizeRSSI(-110)};
+        internal static Interpolator StandardShortInterpolator = new Interpolators.MonotoneCubicHermite(stdRssi, stdDist);
+        internal static Interpolator StandardLongInterpolator = new Interpolators.Lagrangian(stdRssi, stdDist);
         public class Point
         {
             public double X;
@@ -204,16 +208,24 @@ namespace Server
         {
             return -1.0 / RSSI;
         }
+        private static double normalizeDistance(double denormalizedDistance)
+        {
+            return Math.Pow(denormalizedDistance,0.5);
+        }
+        private static double denormalizeDistance(double normalizedDistance)
+        {
+            return Math.Pow(normalizedDistance, 2);
+        }
         private static double Rssi2Dis(Station receivingStation, double RSSI)
         {
             RSSI = normalizeRSSI(RSSI);
             double distance = receivingStation.shortInterpolator.calc(RSSI);
             if (double.IsNaN(distance))
                 distance = receivingStation.longInterpolator.calc(RSSI);
-            return distance*distance;//simulate ^4 power with 3 point interpolator
+            return denormalizeDistance(distance);//simulate ^4 power with 3 point interpolator
         }
 
-        internal static void calibrateInterpolator(double[] dist, double[] rssi, Station s)
+        internal static void calibrateInterpolators(double[] dist, double[] rssi, Station s)
         {
             //normalize
             double[] distance=new double[dist.Length];
@@ -224,7 +236,7 @@ namespace Server
             {
                 if (distance[i] == 0)
                     distance[i] = 0.1;
-                distance[i] = Math.Sqrt(distance[i]);
+                distance[i] = normalizeDistance(distance[i]);
                 RSSI[i] = normalizeRSSI(RSSI[i]);
             }
             Array.Sort(RSSI, distance);

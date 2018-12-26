@@ -20,10 +20,7 @@ namespace Server
         DateTime PositionReady = DateTime.MaxValue;
         PositionTools.Point CalibratingPosition = null;
         Int16 Round = 0;
-        private static double[] stdDist={0.25,1,4,8,16,32,64};
-        private static double[] stdRssi={-30,-50,-70,-80,-90,-100,-110};
-        internal static Interpolator stdShort=new Interpolators.MonotoneCubicHermite(stdDist,stdRssi);
-        internal static Interpolator stdLong=new Interpolators.Lagrangian(stdDist,stdRssi);
+        
         internal bool inCalibration
         {
             get
