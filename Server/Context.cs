@@ -82,7 +82,7 @@ namespace Server
             Station s=loadStation(NameMAC,handler);
             if(s==null&&AllowAsynchronous) //this is already the check if a configuration for the station exists or not
             {
-                //TODO_FEDE: open GUI, get info, then from that guiThread call createStation
+                //TODO_FEDE: open GUI, get info, then from that guiThread call createStation & then saveStation
                 return null;
             }
             return s;
@@ -99,7 +99,10 @@ namespace Server
         {
             return databaseInt.saveRoom(room.roomName,room.xlength,room.ylength);
         }
-
+        public bool deleteRoom(String RoomName)
+        {
+            return databaseInt.deleteRoom(RoomName);
+        }
         public Station loadStation(String NameMAC, StationHandler handler)
         {
             DatabaseInterface.StationInfo? si = databaseInt.loadStationInfo(NameMAC);
@@ -134,6 +137,10 @@ namespace Server
             si.longInterpolator = Interpolators.serialize(s.longInterpolator);
             return databaseInt.saveStationInfo(si); ;
         }
+        public bool deleteStation(String NameMAC)
+        {
+            return databaseInt.removeStation(NameMAC);
+        }
 
         public Station createStation(PositionTools.Room room, String NameMAC, double X, double Y,StationHandler handler)
         {
@@ -155,6 +162,10 @@ namespace Server
         {
             return stations[NameMAC];
         }
+        public IEnumerable<PositionTools.Room> getRooms()
+        {
+            return rooms.Values.ToArray<PositionTools.Room>();
+        }
         public PositionTools.Room getRoom(String name)
         {
             return rooms[name];
@@ -167,6 +178,18 @@ namespace Server
             locker.EnterWriteLock();
             List<Station> st = stationsPerRoom[room];
             st.Remove(s);
+            locker.ExitWriteLock();
+        }
+        public void removeRoom(String NameMAC)
+        {
+            PositionTools.Room room = rooms[NameMAC];
+            locker.EnterWriteLock();
+            foreach (Station s in stationsPerRoom[room].ToArray())
+            {
+                removeStation(s.NameMAC);
+                deleteStation(s.NameMAC);
+            }
+            rooms.TryRemove(room.roomName,out room);
             locker.ExitWriteLock();
         }
         public bool checkStationAliveness(PositionTools.Room room)

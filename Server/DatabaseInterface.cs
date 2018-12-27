@@ -43,5 +43,15 @@ namespace Server
         {
             return true;
         }
+
+        internal bool deleteRoom(string roomName)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal bool removeStation(string nameMAC)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -55,15 +55,15 @@ namespace Server
             Context ctx = new Context();
             Thread backgroundProcessManager = new Thread(new ThreadStart(ctx.orchestrate));
             backgroundProcessManager.Start();
-
             PositionTools.Room r=ctx.createRoom("TestRoom", 25, 25);
-            Station s1=ctx.createStation(r, "0.0", 0, 0);
-            PositionTools.calibrateInterpolator(y, x, s1);
-            Station s2 = ctx.createStation(r, "25.0", 25, 0);
-            PositionTools.calibrateInterpolator(y, x, s2);
-            Station s3 = ctx.createStation(r, "0.25", 0, 25);
-            PositionTools.calibrateInterpolator(y, x, s3);
-
+            StationHandler sh1=null,sh2=null,sh3 = null;
+            Station s1=ctx.createStation(r, "0.0", 0, 0,sh1);
+            PositionTools.calibrateInterpolators(y, x, s1);
+            Station s2 = ctx.createStation(r, "25.0", 25, 0,sh2);
+            PositionTools.calibrateInterpolators(y, x, s2);
+            Station s3 = ctx.createStation(r, "0.25", 0, 25,sh3);
+            PositionTools.calibrateInterpolators(y, x, s3);
+          
             Packet p = new Packet("abcde928", "Alice33Test",DateTime.Now,"","",0);
             p.received(s1, dist2RSSI(12.5));
             p.received(s2, dist2RSSI(12.5));
@@ -72,7 +72,7 @@ namespace Server
 
             Thread.Sleep(12000);
 
-            ctx.switchCalibration(true, r);
+            //ctx.switchCalibration(true, r);
 
             p = new Packet("abcde928", "Fastweb25Test", DateTime.Now, "", "", 0);
             p.received(s1, dist2RSSI(25));
@@ -80,7 +80,7 @@ namespace Server
             p.received(s3, dist2RSSI(0));
             ctx.getAnalyzer().sendToAnalysisQueue(p);
 
-            ctx.switchCalibration(false,r);
+            //ctx.switchCalibration(false,r);
 
             p = new Packet("abcde929", "Polito", DateTime.Now, "", "", 0);
             p.received(s1, dist2RSSI(0));
