@@ -22,6 +22,8 @@ namespace Server
         ReaderWriterLockSlim locker = new ReaderWriterLockSlim();
         DatabasePublisher databasePub;
         DatabaseInterface databaseInt;
+        List<Publisher> publishers;
+        Aggregator aggregator;
         public Context()
         {
             stations = new ConcurrentDictionary<String, Station>();
@@ -30,14 +32,14 @@ namespace Server
             deviceMap = new ConcurrentDictionaryStack<string, Device>();
             peoplePerRoom = new ConcurrentDictionary<PositionTools.Room, ConcurrentDictionary<Device,byte>>();
             databaseInt = new DatabaseInterface();
-            List<Publisher> pb = new List<Publisher>();
+            publishers = new List<Publisher>();
             databasePub = new DatabasePublisher();
             GuiInterface guiPub = new GuiInterface();
-            pb.Add(databasePub);
-            pb.Add(guiPub);
-            Aggregator ag = new Aggregator(pb);
-            pb.Add(ag);
-            analyzer = new AnalysisEngine(pb,peoplePerRoom,deviceMap);
+            publishers.Add(databasePub);
+            publishers.Add(guiPub);
+            aggregator = new Aggregator(publishers);
+            publishers.Add(aggregator);
+            analyzer = new AnalysisEngine(publishers, peoplePerRoom,deviceMap);
             calibrator = new Calibrator(analyzer);            
         }
 
@@ -47,11 +49,15 @@ namespace Server
             analyzerT.Start();
             Thread databaseT = new Thread(new ThreadStart(databasePub.databaseProcess));
             databaseT.Start();
+            Thread aggregatorT = new Thread(new ThreadStart(aggregator.aggregatorProcess));
+            aggregatorT.Start();
             analyzerT.Join();
             calibrator.kill(); //should not be necessary
             //if analyzer completes, kill everything: to shutdown application, kill analyzer!
             databasePub.kill();
+            aggregator.kill();
             databaseT.Join();
+            aggregatorT.Join();
             Environment.Exit(0);            
         }
         public Analyzer getAnalyzer()
@@ -123,6 +129,9 @@ namespace Server
             stationsPerRoom[room].Add(s);
             stations[s.NameMAC] = s;
             locker.ExitWriteLock();
+            foreach (Publisher pb in publishers)
+                if (pb.supportsOperation(Publisher.DisplayableType.StationUpdate))
+                    pb.publishStationUpdate(room,Publisher.EventType.Appear);
             return s;
         }
 
@@ -155,6 +164,9 @@ namespace Server
             stationsPerRoom[room].Add(s);
             stations[s.NameMAC] = s;
             locker.ExitWriteLock();
+            foreach (Publisher pb in publishers)
+                if (pb.supportsOperation(Publisher.DisplayableType.StationUpdate))
+                    pb.publishStationUpdate(room,Publisher.EventType.Appear);
             return s;
         }
 
@@ -179,6 +191,9 @@ namespace Server
             List<Station> st = stationsPerRoom[room];
             st.Remove(s);
             locker.ExitWriteLock();
+            foreach (Publisher pb in publishers)
+                if (pb.supportsOperation(Publisher.DisplayableType.StationUpdate))
+                    pb.publishStationUpdate(room,Publisher.EventType.Disappear);
         }
         public void removeRoom(String NameMAC)
         {
@@ -255,6 +270,9 @@ namespace Server
             locker.ExitWriteLock();
             if(r!=null)
                 peoplePerRoom.TryAdd(r, new ConcurrentDictionary<Device,byte>());
+            foreach (Publisher pb in publishers)
+                if (pb.supportsOperation(Publisher.DisplayableType.RoomUpdate))
+                    pb.publishRoomUpdate(r,Publisher.EventType.Appear);
             return r;
         }
 

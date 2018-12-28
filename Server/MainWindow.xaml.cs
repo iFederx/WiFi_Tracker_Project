@@ -21,25 +21,7 @@ namespace Server
     /// </summary>
     public partial class MainWindow : Window
     {
-        public static double cost(double[] p,object p2)
-        {
-            double[][] p2x=(double[][])p2;
-            double sum = 0;
-            double sumsum = 0;
-            for(int i=0;i<p2x.Length;i++)
-            {
-                sumsum = 0;
-                for (int j = 0; j < p.Length; j++)
-                {
-                    sumsum += (p2x[i][j] * p[j]);
-                }
-                sumsum -= (p2x[i][p.Length]);
-                sum += Math.Pow(sumsum, 2);
-            }
-            return sum;
-
-        }
-      
+              
         public double dist2RSSI(double dist)
         {
             if (dist < 1)
@@ -70,6 +52,14 @@ namespace Server
             p.received(s3, dist2RSSI(Math.Sqrt(12.5 * 12.5 + 25 * 25)));
             ctx.getAnalyzer().sendToAnalysisQueue(p);
 
+            Thread.Sleep(1500);
+
+            p = new Packet("abcde928e", "Fastweb25Test", DateTime.Now, "", "", 0);
+            p.received(s1, dist2RSSI(25));
+            p.received(s2, dist2RSSI(Math.Sqrt(25 * 25 + 25 * 25)));
+            p.received(s3, dist2RSSI(0));
+            ctx.getAnalyzer().sendToAnalysisQueue(p);
+
             Thread.Sleep(12000);
 
             //ctx.switchCalibration(true, r);
@@ -88,7 +78,7 @@ namespace Server
             p.received(s3, dist2RSSI(25));
             ctx.getAnalyzer().sendToAnalysisQueue(p);
 
-            Thread.Sleep(2000);
+            Thread.Sleep(8000);
             ctx.getAnalyzer().kill();
         }
     }

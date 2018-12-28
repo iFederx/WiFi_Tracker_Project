@@ -32,7 +32,7 @@ namespace Server
         {
             get
             {
-                return (int)DisplayableType.DeviceDevicePosition | (int)DisplayableType.Rename | (int)DisplayableType.SSID | (int)DisplayableType.Stat;
+                return (int)DisplayableType.DeviceDevicePosition | (int)DisplayableType.Rename | (int)DisplayableType.SSID | (int)DisplayableType.AggregatedStat;
             }
         }
         BlockingCollection<Displayable> todo = new BlockingCollection<Displayable>();
@@ -41,10 +41,14 @@ namespace Server
             todo.Add(new Displayable(d, null, e, DisplayableType.DeviceDevicePosition));
             System.Diagnostics.Debug.Print("DEVICE POSITION: " + d.lastPosition.X + " " + d.lastPosition.Y);
         }
-        internal override void publishStat(double stat, PositionTools.Room r, StatType s)
+        internal override void publishStat(double stat, PositionTools.Room r, DateTime statTime, StatType s)
         {
-            todo.Add(new Displayable(stat, r, s, DisplayableType.Stat));
-            System.Diagnostics.Debug.Print("ROOM STAT: " + r.roomName + " count: " + stat);
+            todo.Add(new Displayable(stat, r, s, DisplayableType.AggregatedStat));
+            if(s==StatType.OneSecondPeopleCount)
+                System.Diagnostics.Debug.Print("DB ROOM 1sec STAT: " + r.roomName + " count: " + stat);
+            else
+                System.Diagnostics.Debug.Print("DB ROOM avg STAT: " + r.roomName + " count: " + stat);
+
         }
         internal override void publishRename(String oldId, String newId)
         {

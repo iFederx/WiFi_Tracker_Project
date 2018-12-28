@@ -19,7 +19,7 @@ namespace Server
         List<Publisher> publishers;
         public AnalysisEngine(List<Publisher> pb, ConcurrentDictionary<PositionTools.Room, ConcurrentDictionary<Device,byte>> ppr, ConcurrentDictionaryStack<String, Device> dm)
         {
-            publishers = pb;
+            publishers = new List<Publisher>(pb);
             peoplePerRoom = ppr;
             deviceMap = dm;
 
@@ -81,7 +81,7 @@ namespace Server
                     if (pb.supportsOperation(Publisher.DisplayableType.SSID))
                         pb.publishSSID(d,p.RequestedSSID);
             }
-            if (d.lastPosition!=null&&d.lastPosition.positionDate.AddSeconds(10) > p.Timestamp)
+            if (d.lastPosition!=null && d.lastPosition.positionDate.AddSeconds(6) > p.Timestamp && d.lastPosition.room!=p.Receivings[0].ReceivingStation.location.room)
                 return;
             locateAndPublish(d, p);
             deviceMap.upsert(d.identifier, d, (old, cur) => { return cur; });//single thread safe only. To make it multithread i should also copy other fields
@@ -194,8 +194,8 @@ namespace Server
             {
                 if(pb.supportsOperation(Publisher.DisplayableType.DeviceDevicePosition))
                     pb.publishPosition(d, action);
-                if(pb.supportsOperation(Publisher.DisplayableType.Stat))
-                    pb.publishStat(peoplePerRoom[room].Keys.Count, room, Publisher.StatType.InstantaneousPeopleCount);
+                if(pb.supportsOperation(Publisher.DisplayableType.SimpleStat))
+                    pb.publishStat(peoplePerRoom[room].Keys.Count, room, d.lastPosition.positionDate,Publisher.StatType.InstantaneousPeopleCount);
             }
         }
 

@@ -12,7 +12,7 @@ namespace Server
         {
             get
             {
-                return (int)DisplayableType.DeviceDevicePosition | (int)DisplayableType.Stat;
+                return (int)DisplayableType.DeviceDevicePosition | (int)DisplayableType.AggregatedStat | (int) DisplayableType.RoomUpdate | (int) DisplayableType.StationUpdate;
             }
         }
 
@@ -21,13 +21,16 @@ namespace Server
             System.Diagnostics.Debug.Print("DEVICE POSITION: " + d.lastPosition.X + " " + d.lastPosition.Y);
         }
 
-        internal override void publishRename(string oldId, string newId) { throw new NotImplementedException(); }
-
-        internal override void publishSSID(Device d, string SSID) { throw new NotImplementedException(); }
-
-        internal override void publishStat(double stat, PositionTools.Room r, StatType s)
+        internal override void publishStat(double stat, PositionTools.Room r, DateTime statTime, StatType s)
         {
-            System.Diagnostics.Debug.Print("ROOM STAT: " + r.roomName + " count: " + stat);
+            System.Diagnostics.Debug.Print("GUI ROOM STAT: " + r.roomName + " count: " + stat);
         }
+        internal override void publishRoomUpdate(PositionTools.Room r, EventType e)
+        {
+        }
+        internal override void publishStationUpdate(PositionTools.Room r, EventType e)
+        {
+        }
+
     }
 }
