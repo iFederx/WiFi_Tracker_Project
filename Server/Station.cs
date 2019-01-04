@@ -11,8 +11,8 @@ namespace Server
         internal PositionTools.Position location; //contains also Room info
         internal String NameMAC;
         internal DateTime lastHearthbeat;
-        internal DateTime addedAt;
-        public enum Status {Alive,Zombie};
-        Status stat;
+        internal Interpolator shortInterpolator=null;
+        internal Interpolator longInterpolator=null;
+        internal StationHandler handler=null;
     }
 }

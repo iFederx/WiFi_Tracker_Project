@@ -10,12 +10,20 @@ namespace Server
 {
     class AnalysisEngine:Analyzer
     {
+        ConcurrentDictionaryStack<String, Device> deviceMap; //id, corresponding device
         BlockingCollection<Packet> AnalysisQueue = new BlockingCollection<Packet>(new ConcurrentQueue<Packet>());
-        ConcurrentDictionaryStack<String, Device> deviceMap = new ConcurrentDictionaryStack<String, Device>();
-        ConcurrentDictionary<String, Byte> anoniDevices = new ConcurrentDictionary<string, byte>();
-        CancellationTokenSource t = new CancellationTokenSource();
+        Dictionary<String, String> anoniDevices = new Dictionary<string, string>(); //mac, corresponding id
+        ConcurrentDictionary<PositionTools.Room, ConcurrentDictionary<Device,byte>> peoplePerRoom;
+        volatile CancellationTokenSource t;
         volatile bool killed = false;
-        int anPack = 0;
+        List<Publisher> publishers;
+        public AnalysisEngine(List<Publisher> pb, ConcurrentDictionary<PositionTools.Room, ConcurrentDictionary<Device,byte>> ppr, ConcurrentDictionaryStack<String, Device> dm)
+        {
+            publishers = new List<Publisher>(pb);
+            peoplePerRoom = ppr;
+            deviceMap = dm;
+
+        }
         /// <summary>
         /// Lanciare questo metodo ogni qual volta un pacchetto è "maturo" (ovvero ricevuto da tutte le stazioni o andato in timeout).
         /// </summary>
@@ -25,27 +33,23 @@ namespace Server
         {
             AnalysisQueue.Add(p);
         }
-        private void analyzerProcess()
+        public void analyzerProcess()
         {
+            t = new CancellationTokenSource(10000);
             while (!killed)
             {
                 Packet p;
                 try
                 {
                     p = AnalysisQueue.Take(t.Token);
-                    analyzePacket(p);
-                    anPack++;
-                   
-                    if (anPack == 64)
-                    {
-                        updateLongTerm();
-                        coalesceAnonymous();
-                        anPack = 0;
-                    }
+                    System.Diagnostics.Debug.Print("Packet popped");
+                    analyzePacket(p);                    
                 }
-                catch (Exception)//fatal
+                catch (OperationCanceledException)
                 {
-                    killed = true;
+                    coalesceAnonymous();
+                    householdCleaning();
+                    t = new CancellationTokenSource(10000);
                 }
             }
         }
@@ -53,58 +57,163 @@ namespace Server
         {
             Device d;
             bool anew;
-            if (anew=!deviceMap.getKey(p.SendingMAC, out d))
+            String id = p.SendingMAC;
+            String id2;
+            if (anoniDevices.TryGetValue(id, out id2))
+                id = id2;
+            if (anew=!deviceMap.getKey(id, out d))
             {
                 d = new Device();
                 d.MAC = p.SendingMAC;
+                d.identifier = d.MAC;
+                d.HTCapabilities = p.HTCapabilities;
                 if(isMACLocal(p.SendingMAC))
                 {
                     d.anonymous = true;
-                    anoniDevices.TryAdd(p.SendingMAC, 0);
+                    d.identifier = "ANON-" +DateTime.Now.ToShortDateString()+"."+DateTime.Now.ToShortTimeString()+"-"+ d.MAC.GetHashCode().ToString("X").Substring(0,4);
+                    anoniDevices.Add(p.SendingMAC, d.identifier);
                 }
-                d.firstSeen = p.Timestamp;
             }
-            d.lastSeen = p.Timestamp;
-            d.dirty = true;
-            if(p.RequestedSSID!=null)
+            if (p.RequestedSSID != null && !d.requestedSSIDs.ContainsKey(p.RequestedSSID))
             {
-                d.requestedSSIDs.Add(p.RequestedSSID);
+                d.requestedSSIDs.TryAdd(p.RequestedSSID,0);
+                foreach (Publisher pb in publishers)
+                    if (pb.supportsOperation(Publisher.DisplayableType.SSID))
+                        pb.publishSSID(d,p.RequestedSSID);
             }
-            locate(d, p);
-            if (anew)
-            {
-                deviceMap.upsert(d.MAC, d,(old,cur)=> { return cur; });//single thread safe only
-            }
+            if (d.lastPosition!=null && d.lastPosition.positionDate.AddSeconds(6) > p.Timestamp && d.lastPosition.room!=p.Receivings[0].ReceivingStation.location.room)
+                return;
+            locateAndPublish(d, p);
+            deviceMap.upsert(d.identifier, d, (old, cur) => { return cur; });//single thread safe only. To make it multithread i should also copy other fields
         }
 
         private void coalesceAnonymous()
         {
-            //scansiona la tabella anonimous, provando a confrontare tutti gli elementi a due a due per verificare se possono essere lo stesso.
-            //se c'è un pairing, elimina la vecchia identità da anoniDevices, 
-            //abbi inoltre cura di unire i due oggetti in uno solo, salvato sotto il nuovo mac, ed elimina la entry con il vecchio MAC da mapDevices
-            throw new NotImplementedException();
+            List<String> anoni=anoniDevices.Values.ToList<String>();
+            Device A=null;
+            Device B=null;
+            Device first;
+            Device second;
+            int maxpoint;
+            Device bestMatch=null;
+            int curpoint;
+            for(int i=0;i<anoni.Count;i++)
+            {
+                deviceMap.getKey(anoni[i], out A);
+                maxpoint = 0;
+                for(int j=i+1;j<anoni.Count;j++)
+                {
+                    deviceMap.getKey(anoni[j], out B);
+                    curpoint = 0;
+                    if(A.firstPosition.positionDate>B.firstPosition.positionDate)
+                    {
+                        second = A;
+                        first = B;
+                    }
+                    else
+                    {
+                        first = A;
+                        second = B;
+                    }
+                    if (first.lastPosition.positionDate.AddMinutes(3) > DateTime.Now || first.lastPosition.positionDate > second.firstPosition.positionDate || first.lastPosition.room!=second.firstPosition.room)
+                        continue;
+                    curpoint += Math.Max(0, 70 - (int)second.firstPosition.positionDate.Subtract(first.lastPosition.positionDate).TotalSeconds);
+                    if(first.lastPosition.uncertainity!=double.MaxValue&&second.firstPosition.uncertainity!=double.MaxValue)
+                        curpoint += Math.Max(0, 40 - 7 * (int)first.lastPosition.Subtract(second.firstPosition).Module());
+                    if (Math.Abs(Convert.ToInt64(first.MAC, 16) - Convert.ToInt64(second.MAC, 16)) < 2)
+                        curpoint += 100;
+                    if (first.HTCapabilities != null && first.HTCapabilities == second.HTCapabilities)
+                        curpoint += 30;
+                    if (curpoint>maxpoint)
+                    {
+                        maxpoint = Math.Min(100,curpoint);
+                        bestMatch = B;
+                    }
+                }
+                if(maxpoint>50)
+                {
+                    B = bestMatch;
+                    if(A.firstPosition.positionDate>bestMatch.firstPosition.positionDate)
+                    {
+                        B = A;
+                        A = bestMatch;
+                    }
+                    placeInRoomAndPublish(A.lastPosition.room,A,Publisher.EventType.Disappear);
+                    B.firstPosition = A.firstPosition;
+                    B.aliases.PushRange(A.aliases.ToArray());
+                    B.aliases.Push(new Device.Alias(A.MAC, maxpoint));
+                    foreach (String ssid in A.requestedSSIDs.Keys)
+                        B.requestedSSIDs.TryAdd(ssid, 0);
+                    deviceMap.remove(B.identifier);
+                    foreach (Publisher pb in publishers)
+                        if(pb.supportsOperation(Publisher.DisplayableType.Rename))
+                            pb.publishRename(B.identifier, A.identifier);
+                    B.identifier = A.identifier;
+                    deviceMap.upsert(B.identifier,B,(d1,d2)=> { return d2; });
+                    anoniDevices.Remove(A.MAC);
+                    anoniDevices[B.MAC]= B.identifier;
+                    
+                }
+            }
         }
        
         private bool isMACLocal(string sendingMAC)
         {
-            throw new NotImplementedException();
+            long mac = Convert.ToInt64(sendingMAC, 16);
+            return (mac & 0x020000000000) > 0;
         }
-        private void locate(Device d,Packet p)
+        private void locateAndPublish(Device d,Packet p)
         {
-            throw new NotImplementedException();
+            PositionTools.Room oldRoom =(d.lastPosition!=null)?d.lastPosition.room:null;
+            d.lastPosition = PositionTools.triangulate(p.Receivings);
+            d.lastPosition.positionDate = p.Timestamp;
+            Publisher.EventType e = Publisher.EventType.Update;
+            if (oldRoom==null)
+            {
+                d.firstPosition = d.lastPosition;
+                e = Publisher.EventType.Appear;
+            }
+            else if(oldRoom!=d.lastPosition.room)
+            {
+                placeInRoomAndPublish(oldRoom,d,Publisher.EventType.MoveOut);
+                e = Publisher.EventType.MoveIn;
+            }
+            placeInRoomAndPublish(d.lastPosition.room, d, e);
+
         }
 
-             
+        private void placeInRoomAndPublish(PositionTools.Room room, Device d, Publisher.EventType action)
+        {
+            byte dummy;
+            //optionally here insert to update only if device has more than 5 minutes of history
+           if (action==Publisher.EventType.Appear||action==Publisher.EventType.MoveIn)
+                peoplePerRoom[room].TryAdd(d,0);
+            else if(action!=Publisher.EventType.Update)
+                peoplePerRoom[room].TryRemove(d,out dummy);
+            foreach (Publisher pb in publishers)
+            {
+                if(pb.supportsOperation(Publisher.DisplayableType.DeviceDevicePosition))
+                    pb.publishPosition(d, action);
+                if(pb.supportsOperation(Publisher.DisplayableType.SimpleStat))
+                    pb.publishStat(peoplePerRoom[room].Keys.Count, room, d.lastPosition.positionDate,Publisher.StatType.InstantaneousPeopleCount);
+            }
+        }
+
         public void kill()
         {
             killed = true;
             t.Cancel();
         }
         
-        private void updateLongTerm()
+        private void householdCleaning()
         {
-            //elimina da tabella deviceMap i vecchi dispositivi, avendo cura di eliminarlo anche da anoniDevices, e salvali nel db
-            throw new NotImplementedException();
+            Device removed;
+            while (deviceMap.popConditional((Device d)=>{ return d.lastPosition.positionDate.AddMinutes(5) < DateTime.Now; },(Device d)=> { return d.identifier; },out removed))
+            {
+                if (removed.anonymous)
+                    anoniDevices.Remove(removed.MAC);
+                placeInRoomAndPublish(removed.lastPosition.room,removed,Publisher.EventType.Disappear);
+            }
         }
     }
 }

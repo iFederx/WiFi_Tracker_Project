@@ -65,7 +65,7 @@ namespace Server
                 sl.Enter(ref lockTaken);
                 storage[head] = value;
                 head = (head + 1) & bitmask;
-                wrapped = (head == 0)|wrapped;
+                wrapped = (head == 0) | wrapped;
             }
             finally
             {
