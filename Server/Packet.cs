@@ -19,7 +19,7 @@ namespace Server
             }
         }
         internal List<Reception> Receivings = new List<Reception>();
-        internal Packet(String _sendingMAC, String _requestedSSID, DateTime _timestamp, String _hash, String _htcapabilities,Int64 _sequenceNumber)
+        internal Packet(String _sendingMAC, String _requestedSSID, DateTime _timestamp, String _hash, String _htcapabilities, Int64 _sequenceNumber)
         {
             SendingMAC = _sendingMAC;
             RequestedSSID = _requestedSSID;
