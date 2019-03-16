@@ -9,6 +9,7 @@ Debug/
 *.lock
 *.suo
 *.sln
+*.DS_Store
 Server/.vs/Server/v15/.suo
 Server/.vs/Server/xs/UserPrefs.xml
 Server/.vs/Server/v14/.suo
