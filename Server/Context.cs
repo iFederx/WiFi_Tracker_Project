@@ -39,7 +39,7 @@ namespace Server
             publishers.Add(guiPub);
             aggregator = new Aggregator(publishers);
             publishers.Add(aggregator);
-            analyzer = new AnalysisEngine(publishers, peoplePerRoom,deviceMap);
+            analyzer = new AnalysisEngine(publishers, peoplePerRoom, deviceMap);
             calibrator = new Calibrator(analyzer);            
         }
 

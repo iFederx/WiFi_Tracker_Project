@@ -1,0 +1,14 @@
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\bin\Release\ServerSocketWpfApp.exe.config
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\bin\Release\ServerSocketWpfApp.exe
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\bin\Release\ServerSocketWpfApp.pdb
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Release\ServerSocketWpfApp.csprojAssemblyReference.cache
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Release\MainWindow.baml
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Release\MainWindow.g.cs
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Release\App.g.cs
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Release\ServerSocketWpfApp_MarkupCompile.cache
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Release\ServerSocketWpfApp.g.resources
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Release\ServerSocketWpfApp.Properties.Resources.resources
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Release\ServerSocketWpfApp.csproj.GenerateResource.cache
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Release\ServerSocketWpfApp.csproj.CoreCompileInputs.cache
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Release\ServerSocketWpfApp.exe
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Micro\ServerEcho_Wpf\obj\Release\ServerSocketWpfApp.pdb

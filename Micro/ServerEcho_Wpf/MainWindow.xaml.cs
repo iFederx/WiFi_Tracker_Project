@@ -12,7 +12,6 @@ namespace ServerSocketWpfApp
 {
     public partial class MainWindow : Window
     {
-        //all objects that I need in the whole program
         SocketPermission permission;
         Socket sListener;
         IPEndPoint ipEndPoint;
@@ -23,9 +22,7 @@ namespace ServerSocketWpfApp
         public MainWindow()
         {
             InitializeComponent();
-            this.WindowStartupLocation = WindowStartupLocation.CenterOwner;
-            tbAux.SelectionChanged += tbAux_SelectionChanged; //new task when tbAux changes
-            //tbAux.Text = "Prova";
+            tbAux.SelectionChanged += tbAux_SelectionChanged;
 
             Start_Button.IsEnabled = true;
             StartListen_Button.IsEnabled = false;
@@ -33,7 +30,7 @@ namespace ServerSocketWpfApp
 
         private void tbAux_SelectionChanged(object sender, RoutedEventArgs e)
         {
-            this.Dispatcher.BeginInvoke(DispatcherPriority.Normal, (ThreadStart) delegate() //also lambda was good
+            this.Dispatcher.BeginInvoke(DispatcherPriority.Normal, (ThreadStart)delegate ()
             {
                 tbMsgReceived.Text = tbAux.Text;
             }
@@ -58,46 +55,46 @@ namespace ServerSocketWpfApp
         private void Start_Click(object sender, RoutedEventArgs e)
         {
             try
-            {
+            {              
 
-                /*// Resolves a host name to an IPHostEntry instance
+                /*// Resolves a host name to an IPHostEntry instance 
                 IPHostEntry ipHost = Dns.GetHostEntry();*/
 
-                // Gets first IP address associated with a localhost
+                // Gets first IP address associated with a localhost 
                 IPAddress ipAddr = IPAddress.Parse(GetLocalIPAddress());
 
-                // Creates a network endpoint
+                // Creates a network endpoint 
                 ipEndPoint = new IPEndPoint(ipAddr, 1500);
 
-                // Create one Socket object to listen the incoming connection
+                // Create one Socket object to listen the incoming connection 
                 sListener = new Socket(
                     ipAddr.AddressFamily,
                     SocketType.Stream,
                     ProtocolType.Tcp
                     );
-                sListener.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
 
-                // Associates a Socket with a local endpoint
+                // Associates a Socket with a local endpoint 
+                sListener.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, 1);
                 sListener.Bind(ipEndPoint);
 
-                tbStatus.Text = "Server started at: " + ipAddr.ToString();
+                tbStatus.Text = "Server started at: "+ipAddr.ToString();
 
                 Start_Button.IsEnabled = false;
                 StartListen_Button.IsEnabled = true;
                 Close_Button.IsEnabled = true;
             }
-            catch (Exception exc) { MessageBox.Show(exc.ToString() + "\n ciaone 5"); }
+            catch (Exception exc) { MessageBox.Show(exc.ToString()); }
         }
 
         private void Listen_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                // Places a Socket in a listening state and specifies the maximum
-                // Length of the pending connections queue
+                // Places a Socket in a listening state and specifies the maximum 
+                // Length of the pending connections queue 
                 sListener.Listen(10);
 
-                // Begins an asynchronous operation to accept an attempt
+                // Begins an asynchronous operation to accept an attempt 
                 AsyncCallback aCallback = new AsyncCallback(AcceptCallback);
                 sListener.BeginAccept(aCallback, sListener);
 
@@ -105,68 +102,68 @@ namespace ServerSocketWpfApp
 
                 StartListen_Button.IsEnabled = false;
             }
-            catch (Exception exc) { MessageBox.Show(exc.ToString() + "\n ciaone 4"); }
+            catch (Exception exc) { MessageBox.Show(exc.ToString()); }
         }
 
         public void AcceptCallback(IAsyncResult ar)
         {
             Socket listener = null;
 
-            // A new Socket to handle remote host communication
+            // A new Socket to handle remote host communication 
             Socket handler = null;
             try
             {
-                // Receiving byte array
+                // Receiving byte array 
                 byte[] buffer = new byte[1024];
-                // Get Listening Socket object
+                // Get Listening Socket object 
                 listener = (Socket)ar.AsyncState;
-                // Create a new socket
+                // Create a new socket 
                 handler = listener.EndAccept(ar);
 
-                // Using the Nagle algorithm
+                // Using the Nagle algorithm 
                 handler.NoDelay = false;
 
-                // Creates one object array for passing data
+                // Creates one object array for passing data 
                 object[] obj = new object[2];
                 obj[0] = buffer;
                 obj[1] = handler;
 
-                // Begins to asynchronously receive data
+                // Begins to asynchronously receive data 
                 handler.BeginReceive(
-                    buffer,        // An array of type Byt for received data
-                    0,             // The zero-based position in the buffer
-                    buffer.Length, // The number of bytes to receive
-                    SocketFlags.None,// Specifies send and receive behaviors
-                    new AsyncCallback(ReceiveCallback),//An AsyncCallback delegate
-                    obj            // Specifies infomation for receive operation
+                    buffer,        // An array of type Byt for received data 
+                    0,             // The zero-based position in the buffer  
+                    buffer.Length, // The number of bytes to receive 
+                    SocketFlags.None,// Specifies send and receive behaviors 
+                    new AsyncCallback(ReceiveCallback),//An AsyncCallback delegate 
+                    obj            // Specifies infomation for receive operation 
                     );
 
-                // Begins an asynchronous operation to accept an attempt
+                // Begins an asynchronous operation to accept an attempt 
                 AsyncCallback aCallback = new AsyncCallback(AcceptCallback);
                 listener.BeginAccept(aCallback, listener);
             }
-            catch (Exception exc) { MessageBox.Show(exc.ToString() + "\n ciaone 3"); }
+            catch (Exception exc) { MessageBox.Show(exc.ToString()); }
         }
 
         public void ReceiveCallback(IAsyncResult ar)
         {
             try
             {
-                // Fetch a user-defined object that contains information
+                // Fetch a user-defined object that contains information 
                 object[] obj = new object[2];
                 obj = (object[])ar.AsyncState;
 
-                // Received byte array
+                // Received byte array 
                 byte[] buffer = (byte[])obj[0];
 
-                // A Socket to handle remote host communication.
+                // A Socket to handle remote host communication. 
                 handler = (Socket)obj[1];
 
-                // Received message
+                // Received message 
                 string content = string.Empty;
 
 
-                // The number of bytes received.
+                // The number of bytes received. 
                 int bytesRead = handler.EndReceive(ar);
 
                 if (bytesRead > 0)
@@ -205,7 +202,7 @@ namespace ServerSocketWpfApp
                     );
                 }
             }
-            catch (Exception exc) { MessageBox.Show(exc.ToString() + "\n ciaone 2"); }
+            catch (Exception exc) { MessageBox.Show(exc.ToString()); }
         }
 
         private void Close_Click(object sender, RoutedEventArgs e)
@@ -214,20 +211,19 @@ namespace ServerSocketWpfApp
             {
                 if (sListener.Connected)
                 {
-                    sListener.Shutdown(SocketShutdown.Receive); //non basta fare close?
+                    sListener.Shutdown(SocketShutdown.Receive);
                     sListener.Close();
                 }
 
                 Close_Button.IsEnabled = false;
             }
-            catch (Exception exc) { MessageBox.Show(exc.ToString()+"\n ciaone 1"); }
+            catch (Exception exc) { MessageBox.Show(exc.ToString()); }
             Start_Button.IsEnabled = true;
         }
 
         private void Clean_Click(object sender, RoutedEventArgs e)
         {
             tbMsgReceived.Text = String.Empty;
-            tbAux.Text = String.Empty;
         }
     }
 }

@@ -13,3 +13,5 @@ C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Server\obj\Debug\Server.c
 C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Server\obj\Debug\Server.csproj.CoreCompileInputs.cache
 C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Server\obj\Debug\Server.exe
 C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Server\obj\Debug\Server.pdb
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Server\obj\Debug\StationAdder.g.cs
+C:\Users\Massimo\Documents\GitHub\WiFi_Tracker_Project\Server\obj\Debug\StationAdder.baml
