@@ -21,7 +21,7 @@ namespace Server
         }
         ConcurrentDictionary<PositionTools.Room,AvgBucket> stats=new ConcurrentDictionary<PositionTools.Room, AvgBucket>();
         List<Publisher> propagate;
-        Boolean killed = false;
+        volatile Boolean killed = false;
 
         public Aggregator(List<Publisher> p)
         {

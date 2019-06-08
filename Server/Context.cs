@@ -24,6 +24,7 @@ namespace Server
         DatabaseInterface databaseInt;
         List<Publisher> publishers;
         Aggregator aggregator;
+        LinkedList<Thread> threads = new LinkedList<Thread>();
         public Context()
         {
             stations = new ConcurrentDictionary<String, Station>();
@@ -31,16 +32,17 @@ namespace Server
             stationsPerRoom = new Dictionary<PositionTools.Room, List<Station>>();
             deviceMap = new ConcurrentDictionaryStack<string, Device>();
             peoplePerRoom = new ConcurrentDictionary<PositionTools.Room, ConcurrentDictionary<Device,byte>>();
-            databaseInt = new DatabaseInterface();
+            databaseInt = new DatabaseInterface(Properties.Settings.Default.ConnectionString);
             publishers = new List<Publisher>();
-            databasePub = new DatabasePublisher();
+            databasePub = new DatabasePublisher(databaseInt);
             GuiInterface guiPub = new GuiInterface();
             publishers.Add(databasePub);
             publishers.Add(guiPub);
             aggregator = new Aggregator(publishers);
             publishers.Add(aggregator);
             analyzer = new AnalysisEngine(publishers, peoplePerRoom,deviceMap);
-            calibrator = new Calibrator(analyzer);            
+            calibrator = new Calibrator(analyzer);
+            createRoom(PositionTools.externRoom);
         }
 
         public void orchestrate()
@@ -51,14 +53,9 @@ namespace Server
             databaseT.Start();
             Thread aggregatorT = new Thread(new ThreadStart(aggregator.aggregatorProcess));
             aggregatorT.Start();
-            analyzerT.Join();
-            calibrator.kill(); //should not be necessary
-            //if analyzer completes, kill everything: to shutdown application, kill analyzer!
-            databasePub.kill();
-            aggregator.kill();
-            databaseT.Join();
-            aggregatorT.Join();
-            Environment.Exit(0);            
+            threads.AddLast(analyzerT);
+            threads.AddLast(databaseT);
+            threads.AddLast(aggregatorT);
         }
         public Analyzer getAnalyzer()
         {
@@ -97,7 +94,7 @@ namespace Server
         public void loadRooms()
         {
             foreach (DatabaseInterface.RoomInfo ri in databaseInt.loadRooms())
-                createRoom(ri.RoomName, ri.Xlen, ri.Ylen);
+                createRoom(new PositionTools.Room(ri.RoomName, ri.Xlen, ri.Ylen));
             return;
         }
 
@@ -251,20 +248,16 @@ namespace Server
         /// <param name="yl"></param>
         /// <param name="saveToFile"></param>
         /// <returns>The created/instanciated Room object, null if it already exists</returns>
-        public PositionTools.Room createRoom(String name, double xl, double yl)
+        public PositionTools.Room createRoom(PositionTools.Room r)
         {
             //init station per room, user per room
-            PositionTools.Room r = new PositionTools.Room();
-            r.roomName = name;
-            r.xlength = xl;
-            r.ylength = yl;
             List<Station> ls = new List<Station>();
             locker.EnterWriteLock();
-            if (rooms.ContainsKey(name))
+            if (rooms.ContainsKey(r.roomName))
                 r = null;
             else
             {
-                rooms[name] = r;
+                rooms[r.roomName] = r;
                 stationsPerRoom[r] = ls;
             }
             locker.ExitWriteLock();
@@ -274,6 +267,20 @@ namespace Server
                 if (pb.supportsOperation(Publisher.DisplayableType.RoomUpdate))
                     pb.publishRoomUpdate(r,Publisher.EventType.Appear);
             return r;
+        }
+
+        public void kill()
+        {
+            analyzer.kill();
+            calibrator.kill(); //should not be necessary
+            databasePub.kill();
+            aggregator.kill();
+            foreach(Thread t in threads)
+            {
+                t.Join();
+            }
+            databaseInt.close();
+            Environment.Exit(0);
         }
 
 

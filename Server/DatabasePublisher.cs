@@ -3,29 +3,19 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Server
 {
     class DatabasePublisher:Publisher
     {
-        internal class Displayable
+        DatabaseInterface DBInt;
+        volatile CancellationTokenSource t = new CancellationTokenSource();
+        volatile Boolean killed = false;
+        public DatabasePublisher(DatabaseInterface di)
         {
-            internal Displayable(Object o1, Object o2, Object o3, DisplayableType t)
-            {
-                arg1 = o1;
-                arg2 = o2;
-                argtype = o3;
-                type = t;
-            }
-            Object arg1;
-            Object arg2;
-            Object argtype;
-            DisplayableType type;
-        }
-        public DatabasePublisher()
-        {
-            //TODO
+            DBInt = di;
         }
 
         internal override int SupportedOperations
@@ -38,17 +28,17 @@ namespace Server
         BlockingCollection<Displayable> todo = new BlockingCollection<Displayable>();
         internal override void publishPosition(Device d, EventType e)
         {
-            todo.Add(new Displayable(d, null, e, DisplayableType.DeviceDevicePosition));
+            if(e!=EventType.Disappear)
+                todo.Add(new Displayable(d, null, e, DisplayableType.DeviceDevicePosition));
             System.Diagnostics.Debug.Print("DEVICE POSITION: " + d.lastPosition.X + " " + d.lastPosition.Y);
         }
         internal override void publishStat(double stat, PositionTools.Room r, DateTime statTime, StatType s)
         {
             todo.Add(new Displayable(stat, r, s, DisplayableType.AggregatedStat));
-            if(s==StatType.OneSecondPeopleCount)
+            if (s==StatType.OneSecondPeopleCount)
                 System.Diagnostics.Debug.Print("DB ROOM 1sec STAT: " + r.roomName + " count: " + stat);
             else
                 System.Diagnostics.Debug.Print("DB ROOM avg STAT: " + r.roomName + " count: " + stat);
-
         }
         internal override void publishRename(String oldId, String newId)
         {
@@ -63,12 +53,51 @@ namespace Server
         }
         internal void databaseProcess()
         {
-            //TODO
+            Displayable item;
+            while (!killed)
+            {
+                try
+                {
+                    item = todo.Take(t.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    continue;
+                }
+                switch (item.type)
+                {
+                    case DisplayableType.AggregatedStat:
+                        {
+                            if ((StatType)item.argtype == StatType.OneSecondPeopleCount)
+                                DBInt.updateRoomCount((double)item.arg1, ((PositionTools.Room)item.arg2).roomName);
+                            else
+                                DBInt.addLTRoomCount((double)item.arg1, ((PositionTools.Room)item.arg2).roomName, DateTime.Now);
+                            break;
+                        }
+                    case DisplayableType.SSID:
+                        {
+                            DBInt.addRequestedSSID(((Device)item.arg1).identifier, (String)item.arg2);
+                            break;
+                        }
+                    case DisplayableType.Rename:
+                        {
+                            DBInt.renameDevice((String)item.arg1, (String)item.arg2);
+                            break;
+                        }
+                    case DisplayableType.DeviceDevicePosition:
+                        {
+                            Device d = (Device)item.arg1;
+                            DBInt.addDevicePosition(d.identifier,d.MAC,d.lastPosition.room.roomName,d.lastPosition.X,d.lastPosition.Y,d.lastPosition.positionDate);
+                            break;
+                        }
+                }
+            }
         }
 
         internal void kill()
         {
-            //TODO
+            killed = true;
+            t.Cancel();
         }
 
         

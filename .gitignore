@@ -16,3 +16,4 @@ Micro/ServerEcho_Wpf/.vs/ServerSocketWpfApp/xs/UserPrefs.xml
 *.ipch
 Server/Server.VC.db
 sh.exe.stackdump
+Server/packages/*

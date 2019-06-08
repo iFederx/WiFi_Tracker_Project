@@ -12,6 +12,8 @@ namespace Server
         private static double[] stdRssi = { normalizeRSSI(-30), normalizeRSSI(-50), normalizeRSSI(-70), normalizeRSSI(-80), normalizeRSSI(-90), normalizeRSSI(-100), normalizeRSSI(-110)};
         internal static Interpolator StandardShortInterpolator = new Interpolators.MonotoneCubicHermite(stdRssi, stdDist);
         internal static Interpolator StandardLongInterpolator = new Interpolators.Lagrangian(stdRssi, stdDist);
+        internal static Room externRoom = new Room("External", 0, 0);
+        private const double EXTERNAL_MARGIN = 1.5;
         public class Point
         {
             public double X;
@@ -76,6 +78,12 @@ namespace Server
             internal String roomName;
             internal Double xlength;
             internal Double ylength;
+            public Room(String room_Name,Double x_length, Double y_length)
+            {
+                this.roomName = room_Name;
+                this.xlength = x_length;
+                this.ylength = y_length;
+            }
             public override bool Equals(object obj)
             {
                 Room other = (Room)obj;
@@ -158,13 +166,25 @@ namespace Server
             if(p.uncertainity!=double.MaxValue)
             {
                 if (p.X < 0)
-                    p.X = 0;
+                    if (p.X > - EXTERNAL_MARGIN)
+                        p.X = 0;
+                    else
+                        return new Position(0, 0, externRoom);      
                 else if (p.X > p.room.xlength)
-                    p.X = p.room.xlength;
+                    if (p.X - p.room.xlength < EXTERNAL_MARGIN)
+                        p.X = p.room.xlength;
+                    else
+                        return new Position(0, 0, externRoom);
                 if (p.Y < 0)
-                    p.Y = 0;
+                    if(p.Y> - EXTERNAL_MARGIN)
+                        p.Y = 0;
+                    else
+                        return new Position(0, 0, externRoom);      
                 else if (p.Y > p.room.ylength)
-                    p.Y = p.room.ylength;
+                    if (p.Y - p.room.ylength < EXTERNAL_MARGIN)
+                        p.Y = p.room.ylength;
+                    else
+                        return new Position(0, 0, externRoom);
             }
             return p;
         }
