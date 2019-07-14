@@ -96,7 +96,7 @@ namespace Server
             {
                 room = r;
             }
-            public Position(double x, double y, Room r,Double u) : base(x, y)
+            public Position(double x, double y, Room r, Double u) : base(x, y)
             {
                 room = r;
                 uncertainity=u;
@@ -107,7 +107,7 @@ namespace Server
                 room = r;
             }
 
-            public Position(Point a,Room r, Double u):base(a)
+            public Position(Point a, Room r, Double u) : base(a)
             {
                 room = r;
                 uncertainity = u;

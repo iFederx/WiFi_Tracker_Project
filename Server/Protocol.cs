@@ -13,12 +13,17 @@ namespace Server
 {
     class Protocol
     {
+        private const int BUFFER_SIZE = 2048;
+        
         /// <summary>
         /// Interprets the command received through the socket           
         /// </summary>
         public static int Command(string text, Socket socket, int received)
-        { 
+        {
             int x;
+            int toReceive = 0;
+            int fileSize = 0;
+            long timestamp = 0;
             if (text.IndexOf("REGISTER(") > -1)
             {
                 int offset = text.IndexOf("REGISTER(");
@@ -45,44 +50,90 @@ namespace Server
             }
             else if ((x = text.IndexOf("FILE")) > -1)
             {
-                //leggere quanti byte aspettarsi
-                //ciclo: se se ne sono ricevuti di meno, lanciare una receive
-                //int offset = x + received
-                byte[] data = Encoding.UTF8.GetBytes(text);
-                string receivedPath = "./Received/"+"nomeSchedina"+"/";
-                //bbbb
-                int receivedBytesLen = socket.Receive(data, received, 2048, SocketFlags.None);
-                received += receivedBytesLen;
-                //tttt
-                receivedBytesLen = socket.Receive(data, received, 2048, SocketFlags.None);
-                received += receivedBytesLen;
-                //file
-                receivedBytesLen = socket.Receive(data, received, 2048, SocketFlags.None);
-                received += receivedBytesLen;
-                int fileNameLen = BitConverter.ToInt32(data, 0);
-                string fileName = Encoding.ASCII.GetString(data, 4, fileNameLen) + ".txt";
+                //FILE\r\n BBBB TTTT 010101010101010101010 
+                
+                byte[] buffer = Encoding.UTF8.GetBytes(text);
+                byte[] data = new byte[BUFFER_SIZE];
+                //copio l'array "data" nel buffer di ricezione
+                for (int i=0; i<received; i++)
+                {
+                    data[i] = buffer[i];
+                }
+
+                while (received < 14)
+                {
+                    //TODO: ricevere di nuovo
+                    //bbbb
+                    int receivedBytesLen = socket.Receive(data, received, BUFFER_SIZE - received, SocketFlags.None);
+                    received += receivedBytesLen;
+                }
+
+                //ora ho ricevuto i metadati
+                if (received > 14)
+                {
+                    //leggere quanti byte si devono ricevere e timestamp
+                    //System.Net.IPAddress.NetworkToHostOrder(data);
+                    byte[] fileSizeBytes = new byte[4];
+                    byte[] timestampBytes = new byte[4];
+                    byte[] timestampBytesReversed = new byte[4];
+
+                    for (int i = 0; i < 4; i++)
+                    {
+                        fileSizeBytes[3-i] = data[i+6];
+                    }
+                    for (int i = 0; i < 4; i++)
+                    {
+                        timestampBytes[3-i] = data[i + 10];
+                    }
+                    
+                    fileSize = BitConverter.ToInt32(fileSizeBytes, 0);
+                    timestamp = BitConverter.ToInt32(timestampBytes, 0); //timestamp errato lato ESP
+                    toReceive = fileSize - received + 14;
+                    
+                    //var toReceive2 = IPAddress.NetworkToHostOrder(toReceive);
+                    //string fileName = Encoding.ASCII.GetString(data[], 4, fileNameLen) + ".txt";
+                }
+                
+                //creazione file di ricezione
+                string receivingFolderPath = "./Received/" + "nomeSchedina" + "/";
+                //creare cartella se non esiste
+                if (!Directory.Exists(receivingFolderPath))
+                {
+                    Directory.CreateDirectory(receivingFolderPath);
+                }
+                string fileName = "prova.txt";
+                string filePath = receivingFolderPath + fileName;
+                FileStream fs = File.Open(filePath, FileMode.Create);
+
+                //TODO: capire se 1) si devono ricevere altri byte o 2) si ha già tutto
+                //scrivo quello che ho ricevuto
+                fs.Write(data, 14, data.Length - 14); //13 perché salto "FILE\r\n BBBB TTTT"
+                
+                while (toReceive > 0)
+                {
+                    //ricevo ancora
+                    Array.Clear(data, 0, BUFFER_SIZE);
+                    int receivedBytesLen = socket.Receive(data, 0, BUFFER_SIZE, SocketFlags.None);
+                    received = receivedBytesLen;
+                    toReceive = toReceive - received;
+                    //scrivo
+                    fs.Write(data, 0, received);
+                    //TODO: svuoto buffer dopo la scrittura
+                }
+
+                //TODO: rinominare file?
+                //chiudo il file
+                fs.Close();
+                
                 Console.WriteLine("Client:{0} connected & File {1} started received.", socket.RemoteEndPoint, fileName);
-                BinaryWriter bWrite = new BinaryWriter(File.Open(receivedPath + fileName, FileMode.Append)); ;
-                bWrite.Write(data, 4 + fileNameLen, received - 6 - 8);
-                Console.WriteLine("File: {0} received & saved at path: {1}", fileName, receivedPath);
+                
+                
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+                
 
             }
 

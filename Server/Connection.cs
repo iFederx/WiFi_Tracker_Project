@@ -10,13 +10,17 @@ namespace Server
 {
     class Connection
     {
-        private static readonly Socket serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        private static readonly Socket serverSocket = //serverSocket is used only to accept new boards asking for registration
+            new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
-        private static readonly List<Socket> clientSockets = new List<Socket>();
+        protected static readonly List<Socket> clientSockets = new List<Socket>();
         private const int BUFFER_SIZE = 2048;
         private const int PORT = 1500;
         private static readonly byte[] buffer = new byte[BUFFER_SIZE];
 
+        /// <summary>
+        /// This static method initializes a passive listening socket for communications over internet
+        /// </summary>
         public static void StartConnection()
         {
             Console.WriteLine("Setting up server...");
@@ -38,7 +42,7 @@ namespace Server
                 socket.Shutdown(SocketShutdown.Both);
                 socket.Close();
             }
-
+            clientSockets.Clear();
             serverSocket.Close();
         }
 
@@ -48,7 +52,7 @@ namespace Server
 
             try
             {
-                socket = serverSocket.EndAccept(AR);
+                socket = serverSocket.EndAccept(AR); //the socket obtained will be always the same for connections with the requesting board
                 socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, 1);
             }
             catch (ObjectDisposedException) // I cannot seem to avoid this (on exit when properly closing sockets)
@@ -65,13 +69,13 @@ namespace Server
         //when an ESP board sends a command, this Callback manages it
         private static void ReceiveCallback(IAsyncResult AR)
         {
-            Console.WriteLine("Entering in a Receive callback");
+            Console.WriteLine("\n--Entering in a Receive callback--");
             Socket current = (Socket)AR.AsyncState;
             int received;
 
             try
             {
-                received = current.EndReceive(AR);
+                received = current.EndReceive(AR); //it returns num of bytes received
             }
             catch (SocketException)
             {
