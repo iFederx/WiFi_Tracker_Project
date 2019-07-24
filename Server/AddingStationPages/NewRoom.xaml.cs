@@ -10,20 +10,24 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace Server
+namespace Server.AddingStationPages
 {
     /// <summary>
-    /// Logica di interazione per Window1.xaml
+    /// Logica di interazione per NewRoom.xaml
     /// </summary>
-    public partial class StationAdder : Window
+    public partial class NewRoom : Page
     {
-        public StationAdder()
+        public NewRoom()
         {
             InitializeComponent();
-
-			FrameNewStation.Content = new AddingStationPages.SelectRoom();
         }
-    }
+
+		private void Button_Cancel(object sender, RoutedEventArgs e)
+		{
+			this.NavigationService.GoBack();
+		}
+	}
 }

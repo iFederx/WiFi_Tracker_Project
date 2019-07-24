@@ -33,7 +33,7 @@ namespace Server
             Receivings.Add(new Reception(ReceivingStation, RSSI));
         }
         internal String SendingMAC;
-        internal String RequestedSSID;//null if no requested SSID
+        internal String RequestedSSID; //null if no requested SSID
         internal DateTime Timestamp;
         internal String Hash;
         internal String HTCapabilities;

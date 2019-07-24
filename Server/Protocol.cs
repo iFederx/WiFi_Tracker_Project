@@ -23,8 +23,11 @@ namespace Server
             int x;
             int toReceive = 0;
             int fileSize = 0;
-            long timestamp = 0;
-            if (text.IndexOf("REGISTER(") > -1)
+            int timestamp = 0;
+			DateTime timestampDT = new DateTime();
+			string boardName = "ciao"; //recuperarlo da Station
+
+			if (text.IndexOf("REGISTER(") > -1)
             {
                 int offset = text.IndexOf("REGISTER(");
                 string macAddress = text.Substring(offset+9, 17);
@@ -62,8 +65,7 @@ namespace Server
 
                 while (received < 14)
                 {
-                    //TODO: ricevere di nuovo
-                    //bbbb
+                    //ricevo di nuovo, finché non ricevo tutti i metadati
                     int receivedBytesLen = socket.Receive(data, received, BUFFER_SIZE - received, SocketFlags.None);
                     received += receivedBytesLen;
                 }
@@ -87,21 +89,22 @@ namespace Server
                     }
                     
                     fileSize = BitConverter.ToInt32(fileSizeBytes, 0);
-                    timestamp = BitConverter.ToInt32(timestampBytes, 0); //timestamp errato lato ESP
+                    timestamp = BitConverter.ToInt32(timestampBytes, 0);
+					timestampDT = FileParser.TimeFromUnixTimestamp(timestamp);
                     toReceive = fileSize - received + 14;
-                    
-                    //var toReceive2 = IPAddress.NetworkToHostOrder(toReceive);
-                    //string fileName = Encoding.ASCII.GetString(data[], 4, fileNameLen) + ".txt";
-                }
+				}
                 
                 //creazione file di ricezione
-                string receivingFolderPath = "./Received/" + "nomeSchedina" + "/";
+                string receivingFolderPath = "./Received/" + boardName + "/";
                 //creare cartella se non esiste
                 if (!Directory.Exists(receivingFolderPath))
                 {
                     Directory.CreateDirectory(receivingFolderPath);
                 }
-                string fileName = "prova.txt";
+				
+                //string fileName = "prova.txt";
+				string timeString = timestampDT.ToString("_yyyyMMdd_HHmmss");
+				string fileName = boardName + timeString + ".txt";
                 string filePath = receivingFolderPath + fileName;
                 FileStream fs = File.Open(filePath, FileMode.Create);
 
@@ -112,25 +115,25 @@ namespace Server
                 while (toReceive > 0)
                 {
                     //ricevo ancora
-                    Array.Clear(data, 0, BUFFER_SIZE);
+                    Array.Clear(data, 0, BUFFER_SIZE); //svuoto buffer ricezione
                     int receivedBytesLen = socket.Receive(data, 0, BUFFER_SIZE, SocketFlags.None);
                     received = receivedBytesLen;
                     toReceive = toReceive - received;
                     //scrivo
                     fs.Write(data, 0, received);
-                    //TODO: svuoto buffer dopo la scrittura
+                    
                 }
-
-                //TODO: rinominare file?
-                //chiudo il file
-                fs.Close();
+                
+                fs.Close(); //chiudo il file
                 
                 Console.WriteLine("Client:{0} connected & File {1} started received.", socket.RemoteEndPoint, fileName);
+
+                var prova = FileParser.Parse(@filePath, new Station());
+
+                //Console.WriteLine(DateTime.Now);
+                //Console.WriteLine(prova.ToString());
+
                 
-                
-
-
-
 
 
                 
@@ -182,7 +185,7 @@ namespace Server
             ticksElapsed = ticksElapsed / n / 2;
             DateTime ESP_Time = new DateTime(DateTime.Now.Ticks + ticksElapsed);
             //UE will be Unix Epoch version of the time
-            TimeSpan clockUE = ESP_Time - new DateTime(1970, 1, 1);//new TimeSpan(ESP_Time.Ticks);
+            TimeSpan clockUE = ESP_Time - new DateTime(1970, 1, 1); //new TimeSpan(ESP_Time.Ticks);
             uint timestamp = (uint) clockUE.TotalSeconds; //secondi totali dall'anno 0
             byte[] toSend = Encoding.UTF8.GetBytes("CLOCK("+timestamp.ToString()+")\r\n");
             //Console.WriteLine("Sending: " + Encoding.UTF8.GetString(toSend));

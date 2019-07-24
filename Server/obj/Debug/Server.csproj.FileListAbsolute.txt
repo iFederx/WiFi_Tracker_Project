@@ -32,3 +32,9 @@ C:\Users\federicobrignone\Documents\GitHub\WiFi_Tracker_Project\Server\obj\Debug
 C:\Users\federicobrignone\Documents\GitHub\WiFi_Tracker_Project\Server\obj\Debug\Server.csproj.CoreCompileInputs.cache
 C:\Users\federicobrignone\Documents\GitHub\WiFi_Tracker_Project\Server\obj\Debug\Server.exe
 C:\Users\federicobrignone\Documents\GitHub\WiFi_Tracker_Project\Server\obj\Debug\Server.pdb
+C:\Users\federicobrignone\Documents\GitHub\WiFi_Tracker_Project\Server\obj\Debug\AddingStationPages\SelectRoom.g.cs
+C:\Users\federicobrignone\Documents\GitHub\WiFi_Tracker_Project\Server\obj\Debug\AddingStationPages\SelectRoom.baml
+C:\Users\federicobrignone\Documents\GitHub\WiFi_Tracker_Project\Server\obj\Debug\AddingStationPages\NewRoom.g.cs
+C:\Users\federicobrignone\Documents\GitHub\WiFi_Tracker_Project\Server\obj\Debug\AddingStationPages\NewRoom.baml
+C:\Users\federicobrignone\Documents\GitHub\WiFi_Tracker_Project\Server\obj\Debug\AddingStationPages\AddToRoom.g.cs
+C:\Users\federicobrignone\Documents\GitHub\WiFi_Tracker_Project\Server\obj\Debug\AddingStationPages\AddToRoom.baml

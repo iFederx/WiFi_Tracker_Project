@@ -60,6 +60,7 @@ namespace Server
             aggregatorT.Join();
             Environment.Exit(0);            
         }
+
         public Analyzer getAnalyzer()
         {
             if (calibrator.inCalibration)

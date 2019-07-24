@@ -32,12 +32,16 @@ namespace Server
         public MainWindow()
         {
             InitializeComponent();
+
+			StationAdder sa1 = new StationAdder();
+			sa1.Show();
+
             
             Console.WriteLine("Programma avviato");
-            Connection.StartConnection();
+            //Connection.StartConnection();
 
-            Console.ReadLine();
-            /*
+            //Console.ReadLine();
+            
             Thread socketListener = new Thread(new ThreadStart(Connection.StartConnection));
             socketListener.Start();
             double[] x = { dist2RSSI(0), dist2RSSI(10), dist2RSSI(20), dist2RSSI(30), dist2RSSI(40)};
@@ -45,9 +49,10 @@ namespace Server
             Context ctx = new Context();
             Thread backgroundProcessManager = new Thread(new ThreadStart(ctx.orchestrate));
             backgroundProcessManager.Start();
-            //aprire finestra creazione stanza
-            PositionTools.Room r=ctx.createRoom("TestRoom", 25, 25);
-            StationHandler sh1=null,sh2=null,sh3 = null;
+			/*
+            //TODO FEDE: aprire finestra creazione stanza
+            PositionTools.Room r = ctx.createRoom("TestRoom", 25, 25);
+            StationHandler sh1 = null, sh2 = null, sh3 = null;
             //funzione che non so dove sarà chiamata
             //sh1 = new StationHandler(socket);
             Station s1=ctx.createStation(r, "0.0", 0, 0,sh1);
@@ -58,7 +63,7 @@ namespace Server
             PositionTools.calibrateInterpolators(y, x, s3);
             
             //formazione di un oggetto Packet
-            Packet p = new Packet("abcde928", "Alice33Test",DateTime.Now,"","",0);
+            Packet p = new Packet("abcde928", "Alice33Test", DateTime.Now, "", "", 0);
             p.received(s1, dist2RSSI(12.5));
             p.received(s2, dist2RSSI(12.5));
             p.received(s3, dist2RSSI(Math.Sqrt(12.5 * 12.5 + 25 * 25)));

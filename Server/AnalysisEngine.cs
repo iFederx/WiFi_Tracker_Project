@@ -33,6 +33,7 @@ namespace Server
         {
             AnalysisQueue.Add(p);
         }
+
         public void analyzerProcess()
         {
             t = new CancellationTokenSource(10000);
@@ -53,6 +54,7 @@ namespace Server
                 }
             }
         }
+
         private void analyzePacket(Packet p)
         {
             Device d;

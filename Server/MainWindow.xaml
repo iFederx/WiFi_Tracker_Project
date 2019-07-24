@@ -5,8 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Server"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
+        Title="WiFi Tracker" Height="350" MinHeight="300" Width="500" MinWidth="300">
     <Grid>
-        
+
     </Grid>
 </Window>

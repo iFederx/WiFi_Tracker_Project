@@ -58,9 +58,19 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="AddingStationPages\AddToRoom.xaml.cs">
+      <DependentUpon>AddToRoom.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="AddingStationPages\NewRoom.xaml.cs">
+      <DependentUpon>NewRoom.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="AddingStationPages\SelectRoom.xaml.cs">
+      <DependentUpon>SelectRoom.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Aggregator.cs" />
     <Compile Include="Analyzer.cs" />
     <Compile Include="Calibrator.cs" />
+    <Compile Include="FileParser.cs" />
     <Compile Include="Connection.cs" />
     <Compile Include="Protocol.cs" />
     <Compile Include="ConcurrentCircular.cs" />
@@ -80,6 +90,18 @@
     <Compile Include="StationAdder.xaml.cs">
       <DependentUpon>StationAdder.xaml</DependentUpon>
     </Compile>
+    <Page Include="AddingStationPages\AddToRoom.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="AddingStationPages\NewRoom.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="AddingStationPages\SelectRoom.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
