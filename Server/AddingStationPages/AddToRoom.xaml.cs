@@ -41,6 +41,7 @@ namespace Server.AddingStationPages
 
 			xLabel.Content = meterX.ToString("X: 0.## m");
 			yLabel.Content = meterY.ToString("Y: 0.## m");
+
 		}
 
 		protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
@@ -54,6 +55,9 @@ namespace Server.AddingStationPages
 			{
 				AdjustSizeByHeight(sizeInfo);
 			}
+			//TODO_FEDE: aggiornare posizione pallino
+			//Ellipse_StationPosition.SetValue(Canvas.LeftProperty, Mouse.GetPosition(this.GridRoom).X);
+			//Ellipse_StationPosition.SetValue(Canvas.TopProperty, Mouse.GetPosition(this.GridRoom).Y);
 		}
 
 		private void AdjustSizeByHeight(SizeChangedInfo sx)
