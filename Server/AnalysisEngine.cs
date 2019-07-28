@@ -6,21 +6,22 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Server
+namespace Panopticon
 {
     class AnalysisEngine:Analyzer
     {
         ConcurrentDictionaryStack<String, Device> deviceMap; //id, corresponding device
         BlockingCollection<Packet> AnalysisQueue = new BlockingCollection<Packet>(new ConcurrentQueue<Packet>());
         Dictionary<String, String> anoniDevices = new Dictionary<string, string>(); //mac, corresponding id
-        ConcurrentDictionary<PositionTools.Room, ConcurrentDictionary<Device,byte>> peoplePerRoom;
         volatile CancellationTokenSource t;
         volatile bool killed = false;
+        //DEBUG
+        double totalerror = 0;
+        int nerrors = 0;
         List<Publisher> publishers;
-        public AnalysisEngine(List<Publisher> pb, ConcurrentDictionary<PositionTools.Room, ConcurrentDictionary<Device,byte>> ppr, ConcurrentDictionaryStack<String, Device> dm)
+        public AnalysisEngine(List<Publisher> pb, ConcurrentDictionaryStack<String, Device> dm)
         {
             publishers = new List<Publisher>(pb);
-            peoplePerRoom = ppr;
             deviceMap = dm;
 
         }
@@ -81,9 +82,15 @@ namespace Server
                     if (pb.supportsOperation(Publisher.DisplayableType.SSID))
                         pb.publishSSID(d,p.RequestedSSID);
             }
-            if (d.lastPosition!=null && d.lastPosition.positionDate.AddSeconds(6) > p.Timestamp && d.lastPosition.room!=p.Receivings[0].ReceivingStation.location.room)
+            if (d.lastPosition!=null && d.lastPosition.positionDate.AddSeconds(3) > p.Timestamp && d.lastPosition.room==p.Receivings[0].ReceivingStation.location.room)
                 return;
             locateAndPublish(d, p);
+            //DEBUG
+            double error = Math.Sqrt(Math.Pow((d.lastPosition.X - p.testposition.X),2) + Math.Pow((d.lastPosition.Y - p.testposition.Y),2));
+            nerrors++;
+            totalerror += error;
+            System.Diagnostics.Debug.Print("Error: " + error);
+            System.Diagnostics.Debug.Print("Mean Error: " + totalerror/nerrors);
             deviceMap.upsert(d.identifier, d, (old, cur) => { return cur; });//single thread safe only. To make it multithread i should also copy other fields
         }
 
@@ -164,7 +171,7 @@ namespace Server
         }
         private void locateAndPublish(Device d,Packet p)
         {
-            PositionTools.Room oldRoom =(d.lastPosition!=null)?d.lastPosition.room:null;
+            Room oldRoom =(d.lastPosition!=null)?d.lastPosition.room:null;
             d.lastPosition = PositionTools.triangulate(p.Receivings);
             d.lastPosition.positionDate = p.Timestamp;
             Publisher.EventType e = Publisher.EventType.Update;
@@ -182,20 +189,20 @@ namespace Server
 
         }
 
-        private void placeInRoomAndPublish(PositionTools.Room room, Device d, Publisher.EventType action)
+        private void placeInRoomAndPublish(Room room, Device d, Publisher.EventType action)
         {
             byte dummy;
             //optionally here insert to update only if device has more than 5 minutes of history
-           if (action==Publisher.EventType.Appear||action==Publisher.EventType.MoveIn)
-                peoplePerRoom[room].TryAdd(d,0);
-            else if(action!=Publisher.EventType.Update)
-                peoplePerRoom[room].TryRemove(d,out dummy);
+            if (action == Publisher.EventType.Appear || action == Publisher.EventType.MoveIn)
+                room.addDevice(d);
+            else if (action != Publisher.EventType.Update)
+                room.removeDevice(d);
             foreach (Publisher pb in publishers)
             {
                 if(pb.supportsOperation(Publisher.DisplayableType.DeviceDevicePosition))
                     pb.publishPosition(d, action);
                 if(pb.supportsOperation(Publisher.DisplayableType.SimpleStat))
-                    pb.publishStat(peoplePerRoom[room].Keys.Count, room, d.lastPosition.positionDate,Publisher.StatType.InstantaneousPeopleCount);
+                    pb.publishStat(room.devicecount, room, d.lastPosition.positionDate,Publisher.StatType.InstantaneousDeviceCount);
             }
         }
 

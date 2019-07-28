@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Server
+namespace Panopticon
 {
     abstract class Publisher
     {
@@ -25,7 +25,7 @@ namespace Server
             internal DisplayableType type;
         }
         internal enum EventType { Appear, Update, MoveOut, MoveIn, Disappear };
-        internal enum StatType { TenMinuteAveragePeopleCount, OneSecondPeopleCount, InstantaneousPeopleCount };
+        internal enum StatType { TenMinuteAverageDeviceCount, OneSecondDeviceCount, InstantaneousDeviceCount };
 
         internal abstract int SupportedOperations { get; }
        
@@ -34,10 +34,10 @@ namespace Server
             return ((int)dt & this.SupportedOperations) != 0;
         }
         internal virtual void publishPosition(Device d, EventType e) { throw new NotSupportedException(); }
-        internal virtual void publishStat(double stat, PositionTools.Room r, DateTime statTime, StatType s) { throw new NotSupportedException(); }
+        internal virtual void publishStat(double stat, Room r, DateTime statTime, StatType s) { throw new NotSupportedException(); }
         internal virtual void publishRename(String oldId, String newId) { throw new NotSupportedException(); }
-        internal virtual void publishRoomUpdate(PositionTools.Room r, EventType e) { throw new NotSupportedException(); }
-        internal virtual void publishStationUpdate(PositionTools.Room r, EventType e) { throw new NotSupportedException(); }
+        internal virtual void publishRoomUpdate(Room r, EventType e) { throw new NotSupportedException(); }
+        internal virtual void publishStationUpdate(Room r, Station s, EventType e) { throw new NotSupportedException(); }
 
         internal virtual void publishSSID(Device d, String SSID) { throw new NotSupportedException(); }
 

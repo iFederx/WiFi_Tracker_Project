@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Server.Properties {
+namespace Panopticon.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
@@ -25,7 +25,7 @@ namespace Server.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Host=127.0.0.1;Username=panopticon;Password=somepw;Database=panopticon")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Host=127.0.0.1;Username=panopticon;Password=panopticon2;Database=panopticon")]
         public string ConnectionString {
             get {
                 return ((string)(this["ConnectionString"]));

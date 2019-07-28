@@ -3,7 +3,7 @@
   <Profiles />
   <Settings>
     <Setting Name="ConnectionString" Type="System.String" Scope="User">
-      <Value Profile="(Default)">Host=127.0.0.1;Username=panopticon;Password=somepw;Database=panopticon</Value>
+      <Value Profile="(Default)">Host=127.0.0.1;Username=panopticon;Password=panopticon2;Database=panopticon</Value>
     </Setting>
   </Settings>
 </SettingsFile>

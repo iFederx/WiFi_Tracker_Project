@@ -4,7 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 
-namespace Server
+namespace Panopticon
 {
     class Device
     {

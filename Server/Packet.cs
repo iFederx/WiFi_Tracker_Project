@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Server
+namespace Panopticon
 {
     class Packet
     {
@@ -38,5 +38,6 @@ namespace Server
         internal String Hash;
         internal String HTCapabilities;
         internal Int64 SequenceNumber;
+        internal PositionTools.Position testposition; //debug-testing property. To be removed
     }
 }

@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
-namespace Server
+namespace Panopticon
 {
     public abstract class Interpolator
     {

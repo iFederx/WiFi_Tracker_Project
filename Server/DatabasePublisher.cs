@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Server
+namespace Panopticon
 {
     class DatabasePublisher:Publisher
     {
@@ -32,10 +32,10 @@ namespace Server
                 todo.Add(new Displayable(d, null, e, DisplayableType.DeviceDevicePosition));
             System.Diagnostics.Debug.Print("DEVICE POSITION: " + d.lastPosition.X + " " + d.lastPosition.Y);
         }
-        internal override void publishStat(double stat, PositionTools.Room r, DateTime statTime, StatType s)
+        internal override void publishStat(double stat, Room r, DateTime statTime, StatType s)
         {
             todo.Add(new Displayable(stat, r, s, DisplayableType.AggregatedStat));
-            if (s==StatType.OneSecondPeopleCount)
+            if (s==StatType.OneSecondDeviceCount)
                 System.Diagnostics.Debug.Print("DB ROOM 1sec STAT: " + r.roomName + " count: " + stat);
             else
                 System.Diagnostics.Debug.Print("DB ROOM avg STAT: " + r.roomName + " count: " + stat);
@@ -51,6 +51,7 @@ namespace Server
             todo.Add(new Displayable(d, SSID, null, DisplayableType.SSID));
             System.Diagnostics.Debug.Print("REQUESTED SSID: " + SSID);
         }
+
         internal void databaseProcess()
         {
             Displayable item;
@@ -68,10 +69,10 @@ namespace Server
                 {
                     case DisplayableType.AggregatedStat:
                         {
-                            if ((StatType)item.argtype == StatType.OneSecondPeopleCount)
-                                DBInt.updateRoomCount((double)item.arg1, ((PositionTools.Room)item.arg2).roomName);
+                            if ((StatType)item.argtype == StatType.OneSecondDeviceCount)
+                                DBInt.updateRoomCount((double)item.arg1, ((Room)item.arg2).roomName);
                             else
-                                DBInt.addLTRoomCount((double)item.arg1, ((PositionTools.Room)item.arg2).roomName, DateTime.Now);
+                                DBInt.addLTRoomCount((double)item.arg1, ((Room)item.arg2).roomName, DateTime.Now);
                             break;
                         }
                     case DisplayableType.SSID:
