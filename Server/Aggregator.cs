@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Server
+namespace Panopticon
 {
     class Aggregator : Publisher
     {
@@ -16,12 +16,12 @@ namespace Server
             internal double lastval;
             internal DateTime lastvalTime;
             internal DateTime avgTimeBase;
-            internal PositionTools.Room room;
+            internal Room room;
             internal bool dirty;
         }
-        ConcurrentDictionary<PositionTools.Room,AvgBucket> stats=new ConcurrentDictionary<PositionTools.Room, AvgBucket>();
+        ConcurrentDictionary<Room,AvgBucket> stats=new ConcurrentDictionary<Room, AvgBucket>();
         List<Publisher> propagate;
-        Boolean killed = false;
+        volatile Boolean killed = false;
 
         public Aggregator(List<Publisher> p)
         {
@@ -36,7 +36,7 @@ namespace Server
                 return (int)DisplayableType.SimpleStat | (int) DisplayableType.RoomUpdate;
             }
         }
-        internal override void publishRoomUpdate(PositionTools.Room r, EventType e)
+        internal override void publishRoomUpdate(Room r, EventType e)
         {
             AvgBucket ab;
             if (e==EventType.Appear)
@@ -57,15 +57,15 @@ namespace Server
                 stats.TryRemove(r,out ab);
                 updateRoomStat(ab, ab.lastval, DateTime.Now);
                 foreach (Publisher pb in propagate)
-                    pb.publishStat(ab.avg, ab.room, ab.lastvalTime, StatType.TenMinuteAveragePeopleCount);
+                    pb.publishStat(ab.avg, ab.room, ab.lastvalTime, StatType.TenMinuteAverageDeviceCount);
             }
         }
 
         //2 aggregates: 10 minute average, one second value
-        internal override void publishStat(double stat, PositionTools.Room r, DateTime statTime, StatType s) 
+        internal override void publishStat(double stat, Room r, DateTime statTime, StatType s) 
         {
             AvgBucket ab;
-            if (s != StatType.InstantaneousPeopleCount)
+            if (s != StatType.InstantaneousDeviceCount)
                 throw new NotSupportedException();
             if (!stats.ContainsKey(r))
                 return;
@@ -96,11 +96,11 @@ namespace Server
                     {
                         if (ab.dirty)
                             foreach (Publisher pb in propagate)//supports stat by default, or wouldn't be here
-                                pb.publishStat(ab.lastval, ab.room, ab.lastvalTime, StatType.OneSecondPeopleCount);
+                                pb.publishStat(ab.lastval, ab.room, ab.lastvalTime, StatType.OneSecondDeviceCount);
                         if (ab.lastvalTime >= ab.avgTimeBase.AddMinutes(10))
                         {
                             foreach (Publisher pb in propagate)
-                                pb.publishStat(ab.avg, ab.room, ab.lastvalTime, StatType.TenMinuteAveragePeopleCount);
+                                pb.publishStat(ab.avg, ab.room, ab.lastvalTime, StatType.TenMinuteAverageDeviceCount);
                             ab.avg = ab.lastval;
                             ab.avgTimeBase = ab.lastvalTime;
                         }

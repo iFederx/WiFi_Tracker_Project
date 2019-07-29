@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using System.Threading;
 
-namespace Server
+namespace Panopticon
 {
     class Calibrator : Analyzer
     {
         private AnalysisEngine normalAnalyzer;
         BlockingCollection<Packet> AnalysisQueue = new BlockingCollection<Packet>(new ConcurrentQueue<Packet>());
-        private PositionTools.Room RoomInCalibration = null;
+        private Room RoomInCalibration = null;
         private Object locker=new Object();
         private volatile bool killed = false;
         CancellationTokenSource t;
@@ -33,7 +33,7 @@ namespace Server
             
         }
 
-        internal bool switchCalibration(PositionTools.Room toCalibrate)
+        internal bool switchCalibration(Room toCalibrate)
         {
             bool ris;
             lock(locker)

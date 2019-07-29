@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Server
+namespace Panopticon
 {
     class PositionTools
     {
@@ -12,6 +12,7 @@ namespace Server
         private static double[] stdRssi = { normalizeRSSI(-30), normalizeRSSI(-50), normalizeRSSI(-70), normalizeRSSI(-80), normalizeRSSI(-90), normalizeRSSI(-100), normalizeRSSI(-110)};
         internal static Interpolator StandardShortInterpolator = new Interpolators.MonotoneCubicHermite(stdRssi, stdDist);
         internal static Interpolator StandardLongInterpolator = new Interpolators.Lagrangian(stdRssi, stdDist);
+        private const double EXTERNAL_MARGIN = 3;
         public class Point
         {
             public double X;
@@ -71,22 +72,6 @@ namespace Server
             }
         }
 
-        public class Room
-        {
-            internal String roomName;
-            internal Double xlength;
-            internal Double ylength;
-            public override bool Equals(object obj)
-            {
-                Room other = (Room)obj;
-                return other.roomName == this.roomName;
-            }
-
-            public override int GetHashCode()
-            {
-                return roomName.GetHashCode();
-            }
-        }
         public class Position : Point
         {
             internal double uncertainity;
@@ -96,7 +81,7 @@ namespace Server
             {
                 room = r;
             }
-            public Position(double x, double y, Room r, Double u) : base(x, y)
+            public Position(double x, double y, Room r,Double u) : base(x, y)
             {
                 room = r;
                 uncertainity=u;
@@ -107,7 +92,7 @@ namespace Server
                 room = r;
             }
 
-            public Position(Point a, Room r, Double u) : base(a)
+            public Position(Point a,Room r, Double u):base(a)
             {
                 room = r;
                 uncertainity = u;
@@ -158,13 +143,25 @@ namespace Server
             if(p.uncertainity!=double.MaxValue)
             {
                 if (p.X < 0)
-                    p.X = 0;
+                    if (p.X > - EXTERNAL_MARGIN)
+                        p.X = 0;
+                    else
+                        return new Position(0, 0, Room.externRoom);      
                 else if (p.X > p.room.xlength)
-                    p.X = p.room.xlength;
+                    if (p.X - p.room.xlength < EXTERNAL_MARGIN)
+                        p.X = p.room.xlength;
+                    else
+                        return new Position(0, 0, Room.externRoom);
                 if (p.Y < 0)
-                    p.Y = 0;
+                    if(p.Y> - EXTERNAL_MARGIN)
+                        p.Y = 0;
+                    else
+                        return new Position(0, 0, Room.externRoom);      
                 else if (p.Y > p.room.ylength)
-                    p.Y = p.room.ylength;
+                    if (p.Y - p.room.ylength < EXTERNAL_MARGIN)
+                        p.Y = p.room.ylength;
+                    else
+                        return new Position(0, 0, Room.externRoom);
             }
             return p;
         }
@@ -183,7 +180,11 @@ namespace Server
             }
             return pi;
         }
-
+        private static double clusterize(Double measure)
+        {
+            return Math.Sign(measure) * Math.Min(2.5, Math.Abs(measure));
+            //return Math.Sign(measure) * Math.Log(Math.Abs(measure) + 1, 3);
+        }
         private static Position findBetterMinimum(Circle[] circles, Position p)
         {
             Point diff=new Point(100,100);
@@ -195,10 +196,10 @@ namespace Server
                 {
                     Point ediff = circles[j].Subtract(pos);
                     double d = ediff.Module() - circles[j].R;
-                    diff = diff.Add(ediff.Normalize(false).MultiplyScalar(Math.Sign(d)*Math.Min(2.5,Math.Abs(d))));
+                    diff = diff.Add(ediff.Normalize(false).MultiplyScalar(clusterize(d)));
                 }
                 pos = pos.Add(diff.MultiplyScalar(0.45));
-                if (diff.Module() < 0.2)
+                if (diff.Module() < 0.1)
                     break;
             }
             return new Position(pos,p.room,diff.Module());

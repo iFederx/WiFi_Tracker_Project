@@ -8,39 +8,37 @@ using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using System.Threading;
 
-namespace Server
+namespace Panopticon
 {
     class Context
     {
         ConcurrentDictionary<String, Station> stations;
-        ConcurrentDictionary<String, PositionTools.Room> rooms;
+        ConcurrentDictionary<String, Room> rooms;
         ConcurrentDictionaryStack<String, Device> deviceMap;
-        ConcurrentDictionary<PositionTools.Room, ConcurrentDictionary<Device,byte>> peoplePerRoom;
         AnalysisEngine analyzer;
         Calibrator calibrator;
-        Dictionary<PositionTools.Room, List<Station>> stationsPerRoom;
         ReaderWriterLockSlim locker = new ReaderWriterLockSlim();
         DatabasePublisher databasePub;
         DatabaseInterface databaseInt;
         List<Publisher> publishers;
         Aggregator aggregator;
+        LinkedList<Thread> threads = new LinkedList<Thread>();
+        internal readonly GuiInterface guiPub;
         public Context()
         {
             stations = new ConcurrentDictionary<String, Station>();
-            rooms = new ConcurrentDictionary<String, PositionTools.Room>();
-            stationsPerRoom = new Dictionary<PositionTools.Room, List<Station>>();
-            deviceMap = new ConcurrentDictionaryStack<string, Device>();
-            peoplePerRoom = new ConcurrentDictionary<PositionTools.Room, ConcurrentDictionary<Device,byte>>();
-            databaseInt = new DatabaseInterface();
+            deviceMap = new ConcurrentDictionaryStack<String, Device>();
+            rooms = new ConcurrentDictionary<String, Room>();
+            databaseInt = new DatabaseInterface(Properties.Settings.Default.ConnectionString);
             publishers = new List<Publisher>();
-            databasePub = new DatabasePublisher();
-            GuiInterface guiPub = new GuiInterface();
+            databasePub = new DatabasePublisher(databaseInt);
             publishers.Add(databasePub);
+            guiPub = new GuiInterface();
             publishers.Add(guiPub);
             aggregator = new Aggregator(publishers);
             publishers.Add(aggregator);
-            analyzer = new AnalysisEngine(publishers, peoplePerRoom, deviceMap);
-            calibrator = new Calibrator(analyzer);            
+            analyzer = new AnalysisEngine(publishers, deviceMap);
+            calibrator = new Calibrator(analyzer);
         }
 
         public void orchestrate()
@@ -51,16 +49,10 @@ namespace Server
             databaseT.Start();
             Thread aggregatorT = new Thread(new ThreadStart(aggregator.aggregatorProcess));
             aggregatorT.Start();
-            analyzerT.Join();
-            calibrator.kill(); //should not be necessary
-            //if analyzer completes, kill everything: to shutdown application, kill analyzer!
-            databasePub.kill();
-            aggregator.kill();
-            databaseT.Join();
-            aggregatorT.Join();
-            Environment.Exit(0);            
+            threads.AddLast(analyzerT);
+            threads.AddLast(databaseT);
+            threads.AddLast(aggregatorT);
         }
-
         public Analyzer getAnalyzer()
         {
             if (calibrator.inCalibration)
@@ -68,7 +60,7 @@ namespace Server
             else
                 return analyzer;
         }
-        public bool switchCalibration(bool calibrate, PositionTools.Room roomToCalibrate)
+        public bool switchCalibration(bool calibrate, Room roomToCalibrate)
         {
             bool ris = false;
             if (calibrate && calibrator.switchCalibration(roomToCalibrate))
@@ -86,8 +78,8 @@ namespace Server
         }
         public Station tryAddStation(String NameMAC, StationHandler handler, bool AllowAsynchronous) //Replace Object with the relevant type
         {
-            Station s = loadStation(NameMAC, handler);
-            if (s==null && AllowAsynchronous) //this is already the check if a configuration for the station exists or not
+            Station s=loadStation(NameMAC,handler);
+            if(s==null&&AllowAsynchronous) //this is already the check if a configuration for the station exists or not
             {
                 //TODO_FEDE: open GUI, get info, then from that guiThread call createStation & then saveStation
                 return null;
@@ -98,11 +90,12 @@ namespace Server
         public void loadRooms()
         {
             foreach (DatabaseInterface.RoomInfo ri in databaseInt.loadRooms())
-                createRoom(ri.RoomName, ri.Xlen, ri.Ylen);
+                createRoom(new Room(ri.RoomName, ri.Xlen, ri.Ylen));
+            createRoom(Room.externRoom);
             return;
         }
 
-        public bool saveRoom(PositionTools.Room room)
+        public bool saveRoom(Room room)
         {
             return databaseInt.saveRoom(room.roomName,room.xlength,room.ylength);
         }
@@ -122,17 +115,17 @@ namespace Server
             String roomName=si.Value.RoomName;
             double x=si.Value.X;
             double y=si.Value.Y;
-            PositionTools.Room room=getRoom(roomName);
+            Room room=getRoom(roomName);
             s.location = new PositionTools.Position(x,y,room);
             s.shortInterpolator=Interpolators.deserialize(si.Value.shortInterpolator);
             s.longInterpolator=Interpolators.deserialize(si.Value.longInterpolator);
             locker.EnterWriteLock();
-            stationsPerRoom[room].Add(s);
+            room.addStation(s);
             stations[s.NameMAC] = s;
             locker.ExitWriteLock();
             foreach (Publisher pb in publishers)
                 if (pb.supportsOperation(Publisher.DisplayableType.StationUpdate))
-                    pb.publishStationUpdate(room,Publisher.EventType.Appear);
+                    pb.publishStationUpdate(room,s,Publisher.EventType.Appear);
             return s;
         }
 
@@ -152,7 +145,7 @@ namespace Server
             return databaseInt.removeStation(NameMAC);
         }
 
-        public Station createStation(PositionTools.Room room, String NameMAC, double X, double Y, StationHandler handler)
+        public Station createStation(Room room, String NameMAC, double X, double Y,StationHandler handler)
         {
             Station s = new Station();
             s.lastHearthbeat = DateTime.Now;
@@ -162,12 +155,12 @@ namespace Server
             s.longInterpolator= PositionTools.StandardLongInterpolator;
             s.handler = handler;
             locker.EnterWriteLock();
-            stationsPerRoom[room].Add(s);
+            room.addStation(s);
             stations[s.NameMAC] = s;
             locker.ExitWriteLock();
             foreach (Publisher pb in publishers)
                 if (pb.supportsOperation(Publisher.DisplayableType.StationUpdate))
-                    pb.publishStationUpdate(room,Publisher.EventType.Appear);
+                    pb.publishStationUpdate(room,s,Publisher.EventType.Appear);
             return s;
         }
 
@@ -175,11 +168,11 @@ namespace Server
         {
             return stations[NameMAC];
         }
-        public IEnumerable<PositionTools.Room> getRooms()
+        public IEnumerable<Room> getRooms()
         {
-            return rooms.Values.ToArray<PositionTools.Room>();
+            return rooms.Values.ToArray<Room>();
         }
-        public PositionTools.Room getRoom(String name)
+        public Room getRoom(String name)
         {
             return rooms[name];
         }
@@ -187,20 +180,19 @@ namespace Server
         {
             Station s;
             stations.TryRemove(NameMAC,out s);
-            PositionTools.Room room=s.location.room;
+            Room room=s.location.room;
             locker.EnterWriteLock();
-            List<Station> st = stationsPerRoom[room];
-            st.Remove(s);
+            room.removeStation(s);
             locker.ExitWriteLock();
             foreach (Publisher pb in publishers)
                 if (pb.supportsOperation(Publisher.DisplayableType.StationUpdate))
-                    pb.publishStationUpdate(room,Publisher.EventType.Disappear);
+                    pb.publishStationUpdate(room,s,Publisher.EventType.Disappear);
         }
         public void removeRoom(String NameMAC)
         {
-            PositionTools.Room room = rooms[NameMAC];
+            Room room = rooms[NameMAC];
             locker.EnterWriteLock();
-            foreach (Station s in stationsPerRoom[room].ToArray())
+            foreach (Station s in room.getStations())
             {
                 removeStation(s.NameMAC);
                 deleteStation(s.NameMAC);
@@ -208,39 +200,20 @@ namespace Server
             rooms.TryRemove(room.roomName,out room);
             locker.ExitWriteLock();
         }
-        public bool checkStationAliveness(PositionTools.Room room)
+        public bool checkStationAliveness(Room room)
         {
             bool ris = true;
             locker.EnterUpgradeableReadLock();
-            List<Station> st = stationsPerRoom[room];
-            for (int i = 0; i < st.Count; i++)
+            foreach(Station s in room.getStations())
             {
-                if (st[i].lastHearthbeat.AddMinutes(5)<DateTime.Now)
+                if (s.lastHearthbeat.AddMinutes(5)<DateTime.Now)
                 {
                     ris = false;
-                    removeStation(st[i].NameMAC);
+                    removeStation(s.NameMAC);
                     break;
                 }
             }
             locker.ExitUpgradeableReadLock();
-            return ris;
-        }
-
-        public int getNumberStationPerRoom(PositionTools.Room room)
-        {
-            int count;
-            locker.EnterReadLock();
-            count = stationsPerRoom[room].Count;
-            locker.ExitReadLock();
-            return count;
-        }
-
-        public IEnumerable<Station> getStationsInRoom(PositionTools.Room room)
-        {
-            Station[] ris;
-            locker.EnterReadLock();
-            ris = stationsPerRoom[room].ToArray();
-            locker.ExitReadLock();
             return ris;
         }
         
@@ -252,29 +225,35 @@ namespace Server
         /// <param name="yl"></param>
         /// <param name="saveToFile"></param>
         /// <returns>The created/instanciated Room object, null if it already exists</returns>
-        public PositionTools.Room createRoom(String name, double xl, double yl)
+        public Room createRoom(Room r)
         {
             //init station per room, user per room
-            PositionTools.Room r = new PositionTools.Room();
-            r.roomName = name;
-            r.xlength = xl;
-            r.ylength = yl;
-            List<Station> ls = new List<Station>();
             locker.EnterWriteLock();
-            if (rooms.ContainsKey(name))
+            if (rooms.ContainsKey(r.roomName))
                 r = null;
             else
             {
-                rooms[name] = r;
-                stationsPerRoom[r] = ls;
+                rooms[r.roomName] = r;
             }
             locker.ExitWriteLock();
-            if(r!=null)
-                peoplePerRoom.TryAdd(r, new ConcurrentDictionary<Device,byte>());
             foreach (Publisher pb in publishers)
                 if (pb.supportsOperation(Publisher.DisplayableType.RoomUpdate))
                     pb.publishRoomUpdate(r,Publisher.EventType.Appear);
             return r;
+        }
+
+        public void kill()
+        {
+            analyzer.kill();
+            calibrator.kill(); //should not be necessary
+            databasePub.kill();
+            aggregator.kill();
+            foreach(Thread t in threads)
+            {
+                t.Join();
+            }
+            databaseInt.close();
+            Environment.Exit(0);
         }
 
 

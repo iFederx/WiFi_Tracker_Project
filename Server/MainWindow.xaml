@@ -1,12 +1,41 @@
-﻿<Window x:Class="Server.MainWindow"
+﻿<Window x:Class="Panopticon.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Server"
+        xmlns:local="clr-namespace:Panopticon"
         mc:Ignorable="d"
-        Title="WiFi Tracker" Height="350" MinHeight="300" Width="500" MinWidth="300">
+        Title="Panopticon" Height="650" Width="900" WindowStartupLocation="CenterScreen" WindowState="Maximized" ContentRendered="Window_ContentRendered" Closed="Window_Closed" MinWidth="700" MinHeight="700">
     <Grid>
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Width="200" Margin="0,0,0,0" HorizontalAlignment="Left">
+            <StackPanel Name="roomlistpanel" HorizontalAlignment="Left" Width="200"/>
+        </ScrollViewer>
+        <TabControl x:Name="tabControl" Margin="200,0,0,0" SelectionChanged="tabControl_SelectionChanged">
+            <TabItem x:Name="lvtrck" Header="Live tracking" Visibility="Hidden" >
+                <Grid>
+                    <Viewbox Margin="10,80,210,200" x:Name="lvtrck_viewbox" HorizontalAlignment="Center">
+                        <Border x:Name="lvtrck_border" BorderBrush="Black" BorderThickness="2">
+                            <Canvas x:Name="lvtrck_canvas" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                        </Border>                        
+                    </Viewbox>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Width="200" Margin="10,80,10,200" HorizontalAlignment="Right">
+                        <StackPanel Name="lvtrck_devlist_panel" HorizontalAlignment="Left" Width="200"/>
+                    </ScrollViewer>
+                    <Label x:Name="lvtrck_roomname" Content="RoomName" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="60" Width="240" FontSize="40"/>
+                    <Label x:Name="lvtrck_people" Content="Label" HorizontalAlignment="Right" Margin="0,5,10,0" VerticalAlignment="Top" Width="160" Height="40" FontSize="20"/>
+                    <Label x:Name="lvtrck_stations" Content="Label" HorizontalAlignment="Right" Margin="0,35,10,0" VerticalAlignment="Top" Width="160" Height="40" FontSize="20"/>
+                </Grid>
+            </TabItem>
+            <TabItem x:Name="rmstats" Header="Room stats" Visibility="Hidden">
+                <Grid/>
+            </TabItem>
+            <TabItem x:Name="trackrlp" Header="Tracking reloop" Visibility="Hidden">
+                <Grid/>
+            </TabItem>
+            <TabItem x:Name="dvinfo" Header="Device informations" Visibility="Hidden">
+                <Grid/>
+            </TabItem>
+        </TabControl>
 
     </Grid>
 </Window>
