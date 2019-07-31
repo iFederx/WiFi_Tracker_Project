@@ -84,28 +84,55 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="AddingStationPages\AddToRoom.xaml.cs">
+      <DependentUpon>AddToRoom.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="AddingStationPages\NewRoom.xaml.cs">
+      <DependentUpon>NewRoom.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="AddingStationPages\SelectRoom.xaml.cs">
+      <DependentUpon>SelectRoom.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Aggregator.cs" />
     <Compile Include="Analyzer.cs" />
     <Compile Include="Calibrator.cs" />
     <Compile Include="ConcurrentCircular.cs" />
     <Compile Include="ConcurrentDictionaryStack.cs" />
+    <Compile Include="Connection.cs" />
     <Compile Include="Context.cs" />
     <Compile Include="DatabaseInterface.cs" />
     <Compile Include="DatabasePublisher.cs" />
     <Compile Include="Device.cs" />
+    <Compile Include="FileParser.cs" />
     <Compile Include="GuiInterface.cs" />
     <Compile Include="Interpolators.cs" />
     <Compile Include="Packet.cs" />
     <Compile Include="PositionTools.cs" />
+    <Compile Include="Protocol.cs" />
     <Compile Include="Publisher.cs" />
     <Compile Include="Room.cs" />
     <Compile Include="Startup.xaml.cs">
       <DependentUpon>Startup.xaml</DependentUpon>
     </Compile>
     <Compile Include="Station.cs" />
+    <Compile Include="StationAdder.xaml.cs">
+      <DependentUpon>StationAdder.xaml</DependentUpon>
+    </Compile>
     <Compile Include="StationHandler.cs" />
     <Compile Include="Tester.cs" />
     <Compile Include="Utilities.cs" />
+    <Page Include="AddingStationPages\AddToRoom.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="AddingStationPages\NewRoom.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="AddingStationPages\SelectRoom.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -122,6 +149,10 @@
     <Page Include="Startup.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="StationAdder.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
   <ItemGroup>

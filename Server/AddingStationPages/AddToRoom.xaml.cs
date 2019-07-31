@@ -13,7 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace Server.AddingStationPages
+namespace Panopticon.AddingStationPages
 {
     /// <summary>
     /// Logica di interazione per AddToRoom.xaml

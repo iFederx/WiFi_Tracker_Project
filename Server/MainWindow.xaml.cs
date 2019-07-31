@@ -313,7 +313,7 @@ namespace Panopticon
             Context ctx = new Context();
             Thread backgroundProcessManager = new Thread(new ThreadStart(ctx.orchestrate));
             backgroundProcessManager.Start();
-			/*
+			
             //TODO FEDE: aprire finestra creazione stanza
             PositionTools.Room r = ctx.createRoom("TestRoom", 25, 25);
             StationHandler sh1 = null, sh2 = null, sh3 = null;
@@ -362,7 +362,7 @@ namespace Panopticon
             Thread.Sleep(8000);
             ctx.getAnalyzer().kill();
             */
-*/
+
         }
     }
 

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Net.Sockets;
 using System.Net;
 
-namespace Server
+namespace Panopticon
 {
     class Connection
     {

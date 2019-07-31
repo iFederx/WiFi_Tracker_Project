@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using System.IO;
 
-namespace Server
+namespace Panopticon
 {
     class Protocol
     {

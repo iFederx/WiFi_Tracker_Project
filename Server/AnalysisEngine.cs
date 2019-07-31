@@ -203,7 +203,7 @@ namespace Panopticon
             {
                 if(pb.supportsOperation(Publisher.DisplayableType.DeviceDevicePosition))
                     pb.publishPosition(d, action);
-                if(pb.supportsOperation(Publisher.DisplayableType.SimpleStat)
+                if(pb.supportsOperation(Publisher.DisplayableType.SimpleStat))
                     pb.publishStat(room.devicecount, room, d.lastPosition.positionDate,Publisher.StatType.InstantaneousDeviceCount);
             }
         }
