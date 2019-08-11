@@ -42,9 +42,9 @@ namespace Panopticon
             int nerrors = 0;
             while (true)
             {
-                Packet p = new Packet(macs[rand.Next(0, 4)], ssids[rand.Next(0, 4)], DateTime.Now, "", "", 0);
-                double x = 25 * rand.NextDouble();
-                double y = 25 * rand.NextDouble();
+                Packet p = new Packet(macs[rand.Next(0, macs.Length)], ssids[rand.Next(0, macs.Length)], DateTime.Now, "", "", 0);
+                double x = 35 * rand.NextDouble();
+                double y = 35 * rand.NextDouble();
                 System.Diagnostics.Debug.Print("Inserted with real position " + x + " " + y);
                 double xf=0, yf=0, xt=0, yt=0;
                 xf = x + ((rand.NextDouble() * 2) - 1);

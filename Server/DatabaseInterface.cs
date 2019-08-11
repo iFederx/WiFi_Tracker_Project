@@ -12,23 +12,32 @@ namespace Panopticon
     {
         NpgsqlConnection conn; 
         private enum SqlEvent {Insert, Update, Delete, Select};
-        private enum SqlType { Numeric, ByteArray, String, TimeStamp, Column};
+        private enum SqlType { Numeric, ByteArray, String, TimeStamp, Column,Boolean};
         private const String TMFORMAT = "yyyy-MM-dd HH:mm:ss";
-
+        private Object dblock = new object();
         private class SqlVariable
         {
             
             internal String colname;
             internal String value;
             internal bool where;
-            internal SqlVariable (String Colname, String Value, SqlType Type, bool Where)
+            internal string whereclause;
+            internal SqlVariable (String Colname, String Value, SqlType Type):this(Colname,Value,Type,false,"=")
+            {
+                
+                // if right type insert quotes
+            }
+            internal SqlVariable(String Colname, String Value, SqlType Type, Boolean Where):this(Colname,Value,Type,Where,"=")
+            {
+            }
+            internal SqlVariable(String Colname, String Value, SqlType Type, Boolean Where, String WhereClause)
             {
                 colname = Colname;
                 value = Value;
-                where = Where;
                 if (Type == SqlType.String || Type == SqlType.ByteArray || Type == SqlType.TimeStamp)
                     value = "'" + value + "'";
-                // if right type insert quotes
+                where = Where;
+                whereclause = WhereClause;
             }
         }
         private string getSql(SqlEvent eventtype, String tablename,params SqlVariable[] items)
@@ -56,7 +65,7 @@ namespace Panopticon
                                 query += " where ";
                             else
                                 query += " and ";
-                            query += (items[i].colname + "=" + items[i].value);
+                            query += (items[i].colname + items[i].whereclause + items[i].value);
                         }
                         break;
                     }
@@ -161,21 +170,24 @@ namespace Panopticon
         private bool performNonQuery(String sql)
         {
             int res = 0;
-            using (var cmd = new NpgsqlCommand(sql))
+            lock (dblock)
             {
-                cmd.Connection = conn;
-                try
+                using (var cmd = new NpgsqlCommand(sql))
                 {
-                    res = cmd.ExecuteNonQuery();
-                }
-                catch (Npgsql.PostgresException ex)
-                {
-                    if (ex.SqlState == "23505") //Sql state for unique constraint violation
-                        res = -1;
-                    else
-                        throw new Exception(ex.Message);
-                }
+                    cmd.Connection = conn;
+                    try
+                    {
+                        res = cmd.ExecuteNonQuery();
+                    }
+                    catch (Npgsql.PostgresException ex)
+                    {
+                        if (ex.SqlState == "23505") //Sql state for unique constraint violation
+                            res = -1;
+                        else
+                            throw new Exception(ex.Message);
+                    }
 
+                }
             }
             return res >= 0;
         }
@@ -184,29 +196,32 @@ namespace Panopticon
         {
             Nullable<StationInfo> si;
             String query = getSql(SqlEvent.Select, "stations",
-                new SqlVariable("roomname", null, SqlType.Column, false),
-                new SqlVariable("xpos", null, SqlType.Column, false),
-                new SqlVariable("ypos", null, SqlType.Column, false),
-                new SqlVariable("shortintrp", null, SqlType.Column, false),
-                new SqlVariable("longintrp", null, SqlType.Column, false),
+                new SqlVariable("roomname", null, SqlType.Column),
+                new SqlVariable("xpos", null, SqlType.Column),
+                new SqlVariable("ypos", null, SqlType.Column),
+                new SqlVariable("shortintrp", null, SqlType.Column),
+                new SqlVariable("longintrp", null, SqlType.Column),
                 new SqlVariable("namemac", NameMAC, SqlType.String, true));
-            using (var cmd = new NpgsqlCommand(query, conn))
+            lock (dblock)
             {
-                using (var reader = cmd.ExecuteReader())
+                using (var cmd = new NpgsqlCommand(query, conn))
                 {
-                    if (reader.Read())
+                    using (var reader = cmd.ExecuteReader())
                     {
-                        StationInfo si2 = new StationInfo();
-                        si2.NameMAC = NameMAC;
-                        si2.RoomName = reader.GetString(0);
-                        si2.X = reader.GetFloat(1);
-                        si2.Y = reader.GetFloat(2);
-                        si2.shortInterpolator = Convert.FromBase64String(reader.GetString(3));
-                        si2.longInterpolator = Convert.FromBase64String(reader.GetString(4));
-                        si = si2;
+                        if (reader.Read())
+                        {
+                            StationInfo si2 = new StationInfo();
+                            si2.NameMAC = NameMAC;
+                            si2.RoomName = reader.GetString(0);
+                            si2.X = reader.GetFloat(1);
+                            si2.Y = reader.GetFloat(2);
+                            si2.shortInterpolator = Convert.FromBase64String(reader.GetString(3));
+                            si2.longInterpolator = Convert.FromBase64String(reader.GetString(4));
+                            si = si2;
+                        }
+                        else
+                            si = null;
                     }
-                    else
-                        si = null;
                 }
             }
             return si;
@@ -216,20 +231,23 @@ namespace Panopticon
         {
             LinkedList<RoomInfo> li = new LinkedList<RoomInfo>();
             String query = getSql(SqlEvent.Select, "rooms",
-                new SqlVariable("roomname", null, SqlType.Column, false),
-                new SqlVariable("xlength", null, SqlType.Column, false),
-                new SqlVariable("ylength", null, SqlType.Column, false));
-            using (var cmd = new NpgsqlCommand(query, conn))
+                new SqlVariable("roomname", null, SqlType.Column),
+                new SqlVariable("xlength", null, SqlType.Column),
+                new SqlVariable("ylength", null, SqlType.Column));
+            lock (dblock)
             {
-                using (var reader = cmd.ExecuteReader())
+                using (var cmd = new NpgsqlCommand(query, conn))
                 {
-                    while (reader.Read())
+                    using (var reader = cmd.ExecuteReader())
                     {
-                        RoomInfo ri = new RoomInfo();
-                        ri.RoomName = reader.GetString(0);
-                        ri.Xlen = reader.GetFloat(1);
-                        ri.Ylen = reader.GetFloat(2);
-                        li.AddLast(ri);
+                        while (reader.Read())
+                        {
+                            RoomInfo ri = new RoomInfo();
+                            ri.RoomName = reader.GetString(0);
+                            ri.Xlen = reader.GetFloat(1);
+                            ri.Ylen = reader.GetFloat(2);
+                            li.AddLast(ri);
+                        }
                     }
                 }
             }
@@ -241,21 +259,21 @@ namespace Panopticon
             string shint = Convert.ToBase64String(si.shortInterpolator);
             string lgint = Convert.ToBase64String(si.longInterpolator);
             String query = getSql(SqlEvent.Insert, "stations",
-                            new SqlVariable("namemac", si.NameMAC, SqlType.String, false),
-                            new SqlVariable("roomname", si.RoomName, SqlType.String, false),
-                            new SqlVariable("xpos", si.X.ToString(CultureInfo.InvariantCulture), SqlType.Numeric, false),
-                            new SqlVariable("ypos", si.Y.ToString(CultureInfo.InvariantCulture), SqlType.Numeric, false),
-                            new SqlVariable("shortintrp", shint, SqlType.String, false),
-                            new SqlVariable("longintrp", lgint, SqlType.String, false));
+                            new SqlVariable("namemac", si.NameMAC, SqlType.String),
+                            new SqlVariable("roomname", si.RoomName, SqlType.String),
+                            new SqlVariable("xpos", si.X.ToString(CultureInfo.InvariantCulture), SqlType.Numeric),
+                            new SqlVariable("ypos", si.Y.ToString(CultureInfo.InvariantCulture), SqlType.Numeric),
+                            new SqlVariable("shortintrp", shint, SqlType.String),
+                            new SqlVariable("longintrp", lgint, SqlType.String));
             return performNonQuery(query);
         }        
 
         internal bool saveRoom(String RoomName, double Xlen, double Ylen)
         {
             String query = getSql(SqlEvent.Insert, "rooms",
-                            new SqlVariable("roomname", RoomName, SqlType.String, false),
-                            new SqlVariable("xlength", Xlen.ToString(CultureInfo.InvariantCulture), SqlType.Numeric, false),
-                            new SqlVariable("ylength", Ylen.ToString(CultureInfo.InvariantCulture), SqlType.Numeric, false));
+                            new SqlVariable("roomname", RoomName, SqlType.String),
+                            new SqlVariable("xlength", Xlen.ToString(CultureInfo.InvariantCulture), SqlType.Numeric),
+                            new SqlVariable("ylength", Ylen.ToString(CultureInfo.InvariantCulture), SqlType.Numeric));
             return performNonQuery(query);
         }
 
@@ -274,7 +292,7 @@ namespace Panopticon
         internal bool updateRoomCount(double count, String roomName)
         {
             String query = getSql(SqlEvent.Update, "rooms", 
-                new SqlVariable("pcount", count.ToString(CultureInfo.InvariantCulture),  SqlType.Numeric, false), 
+                new SqlVariable("pcount", count.ToString(CultureInfo.InvariantCulture),  SqlType.Numeric), 
                 new SqlVariable("roomname", roomName, SqlType.String, true));
             return performNonQuery(query);
         }
@@ -282,41 +300,102 @@ namespace Panopticon
         internal bool addLTRoomCount(double stat, String roomname, DateTime timestamp)
         {
             String query = getSql(SqlEvent.Insert, "countstats", 
-                new SqlVariable("count", stat.ToString(CultureInfo.InvariantCulture),SqlType.Numeric,false), 
-                new SqlVariable("roomname", roomname,  SqlType.String,false), 
-                new SqlVariable("tm", timestamp.ToString(TMFORMAT), SqlType.TimeStamp,false));
+                new SqlVariable("count", stat.ToString(CultureInfo.InvariantCulture),SqlType.Numeric), 
+                new SqlVariable("roomname", roomname,  SqlType.String), 
+                new SqlVariable("tm", timestamp.ToString(TMFORMAT), SqlType.TimeStamp));
             return performNonQuery(query);
         }
 
         internal bool addRequestedSSID(string identifier, string SSID)
         {
             String query = getSql(SqlEvent.Insert, "requestedssids", 
-                new SqlVariable("identifier", identifier, SqlType.String, false), 
-                new SqlVariable("ssid", SSID, SqlType.String, false));
+                new SqlVariable("identifier", identifier, SqlType.String), 
+                new SqlVariable("ssid", SSID, SqlType.String));
             return performNonQuery(query);
         }
 
         internal bool renameDevice(string oldid, string newid)
         {
             String query = getSql(SqlEvent.Update, "requestedssids", 
-                new SqlVariable("identifier", newid, SqlType.String, false), 
+                new SqlVariable("identifier", newid, SqlType.String), 
                 new SqlVariable("identifier", oldid, SqlType.String, true));
             bool res = performNonQuery(query);
             query = getSql(SqlEvent.Update, "devicespositions", 
-                new SqlVariable("identifier", newid, SqlType.String, false), 
+                new SqlVariable("identifier", newid, SqlType.String), 
                 new SqlVariable("identifier", oldid, SqlType.String, true));
             return res && performNonQuery(query);
         }
-        internal bool addDevicePosition(string identifier, string mac, string roomname, double xpos, double ypos, DateTime timestamp)
+        internal bool addDevicePosition(string identifier, string mac, string roomname, double xpos, double ypos, DateTime timestamp, Publisher.EventType evty)
         {
             String query = getSql(SqlEvent.Insert, "devicespositions", 
-                new SqlVariable("identifier", identifier, SqlType.String, false), 
-                new SqlVariable("mac", mac, SqlType.String, false),
-                new SqlVariable("roomname", roomname, SqlType.String, false),
-                new SqlVariable("tm", timestamp.ToString(TMFORMAT), SqlType.TimeStamp, false),
-                new SqlVariable("xpos", xpos.ToString(CultureInfo.InvariantCulture), SqlType.Numeric, false),
-                new SqlVariable("ypos", ypos.ToString(CultureInfo.InvariantCulture), SqlType.Numeric, false));
+                new SqlVariable("identifier", identifier, SqlType.String), 
+                new SqlVariable("mac", mac, SqlType.String),
+                new SqlVariable("roomname", roomname, SqlType.String),
+                new SqlVariable("tm", timestamp.ToString(TMFORMAT), SqlType.TimeStamp),
+                new SqlVariable("xpos", xpos.ToString(CultureInfo.InvariantCulture), SqlType.Numeric),
+                new SqlVariable("ypos", ypos.ToString(CultureInfo.InvariantCulture), SqlType.Numeric),
+                new SqlVariable("outmovement",(evty==Publisher.EventType.Disappear||evty==Publisher.EventType.MoveOut).ToString(),SqlType.Boolean));
             return performNonQuery(query);
+        }
+        internal struct DevicePosition
+        {
+            internal String identifier;
+            internal double xpos;
+            internal double ypos;
+            internal double prexpos;
+            internal double preypos;
+            internal DateTime timestamp;
+            internal bool moveout;
+        }
+        internal DevicePosition[] loadDevicesPositions(string roomName, DateTime fromdate, string fromtime, DateTime todate, string totime)
+        {
+            String query = getSql(SqlEvent.Select, "devicespositions",
+                new SqlVariable("identifier", null,SqlType.Column),
+                new SqlVariable("xpos", null, SqlType.Column),
+                new SqlVariable("ypos", null, SqlType.Column),
+                new SqlVariable("tm", null, SqlType.Column),
+                new SqlVariable("outmovement", null, SqlType.Column),
+                new SqlVariable("roomname", roomName, SqlType.String,true),
+                new SqlVariable("tm", fromdate.ToString("yyyy-MM-dd") + " " + fromtime, SqlType.TimeStamp, true, ">="),
+                new SqlVariable("tm", todate.ToString("yyyy-MM-dd") + " " + totime, SqlType.TimeStamp, true, "<=")) +
+                " order by tm asc";
+            LinkedList<DevicePosition> li = new LinkedList<DevicePosition>();
+            Dictionary<String, DevicePosition> prepos = new Dictionary<String, DevicePosition>();
+            lock (dblock)
+            {
+                using (var cmd = new NpgsqlCommand(query, conn))
+                {
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            DevicePosition dp = new DevicePosition();
+                            DevicePosition dp2;
+                            dp.identifier = reader.GetString(0);
+                            dp.xpos = reader.GetDouble(1);
+                            dp.ypos = reader.GetDouble(2);
+                            dp.timestamp = reader.GetDateTime(3);
+                            dp.moveout = reader.GetBoolean(4);
+                            if (prepos.TryGetValue(dp.identifier, out dp2))
+                            {
+                                dp.prexpos = dp2.xpos;
+                                dp.preypos = dp2.ypos;
+                                prepos[dp.identifier] = dp;
+                            }
+                            else
+                            {
+                                dp.prexpos = -1;
+                                dp.preypos = -1;
+                                prepos.Add(dp.identifier, dp);
+                            }
+                            li.AddLast(dp);
+                        }
+                    }
+                }
+            }
+            return li.ToArray<DevicePosition>();
+
+
         }
     }
 }

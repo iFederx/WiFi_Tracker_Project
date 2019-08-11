@@ -33,7 +33,7 @@ namespace Panopticon
         {
             return ((int)dt & this.SupportedOperations) != 0;
         }
-        internal virtual void publishPosition(Device d, EventType e) { throw new NotSupportedException(); }
+        internal virtual void publishPosition(Device d, PositionTools.Position p, EventType e) { throw new NotSupportedException(); }
         internal virtual void publishStat(double stat, Room r, DateTime statTime, StatType s) { throw new NotSupportedException(); }
         internal virtual void publishRename(String oldId, String newId) { throw new NotSupportedException(); }
         internal virtual void publishRoomUpdate(Room r, EventType e) { throw new NotSupportedException(); }

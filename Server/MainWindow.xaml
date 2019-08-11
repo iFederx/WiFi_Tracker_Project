@@ -4,19 +4,20 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Panopticon"
-        mc:Ignorable="d"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+    mc:Ignorable="d"
         Title="Panopticon" Height="650" Width="900" WindowStartupLocation="CenterScreen" WindowState="Maximized" ContentRendered="Window_ContentRendered" Closed="Window_Closed" MinWidth="700" MinHeight="700">
     <Grid>
         <ScrollViewer VerticalScrollBarVisibility="Auto" Width="200" Margin="0,0,0,0" HorizontalAlignment="Left">
             <StackPanel Name="roomlistpanel" HorizontalAlignment="Left" Width="200"/>
         </ScrollViewer>
         <TabControl x:Name="tabControl" Margin="200,0,0,0" SelectionChanged="tabControl_SelectionChanged">
-            <TabItem x:Name="lvtrck" Header="Live tracking" Visibility="Hidden" >
+            <TabItem x:Name="lvtrck" Header="Live tracking">
                 <Grid>
                     <Viewbox Margin="10,80,210,200" x:Name="lvtrck_viewbox" HorizontalAlignment="Center">
                         <Border x:Name="lvtrck_border" BorderBrush="Black" BorderThickness="2">
                             <Canvas x:Name="lvtrck_canvas" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-                        </Border>                        
+                        </Border>
                     </Viewbox>
                     <ScrollViewer VerticalScrollBarVisibility="Auto" Width="200" Margin="10,80,10,200" HorizontalAlignment="Right">
                         <StackPanel Name="lvtrck_devlist_panel" HorizontalAlignment="Left" Width="200"/>
@@ -24,18 +25,55 @@
                     <Label x:Name="lvtrck_roomname" Content="RoomName" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="60" Width="240" FontSize="40"/>
                     <Label x:Name="lvtrck_people" Content="Label" HorizontalAlignment="Right" Margin="0,5,10,0" VerticalAlignment="Top" Width="160" Height="40" FontSize="20"/>
                     <Label x:Name="lvtrck_stations" Content="Label" HorizontalAlignment="Right" Margin="0,35,10,0" VerticalAlignment="Top" Width="160" Height="40" FontSize="20"/>
+                    <Viewbox Margin="10,0,10,10" Height="180" HorizontalAlignment="Center" VerticalAlignment="Bottom" Stretch="Fill">
+                        <Canvas Margin="0,0,0,0" Width="720" Height="100" Name="occup_histo"></Canvas>
+                    </Viewbox>
                 </Grid>
             </TabItem>
-            <TabItem x:Name="rmstats" Header="Room stats" Visibility="Hidden">
-                <Grid/>
+            <TabItem x:Name="trackrlp" Header="Tracking reloop">
+                <Grid>
+                    <Viewbox Margin="10,105,210,10" x:Name="trackrlp_viewbox" HorizontalAlignment="Center" VerticalAlignment="Top">
+                        <Border x:Name="trackrlp_border" BorderBrush="Black" BorderThickness="2">
+                            <Canvas x:Name="trackrlp_canvas" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                        </Border>
+                    </Viewbox>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Width="190" Margin="0,105,10,10" HorizontalAlignment="Right">
+                        <StackPanel Name="trackrlp_devlist_panel" HorizontalAlignment="Left" Width="200"/>
+                    </ScrollViewer>
+                    <Label x:Name="trackrlp_roomname" Content="RoomName" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="60" Width="240" FontSize="40"/>
+                    <Label HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,2,387,0">From:</Label>
+                    <DatePicker Name="trackrlp_fromDate" HorizontalAlignment="Right" VerticalAlignment="Top" Width="90" SelectedDate="{x:Static sys:DateTime.Now}" SelectedDateFormat="Short" Height="24" Margin="0,4,297,0"/>
+                    <ComboBox x:Name="trackrlp_fromTime" HorizontalAlignment="Right" VerticalAlignment="Top" Width="55" Height="24" IsEditable="True" Margin="0,4,237,0"/>
+                    <Label HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,2,209,0">To:</Label>
+                    <DatePicker Name="trackrlp_toDate" HorizontalAlignment="Right" VerticalAlignment="Top" Width="90" SelectedDate="{x:Static sys:DateTime.Now}" SelectedDateFormat="Short" Height="24" Margin="0,4,117,0"/>
+                    <ComboBox x:Name="trackrlp_toTime" HorizontalAlignment="Right" VerticalAlignment="Top" Width="55" Height="24" IsEditable="True" Margin="0,4,57,0" />
+                    <Button x:Name="trackrlp_load" Content="Load" HorizontalAlignment="Right" VerticalAlignment="Top" Width="42" Height="24" Margin="0,4,10,0" Click="Rlp_load_Click"/>
+                    <TextBlock x:Name="trackrlp_ReplayInfo" Text="No loaded replay." Margin="0,28,10,0" VerticalAlignment="Top" Height="20" HorizontalAlignment="Right"/>
+                    <TextBlock x:Name="trackrlp_time" HorizontalAlignment="Right" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Margin="0,67,55,0" Width="150" Height="21" FontSize="16"/>
+                    <Grid HorizontalAlignment="Stretch" Height="33" Margin="10,67,210,0" VerticalAlignment="Top" Width="Auto">
+                        <Grid Height="33" Width="170" HorizontalAlignment="Center" Name="trackrlp_controls" Visibility="Hidden">
+                            <Image ToolTip="Back 10 seconds" Cursor="Hand" x:Name="back" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="20" Margin="0,8,0,0" MouseDown="back_MouseDown" Source="Resources/placeholder.png" />
+                            <Image ToolTip="Half speed" Cursor="Hand" x:Name="slower" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="20" Margin="25,8,0,0" MouseDown="slower_MouseDown" Source="Resources/placeholder.png" />
+                            <Image ToolTip="Pause" Cursor="Hand" x:Name="pause" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="20" Margin="50,8,0,0" MouseDown="pause_MouseDown" Source="Resources/placeholder.png" />
+                            <Image ToolTip="Play" Cursor="Hand" x:Name="play" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="20" Margin="75,8,0,0" MouseDown="play_MouseDown" Source="Resources/placeholder.png" />
+                            <Image ToolTip="Reset" Cursor="Hand" x:Name="reset" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="20" Margin="100,8,0,0" MouseDown="reset_MouseDown" Source="Resources/placeholder.png"/>
+                            <Image ToolTip="Double Speed" Cursor="Hand" x:Name="faster" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="20" Margin="125,8,0,0" MouseDown="faster_MouseDown" Source="Resources/placeholder.png" />
+                            <Image ToolTip="Forward 10 seconds" Cursor="Hand" x:Name="forward" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="20" Margin="150,8,0,0" MouseDown="forward_MouseDown" Source="Resources/placeholder.png" />
+                        </Grid>
+                    </Grid>
+                    <TextBlock x:Name="trackrlp_speed" HorizontalAlignment="Right" Margin="0,67,10,0" TextWrapping="Wrap" Text="" Height="21" VerticalAlignment="Top" Width="60" TextAlignment="Left" FontSize="16"/>
+
+
+                </Grid>
             </TabItem>
-            <TabItem x:Name="trackrlp" Header="Tracking reloop" Visibility="Hidden">
+            <TabItem x:Name="rmstats" Header="Room stats">
                 <Grid/>
             </TabItem>
             <TabItem x:Name="dvinfo" Header="Device informations" Visibility="Hidden">
                 <Grid/>
             </TabItem>
         </TabControl>
+
 
     </Grid>
 </Window>

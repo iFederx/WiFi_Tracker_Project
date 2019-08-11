@@ -19,7 +19,7 @@ namespace Panopticon
         Calibrator calibrator;
         ReaderWriterLockSlim locker = new ReaderWriterLockSlim();
         DatabasePublisher databasePub;
-        DatabaseInterface databaseInt;
+        internal readonly DatabaseInterface databaseInt;
         List<Publisher> publishers;
         Aggregator aggregator;
         LinkedList<Thread> threads = new LinkedList<Thread>();
@@ -217,14 +217,6 @@ namespace Panopticon
             return ris;
         }
         
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="name"></param>
-        /// <param name="xl"></param>
-        /// <param name="yl"></param>
-        /// <param name="saveToFile"></param>
-        /// <returns>The created/instanciated Room object, null if it already exists</returns>
         public Room createRoom(Room r)
         {
             //init station per room, user per room

@@ -26,11 +26,10 @@ namespace Panopticon
             }
         }
         BlockingCollection<Displayable> todo = new BlockingCollection<Displayable>();
-        internal override void publishPosition(Device d, EventType e)
+        internal override void publishPosition(Device d, PositionTools.Position p, EventType e)
         {
-            if(e!=EventType.Disappear)
-                todo.Add(new Displayable(d, null, e, DisplayableType.DeviceDevicePosition));
-            System.Diagnostics.Debug.Print("DEVICE POSITION: " + d.lastPosition.X + " " + d.lastPosition.Y);
+            todo.Add(new Displayable(d, p, e, DisplayableType.DeviceDevicePosition));
+            System.Diagnostics.Debug.Print("DEVICE POSITION: " + p.X + " " + p.Y);
         }
         internal override void publishStat(double stat, Room r, DateTime statTime, StatType s)
         {
@@ -88,7 +87,9 @@ namespace Panopticon
                     case DisplayableType.DeviceDevicePosition:
                         {
                             Device d = (Device)item.arg1;
-                            DBInt.addDevicePosition(d.identifier,d.MAC,d.lastPosition.room.roomName,d.lastPosition.X,d.lastPosition.Y,d.lastPosition.positionDate);
+                            PositionTools.Position p = (PositionTools.Position)item.arg2;
+                            EventType e = (EventType)item.argtype;
+                            DBInt.addDevicePosition(d.identifier,d.MAC,p.room.roomName,p.X,p.Y,p.positionDate,e);
                             break;
                         }
                 }

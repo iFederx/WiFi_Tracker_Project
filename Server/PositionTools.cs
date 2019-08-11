@@ -97,6 +97,13 @@ namespace Panopticon
                 room = r;
                 uncertainity = u;
             }
+
+            public Position(Position a) : base(a)
+            {
+                room = a.room;
+                positionDate = a.positionDate;
+                uncertainity = a.uncertainity;
+            }
         }
         class Circle : Point
         {

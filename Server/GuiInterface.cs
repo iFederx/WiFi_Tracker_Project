@@ -19,13 +19,13 @@ namespace Panopticon
             }
         }
 
-        internal override void publishPosition(Device d, EventType e)
+        internal override void publishPosition(Device d, PositionTools.Position p, EventType e)
         {
-            if(d.lastPosition.room == linkedroom || e == EventType.Disappear || e == EventType.MoveOut)
+            if(p.room == linkedroom || e == EventType.Disappear || e == EventType.MoveOut)
             {
-                Application.Current.Dispatcher.Invoke(() => { linkedwindow.updateDevicePosition(d, d.lastPosition); });
+                Application.Current.Dispatcher.Invoke(() => { linkedwindow.updateDevicePosition(d, p, e); });
             }
-            System.Diagnostics.Debug.Print("DEVICE POSITION: " + d.lastPosition.X + " " + d.lastPosition.Y);
+            System.Diagnostics.Debug.Print("DEVICE POSITION: " + p.X + " " + p.Y);
         }
 
         internal override void publishStat(double stat, Room r, DateTime statTime, StatType s)

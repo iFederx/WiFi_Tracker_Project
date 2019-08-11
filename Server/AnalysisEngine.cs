@@ -145,7 +145,9 @@ namespace Panopticon
                         B = A;
                         A = bestMatch;
                     }
-                    placeInRoomAndPublish(A.lastPosition.room,A,Publisher.EventType.Disappear);
+                    PositionTools.Position oldApos = new PositionTools.Position(A.lastPosition);
+                    oldApos.positionDate = B.firstPosition.positionDate;
+                    placeInRoomAndPublish(A.lastPosition.room,A,oldApos,Publisher.EventType.Disappear);
                     B.firstPosition = A.firstPosition;
                     B.aliases.PushRange(A.aliases.ToArray());
                     B.aliases.Push(new Device.Alias(A.MAC, maxpoint));
@@ -172,26 +174,28 @@ namespace Panopticon
         private void locateAndPublish(Device d,Packet p)
         {
             Room oldRoom =(d.lastPosition!=null)?d.lastPosition.room:null;
-            d.lastPosition = PositionTools.triangulate(p.Receivings);
-            d.lastPosition.positionDate = p.Timestamp;
+            PositionTools.Position newposition = PositionTools.triangulate(p.Receivings);
             Publisher.EventType e = Publisher.EventType.Update;
+            newposition.positionDate = p.Timestamp;
             if (oldRoom==null)
             {
-                d.firstPosition = d.lastPosition;
+                d.firstPosition = newposition;
                 e = Publisher.EventType.Appear;
             }
-            else if(oldRoom!=d.lastPosition.room)
+            else if(oldRoom!=newposition.room)
             {
-                placeInRoomAndPublish(oldRoom,d,Publisher.EventType.MoveOut);
+                PositionTools.Position oldpos = new PositionTools.Position(d.lastPosition);
+                oldpos.positionDate = newposition.positionDate;
+                placeInRoomAndPublish(oldRoom,d,oldpos, Publisher.EventType.MoveOut);
                 e = Publisher.EventType.MoveIn;
             }
-            placeInRoomAndPublish(d.lastPosition.room, d, e);
+            d.lastPosition = newposition;
+            placeInRoomAndPublish(d.lastPosition.room, d, newposition, e);
 
         }
 
-        private void placeInRoomAndPublish(Room room, Device d, Publisher.EventType action)
+        private void placeInRoomAndPublish(Room room, Device d, PositionTools.Position p, Publisher.EventType action)
         {
-            byte dummy;
             //optionally here insert to update only if device has more than 5 minutes of history
             if (action == Publisher.EventType.Appear || action == Publisher.EventType.MoveIn)
                 room.addDevice(d);
@@ -200,9 +204,9 @@ namespace Panopticon
             foreach (Publisher pb in publishers)
             {
                 if(pb.supportsOperation(Publisher.DisplayableType.DeviceDevicePosition))
-                    pb.publishPosition(d, action);
+                    pb.publishPosition(d, p, action);
                 if(pb.supportsOperation(Publisher.DisplayableType.SimpleStat))
-                    pb.publishStat(room.devicecount, room, d.lastPosition.positionDate,Publisher.StatType.InstantaneousDeviceCount);
+                    pb.publishStat(room.devicecount, room, p.positionDate,Publisher.StatType.InstantaneousDeviceCount);
             }
         }
 
@@ -219,7 +223,9 @@ namespace Panopticon
             {
                 if (removed.anonymous)
                     anoniDevices.Remove(removed.MAC);
-                placeInRoomAndPublish(removed.lastPosition.room,removed,Publisher.EventType.Disappear);
+                removed.lastPosition = new PositionTools.Position(removed.lastPosition);
+                removed.lastPosition.positionDate = DateTime.Now;
+                placeInRoomAndPublish(removed.lastPosition.room,removed,removed.lastPosition,Publisher.EventType.Disappear);
             }
         }
     }
