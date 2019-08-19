@@ -22,10 +22,11 @@ namespace Panopticon
             internal String value;
             internal bool where;
             internal string whereclause;
+            internal SqlVariable(String Colname) : this(Colname, null, SqlType.Column, false, "=")
+            {
+            }
             internal SqlVariable (String Colname, String Value, SqlType Type):this(Colname,Value,Type,false,"=")
             {
-                
-                // if right type insert quotes
             }
             internal SqlVariable(String Colname, String Value, SqlType Type, Boolean Where):this(Colname,Value,Type,Where,"=")
             {
@@ -396,6 +397,259 @@ namespace Panopticon
             return li.ToArray<DevicePosition>();
 
 
+        }
+
+        internal double[] loadMaxDevicesDay(int selectedmonth, int selectedyear, String roomname)
+        {
+            int numdays = 31;
+            if (selectedmonth == 2)
+            {
+                numdays = 28;
+                if (selectedyear % 4 == 0 && (selectedyear % 100 != 0 || selectedyear % 1000 == 0))
+                    numdays = 29;
+            }
+            else if (selectedmonth == 4 || selectedmonth == 6 || selectedmonth == 9 || selectedmonth == 11)
+                numdays = 30;
+            double[] res = new double[numdays+1];
+            String query = getSql(SqlEvent.Select, "countstats",
+                new SqlVariable("max(count) as mcount"),
+                new SqlVariable("extract(day from tm) as dday"),
+                new SqlVariable("roomname", roomname, SqlType.String, true),
+                new SqlVariable("extract(month from tm)", selectedmonth.ToString(), SqlType.Numeric, true),
+                new SqlVariable("extract(year from tm)", selectedyear.ToString(), SqlType.Numeric, true)) + " group by extract(day from tm)";
+            bool notempty = false;
+            lock (dblock)
+            {
+                using (var cmd = new NpgsqlCommand(query, conn))
+                {
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            notempty = true;
+                            res[(int)reader.GetDouble(1)] = reader.GetDouble(0);
+                        }
+                    }
+                }
+            }
+            return notempty?res:null;
+        }
+
+        internal double[][] loadAvgDevicesTime(int selectedmonth, int selectedyear, string roomname)
+        {
+            int numdays = 31;
+            if (selectedmonth == 2)
+            {
+                numdays = 28;
+                if (selectedyear % 4 == 0 && (selectedyear % 100 != 0 || selectedyear % 1000 == 0))
+                    numdays = 29;
+            }
+            else if (selectedmonth == 4 || selectedmonth == 6 || selectedmonth == 9 || selectedmonth == 11)
+                numdays = 30;
+            double[][] res = new double[numdays + 1][];
+            for(int i=0;i<numdays+1;i++)
+                res[i]=new double[24];
+            String query = getSql(SqlEvent.Select, "countstats",
+                new SqlVariable("avg(count) as mcount"),
+                new SqlVariable("extract(day from tm) as dday"),
+                new SqlVariable("extract(hour from tm) as dhour"),
+                new SqlVariable("roomname", roomname, SqlType.String, true),
+                new SqlVariable("extract(month from tm)", selectedmonth.ToString(), SqlType.Numeric, true),
+                new SqlVariable("extract(year from tm)", selectedyear.ToString(), SqlType.Numeric, true)) + " group by extract(hour from tm), extract(day from tm)";
+
+            lock (dblock)
+            {
+                using (var cmd = new NpgsqlCommand(query, conn))
+                {
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            res[(int)reader.GetDouble(1)][(int)reader.GetDouble(2)] = reader.GetDouble(0);
+                        }
+                    }
+                }
+            }
+            for(int hour=0;hour<24;hour++)
+            {
+                for (int day = 1; day < res.GetLength(0);day++)
+                    res[0][hour] += res[day][hour];
+                res[0][hour] /= res.GetLength(0);
+            }
+            return res;
+        }
+
+        internal int[][,] loadHeathmaps(object p, string roomname, double xlength, double ylength, int selectedmonth, int selectedyear)
+        {
+            int numdays = 31;
+            if (selectedmonth == 2)
+            {
+                numdays = 28;
+                if (selectedyear % 4 == 0 && (selectedyear % 100 != 0 || selectedyear % 1000 == 0))
+                    numdays = 29;
+            }
+            else if (selectedmonth == 4 || selectedmonth == 6 || selectedmonth == 9 || selectedmonth == 11)
+                numdays = 30;
+            int[][,] res = new int[numdays + 1][,];
+            for(int j=0;j<numdays+1;j++)
+                res[j]= new int[(int)xlength+1, (int)ylength + 1];
+            String query = getSql(SqlEvent.Select, "devicespositions",
+               new SqlVariable("xpos"),
+               new SqlVariable("ypos"),
+               new SqlVariable("extract(day from tm) as dday"),
+               new SqlVariable("roomname", roomname, SqlType.String, true),
+               new SqlVariable("extract(month from tm)", selectedmonth.ToString(), SqlType.Numeric, true),
+               new SqlVariable("extract(year from tm)", selectedyear.ToString(), SqlType.Numeric, true));
+            lock (dblock)
+            {
+                using (var cmd = new NpgsqlCommand(query, conn))
+                {
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            res[(int)(reader.GetDouble(2))][(int)(reader.GetDouble(0)), (int)(reader.GetDouble(1))] += 1;
+                        }
+                    }
+                }
+            }
+            for (int xpos = 0; xpos < res[0].GetLength(0); xpos++)
+            {
+                for(int ypos=0;ypos<res[0].GetLength(1);ypos++)
+                {
+                    for (int day = 1; day < res.Length; day++)
+                        res[0][xpos,ypos] += res[day][xpos,ypos];
+                }               
+            }
+            return res;
+        }
+
+        internal string[,] loadFrequentMacs(int month, int year, string roomname)
+        {
+            int maxres = 15;
+            int numdays = 31;
+            if (month == 2)
+            {
+                numdays = 28;
+                if (year % 4 == 0 && (year % 100 != 0 || year % 1000 == 0))
+                    numdays = 29;
+            }
+            else if (month == 4 || month == 6 || month == 9 || month == 11)
+                numdays = 30;
+            String[,] res = new String[numdays + 1, maxres];
+            String query1 = getSql(SqlEvent.Select, "devicespositions",
+               new SqlVariable("identifier"),
+               new SqlVariable("count(*) as cnt"),
+               new SqlVariable("extract(day from date(tm)) as dt"),
+               new SqlVariable("roomname", roomname, SqlType.String, true),
+               new SqlVariable("extract(month from tm)", month.ToString(), SqlType.Numeric, true),
+               new SqlVariable("extract(year from tm)", year.ToString(), SqlType.Numeric, true))+" group by identifier,date(tm)";
+            String query2 = getSql(SqlEvent.Select, "devicespositions",
+               new SqlVariable("identifier"),
+               new SqlVariable("count(*) as cnt"),
+               new SqlVariable("0 as dt"),
+               new SqlVariable("roomname", roomname, SqlType.String, true),
+               new SqlVariable("extract(month from tm)", month.ToString(), SqlType.Numeric, true),
+               new SqlVariable("extract(year from tm)", year.ToString(), SqlType.Numeric, true)) + " group by identifier";
+            String query = "(" + query1 + ") union (" + query2 + ") order by dt,cnt desc";
+            int preday = -1;
+            int cntperday = 0;
+            lock (dblock)
+            {
+                using (var cmd = new NpgsqlCommand(query, conn))
+                {
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            int day = (int)reader.GetDouble(2);
+                            String id = reader.GetString(0);
+                            if (preday != day)
+                            {
+                                cntperday = 0;
+                                preday = day;
+                            }
+                            if(cntperday<maxres)
+                            {
+                                res[day, cntperday] = id;
+                                cntperday++;
+                            }
+                        }
+                    }
+                }
+            }
+            return res;
+        }
+
+        internal class DeviceInfo
+        {
+            internal DateTime FirstSeen;
+            internal DateTime LastSeen;
+            internal String[] ssids;
+        }
+
+        internal DeviceInfo loadDeviceInfo(string id)
+        {
+            DeviceInfo di = new DeviceInfo();
+            String query1 = getSql(SqlEvent.Select, "devicespositions",
+                new SqlVariable("min(tm)"),
+                new SqlVariable("max(tm)"),
+                new SqlVariable("identifier", id, SqlType.String, true));
+            String query2 = getSql(SqlEvent.Select, "requestedssids",
+                new SqlVariable("ssid"),
+                new SqlVariable("identifier", id, SqlType.String, true));
+            LinkedList<String> ssids = new LinkedList<string>();
+            lock (dblock)
+            {
+                using (var cmd = new NpgsqlCommand(query1, conn))
+                {
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            try
+                            {
+                                di.FirstSeen = reader.GetDateTime(0);
+                                di.LastSeen = reader.GetDateTime(1);
+                            }
+                            catch(Exception ex)
+                            {
+                                return null;
+                            }
+                        }
+                        else
+                        {
+                            return null;
+                        }
+                    }
+                }
+                using (var cmd = new NpgsqlCommand(query2, conn))
+                {
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            ssids.AddLast(reader.GetString(0));
+                        }
+                    }
+                }
+            }
+            di.ssids = ssids.ToArray<String>();
+            return di;
+        }
+
+        internal class DeviceStats
+        {
+            internal Double[] timeperday;
+            internal Double[] pingsperhour;
+            internal int[,] heatmap;
+            internal Dictionary<String, Int32> roommap = new Dictionary<string, int>();
+        }
+
+        internal DeviceStats loadDeviceStats(DateTime fromdate, string fromtime, DateTime todate, string totime, string deviceid, string roomName, bool loadroommap, bool loadheathmap, double xlen, double ylen)
+        {
+            DeviceStats ds = new DeviceStats();
+            return ds;
         }
     }
 }

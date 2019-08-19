@@ -16,7 +16,6 @@ namespace Panopticon
         ConcurrentDictionary<String, Room> rooms;
         ConcurrentDictionaryStack<String, Device> deviceMap;
         AnalysisEngine analyzer;
-        Calibrator calibrator;
         ReaderWriterLockSlim locker = new ReaderWriterLockSlim();
         DatabasePublisher databasePub;
         internal readonly DatabaseInterface databaseInt;
@@ -38,7 +37,6 @@ namespace Panopticon
             aggregator = new Aggregator(publishers);
             publishers.Add(aggregator);
             analyzer = new AnalysisEngine(publishers, deviceMap);
-            calibrator = new Calibrator(analyzer);
         }
 
         public void orchestrate()
@@ -55,27 +53,9 @@ namespace Panopticon
         }
         public Analyzer getAnalyzer()
         {
-            if (calibrator.inCalibration)
-                return calibrator;
-            else
-                return analyzer;
+           return analyzer;
         }
-        public bool switchCalibration(bool calibrate, Room roomToCalibrate)
-        {
-            bool ris = false;
-            if (calibrate && calibrator.switchCalibration(roomToCalibrate))
-            {
-                Thread calibratorT = new Thread(new ThreadStart(calibrator.calibratorProcess));
-                calibratorT.Start();
-                ris = true;
-            }
-            else if (!calibrate && calibrator.switchCalibration(null))
-            {
-                calibrator.kill();
-                ris = true;
-            }
-            return ris;
-        }
+       
         public Station tryAddStation(String NameMAC, StationHandler handler, bool AllowAsynchronous) //Replace Object with the relevant type
         {
             Station s=loadStation(NameMAC,handler);
@@ -117,8 +97,6 @@ namespace Panopticon
             double y=si.Value.Y;
             Room room=getRoom(roomName);
             s.location = new PositionTools.Position(x,y,room);
-            s.shortInterpolator=Interpolators.deserialize(si.Value.shortInterpolator);
-            s.longInterpolator=Interpolators.deserialize(si.Value.longInterpolator);
             locker.EnterWriteLock();
             room.addStation(s);
             stations[s.NameMAC] = s;
@@ -136,8 +114,6 @@ namespace Panopticon
             si.RoomName = s.location.room.roomName;
             si.X = s.location.X;
             si.Y = s.location.Y;
-            si.shortInterpolator = Interpolators.serialize(s.shortInterpolator);
-            si.longInterpolator = Interpolators.serialize(s.longInterpolator);
             return databaseInt.saveStationInfo(si); ;
         }
         public bool deleteStation(String NameMAC)
@@ -151,8 +127,6 @@ namespace Panopticon
             s.lastHearthbeat = DateTime.Now;
             s.NameMAC = NameMAC;
             s.location = new PositionTools.Position(X, Y, room);
-            s.shortInterpolator=PositionTools.StandardShortInterpolator;
-            s.longInterpolator= PositionTools.StandardLongInterpolator;
             s.handler = handler;
             locker.EnterWriteLock();
             room.addStation(s);
@@ -237,7 +211,6 @@ namespace Panopticon
         public void kill()
         {
             analyzer.kill();
-            calibrator.kill(); //should not be necessary
             databasePub.kill();
             aggregator.kill();
             foreach(Thread t in threads)

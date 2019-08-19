@@ -10,10 +10,8 @@ namespace Panopticon
     class Tester
     {
         public double dist2RSSI(double dist)
-        {
-            if (dist < 1)
-                return -25;
-            return -30 * (Math.Log(dist, 5) + 1);
+        {           
+            return dist;
         }
         public double pos2dist(double x, double y, double sx, double sy)
         {

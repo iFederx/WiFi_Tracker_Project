@@ -48,7 +48,7 @@
                     <DatePicker Name="trackrlp_toDate" HorizontalAlignment="Right" VerticalAlignment="Top" Width="90" SelectedDate="{x:Static sys:DateTime.Now}" SelectedDateFormat="Short" Height="24" Margin="0,4,117,0"/>
                     <ComboBox x:Name="trackrlp_toTime" HorizontalAlignment="Right" VerticalAlignment="Top" Width="55" Height="24" IsEditable="True" Margin="0,4,57,0" />
                     <Button x:Name="trackrlp_load" Content="Load" HorizontalAlignment="Right" VerticalAlignment="Top" Width="42" Height="24" Margin="0,4,10,0" Click="Rlp_load_Click"/>
-                    <TextBlock x:Name="trackrlp_ReplayInfo" Text="No loaded replay." Margin="0,28,10,0" VerticalAlignment="Top" Height="20" HorizontalAlignment="Right"/>
+                    <TextBlock x:Name="trackrlp_ReplayInfo" Text="No loaded replay." Margin="0,28,10,0" VerticalAlignment="Top" Height="20" HorizontalAlignment="Right" FontStyle="Italic" FontFamily="Segoe UI"/>
                     <TextBlock x:Name="trackrlp_time" HorizontalAlignment="Right" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Margin="0,67,55,0" Width="150" Height="21" FontSize="16"/>
                     <Grid HorizontalAlignment="Stretch" Height="33" Margin="10,67,210,0" VerticalAlignment="Top" Width="Auto">
                         <Grid Height="33" Width="170" HorizontalAlignment="Center" Name="trackrlp_controls" Visibility="Hidden">
@@ -67,13 +67,80 @@
                 </Grid>
             </TabItem>
             <TabItem x:Name="rmstats" Header="Room stats">
-                <Grid/>
+                <Grid>
+                    <Label x:Name="rmstats_roomname" Content="RoomName" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="60" Width="240" FontSize="40"/>
+
+                    <Image ToolTip="Previous Month" Cursor="Hand" x:Name="rmstats_premonth" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="20" Margin="10,70,0,0"  Source="Resources/placeholder.png" MouseDown="rmstats_premonth_MouseDown" />
+                    <Image ToolTip="Next Month" Cursor="Hand" x:Name="rmstats_nextmonth" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="20" Margin="33,70,0,0"  Source="Resources/placeholder.png" MouseDown="rmstats_nextmonth_MouseDown" />
+                    <TextBlock Text="Max devices per day in April 2019" Margin="56,70,0,0" Name="rmstats_daylabel"  HorizontalAlignment="Left" Height="20" VerticalAlignment="Top"></TextBlock>
+                    <TextBlock Text="Average devices per hour April 2019" Margin="0,70,10,0" VerticalAlignment="Top" Height="20" HorizontalAlignment="Right" Name="rmstats_timelabel"></TextBlock>
+
+                    <Viewbox Margin="10,90,10,10" Height="230" VerticalAlignment="Top" Stretch="Fill">
+                        <Grid Height="100" Width="500">
+                            <Canvas Name="rmstats_maxday" HorizontalAlignment="Left" Height="100" Margin="0,0,0,0" VerticalAlignment="Top" Width="247"/>
+                            <Canvas Name="rmstats_avgtime" HorizontalAlignment="Right" Height="100" Margin="0,0,0,0" VerticalAlignment="Top" Width="247"/>
+                        </Grid>
+                    </Viewbox>
+                    <Label Margin="315,325,0,0" Name="rmstats_heatlabel">Positions Heatmap</Label>
+                    <Viewbox Name="rmstats_viewbox" Margin="315,345,10,0" HorizontalAlignment="Left">
+                        <Border x:Name="rmstats_border" BorderBrush="Black" BorderThickness="2">
+                            <Image Name="rmstats_heatmap" Stretch="Uniform" VerticalAlignment="Stretch"  HorizontalAlignment="Stretch"></Image>
+                        </Border>
+                    </Viewbox>
+                    <Label Content="Most frequent devices:" Margin="20,325,10,0" VerticalAlignment="Top" Height="25" Width="130" HorizontalAlignment="Left"></Label>
+                    <ScrollViewer Margin="10,345,10,0" Width="300" VerticalAlignment="Stretch" HorizontalAlignment="Left">
+                        <StackPanel Name="rmstats_frequentmacs" HorizontalAlignment="Stretch" />
+                    </ScrollViewer>
+                </Grid>
             </TabItem>
-            <TabItem x:Name="dvinfo" Header="Device informations" Visibility="Hidden">
-                <Grid/>
+            <TabItem x:Name="dvinfo" Header="Device informations">
+                <Grid>
+                    <TextBlock FontSize="14" Margin="10,4,300,2" Width="105" VerticalAlignment="Top" Height="30" HorizontalAlignment="Right">Device identifier:</TextBlock>
+                    <TextBox Name="dvcinfo_idtextbox" Width="200" Height="20" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,6,95,0" KeyDown="dvcinfo_idtextbox_KeyDown" ></TextBox>
+                    <Button Name="dvcinfo_search" Width="80" Height="20" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,6,10,0" Click="dvcinfo_search_Click">Search</Button>
+                    <TextBlock x:Name="dvcinfo_deviceid" Text="No device selected"  Margin="10,26,10,0" VerticalAlignment="Top" Height="80" HorizontalAlignment="Stretch" FontSize="40" LineHeight="1"/>
+                    <TextBlock Text="First detected:" Width="90"  Height="20" VerticalAlignment="Top" FontSize="14" HorizontalAlignment="Left" Margin="10,80,10,0"/>
+                    <TextBlock Name="dvcinfo_firstdetected" Text="" Width="190"  Height="20" VerticalAlignment="Top" FontSize="14" HorizontalAlignment="Left" Margin="100,80,10,0"/>
+                    <TextBlock Text="Last detected:" Width="90"  Height="20" VerticalAlignment="Top" FontSize="14" HorizontalAlignment="Left" Margin="10,105,10,0"/>
+                    <TextBlock Name="dvcinfo_lastdetected" Text="" Width="190"  Height="20" VerticalAlignment="Top" FontSize="14" HorizontalAlignment="Left" Margin="100,105,10,0"/>
+                    <TextBlock Text="Requested ssids:" Width="110"  Height="20" VerticalAlignment="Top" FontSize="14" HorizontalAlignment="Left" Margin="310,80,10,0"/>
+                    <ScrollViewer Margin="310,100,10,0" VerticalAlignment="Top" Height="110" HorizontalAlignment="Stretch">
+                        <StackPanel Name="dvcinfo_ssids" HorizontalAlignment="Stretch" />
+                    </ScrollViewer>
+                    <Label HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,190,0,0" FontSize="14">Avanced Statistics</Label>
+                    <Label HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,212,0,0">Room:</Label>
+                    <ComboBox Name="dvcinfo_room" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="60,214,0,0" Width="100"/>
+                    <WrapPanel HorizontalAlignment="Left" VerticalAlignment="Top" Margin="165,210,10,0" Height="60" Orientation="Horizontal">
+                        <Label HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,2,0,0" Width="40">From:</Label>
+                        <DatePicker Name="dvcinfo_fromDate" HorizontalAlignment="Left" VerticalAlignment="Top" Width="90" SelectedDate="{x:Static sys:DateTime.Now}" SelectedDateFormat="Short" Height="24" Margin="5,4,0,0"/>
+                        <ComboBox x:Name="dvcinfo_fromTime" HorizontalAlignment="Left" VerticalAlignment="Top" Width="55" Height="24" IsEditable="True" Margin="5,4,0,0"/>
+                        <StackPanel Orientation="Horizontal">
+                            <Label HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,2,0,0" Width="40" HorizontalContentAlignment="Center">To:</Label>
+                            <DatePicker Name="dvcinfo_toDate" HorizontalAlignment="Left" VerticalAlignment="Top" Width="90" SelectedDate="{x:Static sys:DateTime.Now}" SelectedDateFormat="Short" Height="24" Margin="5,4,0,0"/>
+                            <ComboBox x:Name="dvcinfo_toTime" HorizontalAlignment="Left" VerticalAlignment="Top" Width="55" Height="24" IsEditable="True" Margin="5,4,0,0" />
+                        </StackPanel>
+                        <Button x:Name="dvcinfo_load" Content="Load" HorizontalAlignment="Left" VerticalAlignment="Top" Width="42" Height="24" Margin="5,4,5,0" Click="dvcinfo_load_Click" IsEnabled="False"/>
+                    </WrapPanel>
+                    <Label Name="dvcinfo_loadstatus" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="128,192,0,0" Width="200" Height="30" FontFamily="Segoe UI" FontStyle="Italic"></Label>
+                    <Label Margin="10,245,0,0" Width="200" Height="30" VerticalAlignment="Top" HorizontalAlignment="Left">Presence per day</Label>
+                    <Viewbox Margin="10,270,10,30" HorizontalAlignment="Stretch" Height="130" VerticalAlignment="Top" Stretch="Fill">
+                        <Grid Width="100" Height="100" Background="AliceBlue">
+                            <Canvas Width="100" Height="100" Margin="0,0,0,0" Name="dvcinfo_dayspresent" VerticalAlignment="Top" HorizontalAlignment="Left"/>
+                        </Grid>
+                    </Viewbox>
+                    <Viewbox Margin="10,405,10,18" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Stretch="Fill">
+                        <Grid Width="200" Height="100">
+                            <Image Width="100" Height="100" Margin="100,0,0,0" Name="dvcinfo_heatmap" VerticalAlignment="Top" HorizontalAlignment="Left"/>
+                            <Canvas Width="100" Height="100" Margin="0,0,0,0" Name="dvcinfo_hourspresent" VerticalAlignment="Top" HorizontalAlignment="Left"/>
+                        </Grid>
+                    </Viewbox>
+                    <ScrollViewer Width="250" Margin="100,410,10,18" Name="dvcinfo_roomsmapcontainer" VerticalAlignment="Stretch" HorizontalAlignment="Right" Visibility="Hidden">
+                        <StackPanel Name="dvcinfo_roomsmap" HorizontalAlignment="Stretch" />
+                    </ScrollViewer>
+                    <Label Margin="10,0,0,-5" Width="200" Height="30" VerticalAlignment="Bottom" HorizontalAlignment="Left">Detections per hour</Label>
+                    <Label Name="dvcinfo_extralabel" Margin="10,0,10,-5" Width="200" Height="30" VerticalAlignment="Bottom" HorizontalAlignment="Right" HorizontalContentAlignment="Right"></Label>
+                </Grid>
             </TabItem>
         </TabControl>
-
-
     </Grid>
 </Window>

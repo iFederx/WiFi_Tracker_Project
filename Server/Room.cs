@@ -10,6 +10,7 @@ namespace Panopticon
     class Room
     {
         internal static Room externRoom = new Room("External", 0, 0);
+        internal static Room overallRoom = new Room("Overall", 0, 0);
         internal String roomName;
         internal Double xlength;
         internal Double ylength;
@@ -35,6 +36,10 @@ namespace Panopticon
         public override int GetHashCode()
         {
             return roomName.GetHashCode();
+        }
+        public override string ToString()
+        {
+            return this.roomName;
         }
 
         public void addStation(Station s)

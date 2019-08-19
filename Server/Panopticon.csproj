@@ -87,7 +87,6 @@
     </ApplicationDefinition>
     <Compile Include="Aggregator.cs" />
     <Compile Include="Analyzer.cs" />
-    <Compile Include="Calibrator.cs" />
     <Compile Include="ConcurrentCircular.cs" />
     <Compile Include="ConcurrentDictionaryStack.cs" />
     <Compile Include="Context.cs" />
@@ -95,10 +94,10 @@
     <Compile Include="DatabasePublisher.cs" />
     <Compile Include="Device.cs" />
     <Compile Include="GuiInterface.cs" />
-    <Compile Include="Interpolators.cs" />
     <Compile Include="Packet.cs" />
     <Compile Include="PositionTools.cs" />
     <Compile Include="Publisher.cs" />
+    <Compile Include="Graphics.cs" />
     <Compile Include="Room.cs" />
     <Compile Include="Startup.xaml.cs">
       <DependentUpon>Startup.xaml</DependentUpon>
