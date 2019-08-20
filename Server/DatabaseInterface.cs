@@ -1,20 +1,39 @@
 ﻿using Npgsql;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace Panopticon
 {
     class DatabaseInterface
     {
-        NpgsqlConnection conn; 
+        private const int CONNPOOLSIZE = 4;
+        BlockingCollection<NpgsqlConnection> connectionpool = new BlockingCollection<NpgsqlConnection>();
+        NpgsqlConnection[] allconnections = new NpgsqlConnection[CONNPOOLSIZE];
+
+        internal class ConnectionHandle : IDisposable
+        {
+            private BlockingCollection<NpgsqlConnection> cp;
+            internal NpgsqlConnection conn;
+            internal ConnectionHandle(BlockingCollection<NpgsqlConnection> connectionpool)
+            {
+                cp = connectionpool;
+                conn = cp.Take();
+            }
+            public void Dispose()
+            {
+                cp.Add(conn);
+            }
+        }
         private enum SqlEvent {Insert, Update, Delete, Select};
         private enum SqlType { Numeric, ByteArray, String, TimeStamp, Column,Boolean};
         private const String TMFORMAT = "yyyy-MM-dd HH:mm:ss";
-        private Object dblock = new object();
+        private Object queryconnlock = new object();
         private class SqlVariable
         {
             
@@ -60,6 +79,12 @@ namespace Panopticon
                         int start = i;
                         for(; i<items.Length;i++)
                         {
+                            if(items[i]==null)
+                            {
+                                if (i == start)
+                                    start++;
+                                continue;
+                            }
                             if (!items[i].where)
                                 throw new Exception("Out of order condition");
                             if (i == start)
@@ -154,8 +179,12 @@ namespace Panopticon
             System.Diagnostics.Debug.Print(connectionstring);
             try
             {
-                conn = new NpgsqlConnection(connectionstring);
-                conn.Open();
+                for(int i=0;i<CONNPOOLSIZE;i++)
+                {
+                    allconnections[i] = new NpgsqlConnection(connectionstring);
+                    allconnections[i].Open();
+                    connectionpool.Add(allconnections[i]);
+                }
             }
             catch(Exception ex)
             {
@@ -165,17 +194,20 @@ namespace Panopticon
         }
         internal void close()
         {
-            conn.Close();
+            foreach (NpgsqlConnection conn in allconnections)
+            {
+                conn.Close();
+            }
         }
         
         private bool performNonQuery(String sql)
         {
             int res = 0;
-            lock (dblock)
+            using (ConnectionHandle conn = new ConnectionHandle(connectionpool))
             {
                 using (var cmd = new NpgsqlCommand(sql))
                 {
-                    cmd.Connection = conn;
+                    cmd.Connection = conn.conn;
                     try
                     {
                         res = cmd.ExecuteNonQuery();
@@ -203,9 +235,9 @@ namespace Panopticon
                 new SqlVariable("shortintrp", null, SqlType.Column),
                 new SqlVariable("longintrp", null, SqlType.Column),
                 new SqlVariable("namemac", NameMAC, SqlType.String, true));
-            lock (dblock)
+            using (ConnectionHandle conn = new ConnectionHandle(connectionpool))
             {
-                using (var cmd = new NpgsqlCommand(query, conn))
+                using (var cmd = new NpgsqlCommand(query, conn.conn))
                 {
                     using (var reader = cmd.ExecuteReader())
                     {
@@ -235,9 +267,9 @@ namespace Panopticon
                 new SqlVariable("roomname", null, SqlType.Column),
                 new SqlVariable("xlength", null, SqlType.Column),
                 new SqlVariable("ylength", null, SqlType.Column));
-            lock (dblock)
+            using (ConnectionHandle conn = new ConnectionHandle(connectionpool))
             {
-                using (var cmd = new NpgsqlCommand(query, conn))
+                using (var cmd = new NpgsqlCommand(query, conn.conn))
                 {
                     using (var reader = cmd.ExecuteReader())
                     {
@@ -362,9 +394,9 @@ namespace Panopticon
                 " order by tm asc";
             LinkedList<DevicePosition> li = new LinkedList<DevicePosition>();
             Dictionary<String, DevicePosition> prepos = new Dictionary<String, DevicePosition>();
-            lock (dblock)
+            using (ConnectionHandle conn = new ConnectionHandle(connectionpool))
             {
-                using (var cmd = new NpgsqlCommand(query, conn))
+                using (var cmd = new NpgsqlCommand(query, conn.conn))
                 {
                     using (var reader = cmd.ExecuteReader())
                     {
@@ -399,18 +431,23 @@ namespace Panopticon
 
         }
 
-        internal double[] loadMaxDevicesDay(int selectedmonth, int selectedyear, String roomname)
+        private int dayspermonth(int month, int year)
         {
             int numdays = 31;
-            if (selectedmonth == 2)
+            if (month == 2)
             {
                 numdays = 28;
-                if (selectedyear % 4 == 0 && (selectedyear % 100 != 0 || selectedyear % 1000 == 0))
+                if (year % 4 == 0 && (year % 100 != 0 || year % 1000 == 0))
                     numdays = 29;
             }
-            else if (selectedmonth == 4 || selectedmonth == 6 || selectedmonth == 9 || selectedmonth == 11)
+            else if (month == 4 || month == 6 || month == 9 || month == 11)
                 numdays = 30;
-            double[] res = new double[numdays+1];
+            return numdays;
+        }
+
+        internal double[] loadMaxDevicesDay(int selectedmonth, int selectedyear, String roomname)
+        {
+            double[] res = new double[dayspermonth(selectedmonth,selectedyear)+1];
             String query = getSql(SqlEvent.Select, "countstats",
                 new SqlVariable("max(count) as mcount"),
                 new SqlVariable("extract(day from tm) as dday"),
@@ -418,9 +455,9 @@ namespace Panopticon
                 new SqlVariable("extract(month from tm)", selectedmonth.ToString(), SqlType.Numeric, true),
                 new SqlVariable("extract(year from tm)", selectedyear.ToString(), SqlType.Numeric, true)) + " group by extract(day from tm)";
             bool notempty = false;
-            lock (dblock)
+            using (ConnectionHandle conn = new ConnectionHandle(connectionpool))
             {
-                using (var cmd = new NpgsqlCommand(query, conn))
+                using (var cmd = new NpgsqlCommand(query, conn.conn))
                 {
                     using (var reader = cmd.ExecuteReader())
                     {
@@ -437,15 +474,7 @@ namespace Panopticon
 
         internal double[][] loadAvgDevicesTime(int selectedmonth, int selectedyear, string roomname)
         {
-            int numdays = 31;
-            if (selectedmonth == 2)
-            {
-                numdays = 28;
-                if (selectedyear % 4 == 0 && (selectedyear % 100 != 0 || selectedyear % 1000 == 0))
-                    numdays = 29;
-            }
-            else if (selectedmonth == 4 || selectedmonth == 6 || selectedmonth == 9 || selectedmonth == 11)
-                numdays = 30;
+            int numdays = dayspermonth(selectedmonth, selectedyear);
             double[][] res = new double[numdays + 1][];
             for(int i=0;i<numdays+1;i++)
                 res[i]=new double[24];
@@ -457,9 +486,9 @@ namespace Panopticon
                 new SqlVariable("extract(month from tm)", selectedmonth.ToString(), SqlType.Numeric, true),
                 new SqlVariable("extract(year from tm)", selectedyear.ToString(), SqlType.Numeric, true)) + " group by extract(hour from tm), extract(day from tm)";
 
-            lock (dblock)
+            using (ConnectionHandle conn = new ConnectionHandle(connectionpool))
             {
-                using (var cmd = new NpgsqlCommand(query, conn))
+                using (var cmd = new NpgsqlCommand(query, conn.conn))
                 {
                     using (var reader = cmd.ExecuteReader())
                     {
@@ -481,15 +510,7 @@ namespace Panopticon
 
         internal int[][,] loadHeathmaps(object p, string roomname, double xlength, double ylength, int selectedmonth, int selectedyear)
         {
-            int numdays = 31;
-            if (selectedmonth == 2)
-            {
-                numdays = 28;
-                if (selectedyear % 4 == 0 && (selectedyear % 100 != 0 || selectedyear % 1000 == 0))
-                    numdays = 29;
-            }
-            else if (selectedmonth == 4 || selectedmonth == 6 || selectedmonth == 9 || selectedmonth == 11)
-                numdays = 30;
+            int numdays = dayspermonth(selectedmonth, selectedyear);
             int[][,] res = new int[numdays + 1][,];
             for(int j=0;j<numdays+1;j++)
                 res[j]= new int[(int)xlength+1, (int)ylength + 1];
@@ -500,9 +521,9 @@ namespace Panopticon
                new SqlVariable("roomname", roomname, SqlType.String, true),
                new SqlVariable("extract(month from tm)", selectedmonth.ToString(), SqlType.Numeric, true),
                new SqlVariable("extract(year from tm)", selectedyear.ToString(), SqlType.Numeric, true));
-            lock (dblock)
+            using (ConnectionHandle conn = new ConnectionHandle(connectionpool))
             {
-                using (var cmd = new NpgsqlCommand(query, conn))
+                using (var cmd = new NpgsqlCommand(query, conn.conn))
                 {
                     using (var reader = cmd.ExecuteReader())
                     {
@@ -527,15 +548,7 @@ namespace Panopticon
         internal string[,] loadFrequentMacs(int month, int year, string roomname)
         {
             int maxres = 15;
-            int numdays = 31;
-            if (month == 2)
-            {
-                numdays = 28;
-                if (year % 4 == 0 && (year % 100 != 0 || year % 1000 == 0))
-                    numdays = 29;
-            }
-            else if (month == 4 || month == 6 || month == 9 || month == 11)
-                numdays = 30;
+            int numdays = dayspermonth(month, year);
             String[,] res = new String[numdays + 1, maxres];
             String query1 = getSql(SqlEvent.Select, "devicespositions",
                new SqlVariable("identifier"),
@@ -554,9 +567,9 @@ namespace Panopticon
             String query = "(" + query1 + ") union (" + query2 + ") order by dt,cnt desc";
             int preday = -1;
             int cntperday = 0;
-            lock (dblock)
+            using (ConnectionHandle conn = new ConnectionHandle(connectionpool))
             {
-                using (var cmd = new NpgsqlCommand(query, conn))
+                using (var cmd = new NpgsqlCommand(query, conn.conn))
                 {
                     using (var reader = cmd.ExecuteReader())
                     {
@@ -599,9 +612,9 @@ namespace Panopticon
                 new SqlVariable("ssid"),
                 new SqlVariable("identifier", id, SqlType.String, true));
             LinkedList<String> ssids = new LinkedList<string>();
-            lock (dblock)
+            using (ConnectionHandle conn = new ConnectionHandle(connectionpool))
             {
-                using (var cmd = new NpgsqlCommand(query1, conn))
+                using (var cmd = new NpgsqlCommand(query1, conn.conn))
                 {
                     using (var reader = cmd.ExecuteReader())
                     {
@@ -623,7 +636,7 @@ namespace Panopticon
                         }
                     }
                 }
-                using (var cmd = new NpgsqlCommand(query2, conn))
+                using (var cmd = new NpgsqlCommand(query2, conn.conn))
                 {
                     using (var reader = cmd.ExecuteReader())
                     {
@@ -641,15 +654,59 @@ namespace Panopticon
         internal class DeviceStats
         {
             internal Double[] timeperday;
-            internal Double[] pingsperhour;
+            internal Double[] pingsperhour=new Double[24*6];
             internal int[,] heatmap;
             internal Dictionary<String, Int32> roommap = new Dictionary<string, int>();
         }
 
-        internal DeviceStats loadDeviceStats(DateTime fromdate, string fromtime, DateTime todate, string totime, string deviceid, string roomName, bool loadroommap, bool loadheathmap, double xlen, double ylen)
+        internal DeviceStats loadDeviceStats(DateTime fromdate, string fromtime, DateTime todate, string totime, string deviceid, string roomname, bool loadroommap, bool loadheathmap, double xlen, double ylen)
         {
             DeviceStats ds = new DeviceStats();
-            return ds;
+            if(loadheathmap)
+                ds.heatmap =  new int[(int)xlen + 1, (int)ylen + 1];
+            if (loadroommap)
+                ds.roommap.Add("__OVERALL__", 0);
+            ds.timeperday = new Double[(int)todate.Subtract(fromdate).TotalDays + 1];
+            String query = getSql(SqlEvent.Select, "devicespositions",
+               new SqlVariable("xpos"),
+               new SqlVariable("ypos"),
+               new SqlVariable("tm"),
+               new SqlVariable("roomname"),
+               new SqlVariable("identifier",deviceid,SqlType.String,true),
+               !loadroommap?new SqlVariable("roomname", roomname, SqlType.String, true):null,
+               new SqlVariable("tm", fromdate.ToString("yyyy-MM-dd") + " " + fromtime, SqlType.TimeStamp, true, ">="),
+               new SqlVariable("tm", todate.ToString("yyyy-MM-dd") + " " + totime, SqlType.TimeStamp, true, "<=")) +
+                " order by tm asc";
+            DateTime pre = DateTime.MinValue;
+            using (ConnectionHandle conn = new ConnectionHandle(connectionpool))
+            {
+                using (var cmd = new NpgsqlCommand(query, conn.conn))
+                {
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            if (loadheathmap)
+                                ds.heatmap[(int)reader.GetDouble(0), (int)reader.GetDouble(1)] += 1;
+                            if (loadroommap)
+                            {
+                                ds.roommap["__OVERALL__"] += 1;
+                                String room = reader.GetString(3);
+                                if (!ds.roommap.ContainsKey(room))
+                                    ds.roommap.Add(room, 0);
+                                ds.roommap[room] += 1;
+                            }
+                            DateTime detectiontime = reader.GetDateTime(2);
+                            if (detectiontime.Subtract(pre).TotalMinutes < 15)
+                                ds.timeperday[(int)detectiontime.Subtract(fromdate).TotalDays]+=detectiontime.Subtract(pre).TotalMinutes;
+                            ds.pingsperhour[detectiontime.Hour*6+detectiontime.Minute/10]++;
+                            pre = detectiontime;
+                        }
+                    }
+                }
+            }
+
+            return pre!=DateTime.MinValue?ds:null;
         }
     }
 }

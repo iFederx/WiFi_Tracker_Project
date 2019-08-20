@@ -103,7 +103,7 @@ namespace Panopticon
                         d_gui_e.Width = selectedRoom.room.ylength / 2;
                         d_gui_e.ToolTip = "Device " + deviceIdentifier;
                         d_gui_e.Tag = deviceIdentifier;
-                        Brush color = Utilities.FancyColorCreator.randomBrush(deviceIdentifier.GetHashCode());
+                        Brush color = Graphics.FancyColorCreator.randomBrush(deviceIdentifier.GetHashCode());
                         d_gui_e.Fill = color.Clone();
                         if (lastPosition.uncertainity == double.MaxValue)
                             d_gui_e.Fill.Opacity = 0;
@@ -385,9 +385,14 @@ namespace Panopticon
                 min = 0;
             }
             trackrlp_fromTime.SelectedIndex = DateTime.Now.Hour * 4 + DateTime.Now.Minute / 15;
+            dvcinfo_fromTime.SelectedIndex = trackrlp_fromTime.SelectedIndex;
             trackrlp_toTime.SelectedIndex = (DateTime.Now.Hour * 4 + DateTime.Now.Minute / 15 + 1)%96;
-            dvcinfo_fromTime.SelectedIndex = DateTime.Now.Hour * 4 + DateTime.Now.Minute / 15;
-            dvcinfo_toTime.SelectedIndex = (DateTime.Now.Hour * 4 + DateTime.Now.Minute / 15 + 1) % 96;
+            dvcinfo_toTime.SelectedIndex = trackrlp_toTime.SelectedIndex;
+            if (trackrlp_toTime.SelectedIndex == 0)
+            {
+                trackrlp_toDate.SelectedDate = DateTime.Today.AddDays(1);
+                dvcinfo_toDate.SelectedDate = DateTime.Today.AddDays(1);
+            }
             dvcinfo_room.Items.Add(Room.overallRoom);
             dvcinfo_room.SelectedIndex = 0;
             Style = (Style)FindResource(typeof(Window));
@@ -789,6 +794,7 @@ namespace Panopticon
         private void loadDeviceStats(String id)
         {
             clearDeviceInfo();
+            clearAdvancedDeviceStat();
             DeviceInfo di = ctx.databaseInt.loadDeviceInfo(id);
             if(di==null)
             {
@@ -816,16 +822,24 @@ namespace Panopticon
             dvcinfo_firstdetected.Text = "";
             dvcinfo_ssids.Children.Clear();
             dvcinfo_loadstatus.Content = "";
-            dvcinfo_extralabel.Content = "";
-            dvcinfo_heatmap.Visibility = Visibility.Hidden;
-            dvcinfo_heatmap.Source = null;
+        }
+
+        private void clearAdvancedDeviceStat()
+        {
+            dvcinfo_heatmapborder.Visibility = Visibility.Hidden;
+            dvcinfo_heatmapimage.Visibility = Visibility.Hidden;
+            dvcinfo_heatmapimage.Source = null;
             dvcinfo_roomsmap.Children.Clear();
             dvcinfo_roomsmap.Visibility = Visibility.Hidden;
+            dvcinfo_roomsmapcontainer.Visibility = Visibility.Hidden;
+            dvcinfo_dayspresent.Children.Clear();
+            dvcinfo_hourspresent.Children.Clear();
+            dvcinfo_extralabel.Content = "";
         }
 
         private void dvcinfo_load_Click(object sender, RoutedEventArgs e)
         {
-            clearDeviceInfo();
+            clearAdvancedDeviceStat();
             dvcinfo_loadstatus.Content = "Loading...";
             dvcinfo_load.IsEnabled = false;
             DateTime? fromdate = dvcinfo_fromDate.SelectedDate;
@@ -852,24 +866,20 @@ namespace Panopticon
                 return;
             }
             Room dvcstatroom = ((Room)dvcinfo_room.SelectedItem);
-            if (dvcstatroom == Room.overallRoom)
-                dvcinfo_roomsmap.Visibility = Visibility.Visible;
-            else if (dvcstatroom != Room.externRoom)
-                dvcinfo_heatmap.Visibility = Visibility.Visible;
             DeviceStats ds = ctx.databaseInt.loadDeviceStats(fromdate.Value, fromtime, todate.Value, totime, dvcinfo_idtextbox.Text, dvcstatroom.roomName, dvcstatroom == Room.overallRoom, dvcstatroom != Room.externRoom && dvcstatroom != Room.overallRoom, dvcstatroom.xlength, dvcstatroom.ylength);
-            if(ds==null)
+            if (ds == null)
             {
-                dvcinfo_loadstatus.Content = "Database error";
+                dvcinfo_loadstatus.Content = "No data";
                 dvcinfo_load.IsEnabled = true;
                 return;
             }
-            if (dvcstatroom != Room.externRoom && dvcstatroom != Room.overallRoom)
-                dvcinfo_heatmap.Source = Graphics.createheatmap(ds.heatmap);
-            else if(dvcstatroom==Room.overallRoom)
+            if (dvcstatroom == Room.overallRoom)
             {
+                dvcinfo_roomsmap.Visibility = Visibility.Visible;
+                dvcinfo_roomsmapcontainer.Visibility = Visibility.Visible;
                 int tot = ds.roommap["__OVERALL__"];
                 ds.roommap.Remove("__OVERALL__");
-                foreach(string rm in ds.roommap.Keys)
+                foreach (string rm in ds.roommap.Keys)
                 {
                     double count = (double)ds.roommap[rm] * 100.0 / (double)tot;
                     TextBlock tb = new TextBlock();
@@ -877,10 +887,21 @@ namespace Panopticon
                     tb.FontSize = 16;
                     dvcinfo_roomsmap.Children.Add(tb);
                 }
+                dvcinfo_extralabel.Content = "Detections per room";
             }
-            Graphics.drawHistogram(dvcinfo_dayspresent, ds.timeperday, (double val, int i, object data) => { return ""; }, fromdate, null, weekhistcolors, weekhistcolors, (int)fromdate.Value.DayOfWeek,null,null);
-            Graphics.drawHistogram(dvcinfo_hourspresent, ds.pingsperhour, (double val, int i, object data) => { return ""; }, null, null, timehistcolors, timehistcolors, 0,null,null);
+            else if (dvcstatroom != Room.externRoom)
+            {
+                dvcinfo_heatmapimage.Visibility = Visibility.Visible;
+                dvcinfo_heatmapborder.Visibility = Visibility.Visible;
+                dvcinfo_heatmapimage.Source = Graphics.createheatmap(ds.heatmap);
+                dvcinfo_heatmapborder.Width = 20 * dvcstatroom.xlength;
+                dvcinfo_heatmapborder.Height = 20 * dvcstatroom.ylength;
+                dvcinfo_extralabel.Content = "Positions heatmap";
+            }
+            Graphics.drawHistogram(dvcinfo_dayspresent, ds.timeperday, (double val, int i, object data) => { return ((DateTime)data).AddDays(i).ToString("dd/MM/yyyy")+" - "+((int)val)+" minutes"; }, fromdate.Value, null, weekhistcolors, weekhistcolors, (int)fromdate.Value.DayOfWeek,null,null);
+            Graphics.drawHistogram(dvcinfo_hourspresent, ds.pingsperhour, (double val, int i, object data) => { return ((int)i / 6).ToString("00") + ":" + ((i % 6) * 10).ToString("00") + " - " + val; }, null, null, timehistcolors, timehistcolors, 0,null,null);
             dvcinfo_loadstatus.Content = "";
+            dvcinfo_load.IsEnabled = true;
         }
 
         private void dvcinfo_idtextbox_KeyDown(object sender, KeyEventArgs e)
