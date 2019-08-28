@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Panopticon
 {
-    class Device
+    public class Device
     {
         internal class Alias
         {

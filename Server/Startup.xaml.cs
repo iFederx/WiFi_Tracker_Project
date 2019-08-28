@@ -20,6 +20,7 @@ namespace Panopticon
     /// </summary>
     public partial class Startup : Window
     {
+		/// </summary>
         public Startup()
         {
             InitializeComponent();
@@ -27,7 +28,7 @@ namespace Panopticon
         private void Window_ContentRendered(object sender, EventArgs e)
         {
             Context ctx = new Context();
-            MainWindow mn = new MainWindow(ctx);
+			MainWindow mn = new MainWindow(ctx);
             ctx.loadRooms();
             ctx.orchestrate();
             mn.Show();

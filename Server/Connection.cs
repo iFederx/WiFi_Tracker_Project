@@ -8,15 +8,15 @@ using System.Net;
 
 namespace Panopticon
 {
-    class Connection
-    {
-        private static readonly Socket serverSocket = //serverSocket is used only to accept new boards asking for registration
-            new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+	class Connection
+	{
+		private static readonly Socket serverSocket = //serverSocket is used only to accept new boards asking for registration
+			new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
-        protected static readonly List<Socket> clientSockets = new List<Socket>();
-        private const int BUFFER_SIZE = 2048;
-        private const int PORT = 1500;
-        private static readonly byte[] buffer = new byte[BUFFER_SIZE];
+		protected static readonly List<Socket> clientSockets = new List<Socket>();
+		private const int BUFFER_SIZE = 2048;
+		private const int PORT = 1500;
+		private static readonly byte[] buffer = new byte[BUFFER_SIZE];
 
         /// <summary>
         /// This static method initializes a passive listening socket for communications over internet
@@ -24,7 +24,7 @@ namespace Panopticon
         public static void StartConnection()
         {
             Console.WriteLine("Setting up server...");
-            
+			
             serverSocket.Bind(new IPEndPoint(IPAddress.Any, PORT));
             serverSocket.Listen(0);
             serverSocket.BeginAccept(AcceptCallback, null);
@@ -91,9 +91,9 @@ namespace Panopticon
             string text = Encoding.UTF8.GetString(recBuf);
             Console.WriteLine("Received Text: " + text);
 
-            //TODO: leggere il comando
+			//TODO: leggere il comando
             int result = Protocol.Command(text, current, received);
-        
+			
             /*
             if (text.ToLower() == "get time") // Client requested time
             {

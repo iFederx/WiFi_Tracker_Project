@@ -17,7 +17,7 @@
         <Label Content="Room name:" HorizontalAlignment="Left" Margin="71,70,0,0" VerticalAlignment="Top"/>
         <Label Content="Room width:" HorizontalAlignment="Left" Margin="71,110,0,0" VerticalAlignment="Top"/>
         <Label Content="Room height:" HorizontalAlignment="Left" Margin="67,150,0,0" VerticalAlignment="Top"/>
-        <Button Content="Continue" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="75" IsDefault="True"/>
+        <Button Content="Continue" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="75" IsDefault="True" Click="Button_Continue"/>
         <Button Content="Cancel" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Width="74" Click="Button_Cancel"/>
 
 

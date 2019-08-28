@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Panopticon
 {
-    class Room
+    public class Room
     {
         internal static Room externRoom = new Room("External", 0, 0);
         internal String roomName;

@@ -27,6 +27,7 @@ namespace Panopticon
         RoomInfoGUI selected = null;
         Dictionary<Room, RoomInfoGUI> roomToRoomInfoGUI = new Dictionary<Room, RoomInfoGUI>();
         Dictionary<object, List<UIElement>> uiElements = new Dictionary<object, List<UIElement>>();
+
         class RoomInfoGUI
         {
             internal Border container;
@@ -272,6 +273,7 @@ namespace Panopticon
         {
             ctx = context;
             ctx.guiPub.linkedwindow = this;
+			GuiInterface.statlinkedwindow = this; //FEDE
             InitializeComponent();
             Style = (Style)FindResource(typeof(Window));
         }
@@ -296,7 +298,16 @@ namespace Panopticon
                     
                 }
             }
-/*
+        }
+
+		//test
+		public void NewStation()
+		{
+			StationAdder sa1 = new StationAdder();
+			sa1.Show();
+		}
+
+		/*
             StationAdder sa1 = new StationAdder();
 			sa1.Show();
 
@@ -361,10 +372,8 @@ namespace Panopticon
 
             Thread.Sleep(8000);
             ctx.getAnalyzer().kill();
-            */
+		*/
+	}
 
-        }
-    }
 
-       
 }

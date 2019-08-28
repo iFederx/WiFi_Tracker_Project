@@ -23,24 +23,26 @@ namespace Panopticon.AddingStationPages
 		private double roomX;
 		private double roomY;
 		private double aspectRatio = 1.77777;
+		private Room room;
 
-		public AddToRoom()
+		public AddToRoom(Room _room)
         {
             InitializeComponent();
+			room = _room;
         }
 
 		private void Grid_MouseMove(object sender, MouseEventArgs e)
 		{
 			//TODO_FEDE: recuperare misure stanza
-			roomX = 10;
-			roomY = 5;
+			roomX = 500;
+			roomY = 300;
 			aspectRatio = roomX / roomY;
 
 			double meterX = Mouse.GetPosition(this.GridRoom).X / this.GridRoom.Width * roomX;
 			double meterY = Mouse.GetPosition(this.GridRoom).Y / this.GridRoom.Height * roomY;
 
-			xLabel.Content = meterX.ToString("X: 0.## m");
-			yLabel.Content = meterY.ToString("Y: 0.## m");
+			xLabel.Content = meterX.ToString("X: 0.## cm");
+			yLabel.Content = meterY.ToString("Y: 0.## cm");
 
 		}
 
@@ -76,8 +78,8 @@ namespace Panopticon.AddingStationPages
 		{
 			double meterX = Mouse.GetPosition(this.GridRoom).X / this.GridRoom.Width * roomX;
 			double meterY = Mouse.GetPosition(this.GridRoom).Y / this.GridRoom.Height * roomY;
-			LastX.Content = meterX.ToString("Last X: 0.## m");
-			LastY.Content = meterY.ToString("Last Y: 0.## m");
+			LastX.Content = meterX.ToString("Last X: 0.## cm");
+			LastY.Content = meterY.ToString("Last Y: 0.## cm");
 			Button_ConfirmPosition.IsEnabled = true;
 			Ellipse_StationPosition.SetValue(Canvas.LeftProperty, Mouse.GetPosition(this.GridRoom).X);
 			Ellipse_StationPosition.SetValue(Canvas.TopProperty, Mouse.GetPosition(this.GridRoom).Y);

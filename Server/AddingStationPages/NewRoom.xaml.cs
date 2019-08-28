@@ -29,5 +29,13 @@ namespace Panopticon.AddingStationPages
 		{
 			this.NavigationService.GoBack();
 		}
+
+		private void Button_Continue(object sender, RoutedEventArgs e)
+		{
+			//verificare che tutti i campi siano correttamente riempiti
+			//se tutto ok, salvare nuova stanza
+
+			this.NavigationService.Navigate(new AddToRoom(new Room("prova", 43.2, 53.12))); //TODO: mettere stanza giusta
+		}
 	}
 }

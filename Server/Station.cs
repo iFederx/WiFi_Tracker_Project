@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Panopticon
 {
-    class Station
+    public class Station
     {
         internal PositionTools.Position location; //contains also Room info
         internal String NameMAC;

@@ -8,12 +8,16 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 using System.IO;
+using System.Windows;
 
 namespace Panopticon
 {
     class Protocol
     {
-        private const int BUFFER_SIZE = 2048;
+		public delegate void SafeNewStation();
+
+		private const int BUFFER_SIZE = 2048;
+		
         
         /// <summary>
         /// Interprets the command received through the socket           
@@ -29,19 +33,23 @@ namespace Panopticon
 
 			if (text.IndexOf("REGISTER(") > -1)
             {
-                int offset = text.IndexOf("REGISTER(");
+                int offset = text.IndexOf("REGISTER(");//----------------------------------------------------------
                 string macAddress = text.Substring(offset+9, 17);
                 Console.WriteLine("An ESP board with MAC: " + macAddress + " has requested access");
-                //TODO
-                //verificare se esiste già la schedina
-                //se esiste, sostituire il vecchio socket nella struttura
-                //se NON esiste
-                //aprire finestra di configurazione + calibrazione
+				//TODO
+				//verificare se esiste già la schedina
+				//se esiste, sostituire il vecchio socket nella struttura
+				//se NON esiste
+				//aprire finestra di configurazione
 
+				//apro finestra configurazione nuova scheda
+				var d = new SafeNewStation(GuiInterface.statlinkedwindow.NewStation);
+				Application.Current.Dispatcher.Invoke(d);
 
-
-                byte[] data = Encoding.UTF8.GetBytes("ACCEPT\r\n");
+				byte[] data = Encoding.UTF8.GetBytes("ACCEPT\r\n");
                 socket.Send(data); //blocking method
+
+				//codice da spostare-----------------
                 int result = ESP_SyncClock(socket);
                 if (result == -1) return -1;
 
@@ -50,6 +58,7 @@ namespace Panopticon
                 Thread.Sleep(40000);
                 ESP_BlinkStop(socket);
                 Console.Write("stop");
+				//-----------------------------------
             }
             else if ((x = text.IndexOf("FILE")) > -1)
             {
@@ -143,10 +152,11 @@ namespace Panopticon
             return 0; //if here, all fine
         }
 
-        /// <summary>
-        /// Syncronizes clock of ESP board (Attention: it doesn't include SYNC message)
-        /// </summary>
-        public static int ESP_SyncClock(Socket socket)
+		/// <summary>
+		/// Syncronizes clock of ESP board (Attention: it doesn't include SYNC message).
+		/// After this phase, ESP board will begin the sniffing
+		/// </summary>
+		public static int ESP_SyncClock(Socket socket)
         {
             Console.WriteLine("Starting CLOCK sync");
             int n=5; //number of PING-PONG repetitions

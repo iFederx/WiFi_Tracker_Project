@@ -23,6 +23,7 @@ namespace Panopticon.AddingStationPages
 		public SelectRoom()
 		{
 			InitializeComponent();
+			//TODO: caricare elenco stanze disponibili
 		}
 
 		private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -38,7 +39,7 @@ namespace Panopticon.AddingStationPages
 
 		private void Button_RoomSelected(object sender, RoutedEventArgs e)
 		{
-			this.NavigationService.Navigate(new AddToRoom());
+			this.NavigationService.Navigate(new AddToRoom(new Room("prova", 43.2, 53.12))); //TODO: mettere stanza giusta
 		}
 	}
 }
