@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -273,7 +274,7 @@ namespace Panopticon
         {
             ctx = context;
             ctx.guiPub.linkedwindow = this;
-			GuiInterface.statlinkedwindow = this; //FEDE
+			GuiInterface.statlinkedwindow = this; //aggiunto da FEDE (necessario in Protocol.Command)
             InitializeComponent();
             Style = (Style)FindResource(typeof(Window));
         }
@@ -300,11 +301,16 @@ namespace Panopticon
             }
         }
 
-		//test
-		public void NewStation()
+		/// <summary>
+		/// This method open a window dedicated to register a new Station (ESP board)
+		/// </summary>
+		public void NewStation(string _macAddress, Socket _socket)
 		{
-			StationAdder sa1 = new StationAdder();
-			sa1.Show();
+			
+			StationHandler handler = new StationHandler(_socket, _macAddress);
+			ctx.tryAddStation(handler.macAddress, handler, true);
+			//StationAdder sa1 = new StationAdder(ctx, handler);
+			//sa1.Show();
 		}
 
 		/*

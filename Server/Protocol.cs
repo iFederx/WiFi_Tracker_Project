@@ -14,7 +14,7 @@ namespace Panopticon
 {
     class Protocol
     {
-		public delegate void SafeNewStation();
+		public delegate void SafeNewStation(string _string, Socket socket);
 
 		private const int BUFFER_SIZE = 2048;
 		
@@ -44,21 +44,23 @@ namespace Panopticon
 
 				//apro finestra configurazione nuova scheda
 				var d = new SafeNewStation(GuiInterface.statlinkedwindow.NewStation);
-				Application.Current.Dispatcher.Invoke(d);
+				Application.Current.Dispatcher.Invoke(d, macAddress, socket);
 
 				byte[] data = Encoding.UTF8.GetBytes("ACCEPT\r\n");
                 socket.Send(data); //blocking method
 
-				//codice da spostare-----------------
+				
+				//codice da spostare-----------------verrà gestito in StationHandler
                 int result = ESP_SyncClock(socket);
                 if (result == -1) return -1;
-
+				/*
                 Console.Write("Blinking... ");
                 ESP_BlinkStart(socket);
                 Thread.Sleep(40000);
                 ESP_BlinkStop(socket);
                 Console.Write("stop");
 				//-----------------------------------
+				*/
             }
             else if ((x = text.IndexOf("FILE")) > -1)
             {
@@ -212,7 +214,8 @@ namespace Panopticon
         {
             byte[] data = Encoding.UTF8.GetBytes("BLINK\r\n");
             socket.Send(data); //blocking method
-        }
+			Console.Write("Blinking... ");
+		}
 
         /// <summary>
         /// Syncronizes clock of ESP board in any arbitrary time (SYNC version)
@@ -231,7 +234,8 @@ namespace Panopticon
         {
             byte[] data = Encoding.UTF8.GetBytes("OKLED\r\n");
             socket.Send(data); //blocking method
-        }
+			Console.Write("Blinking stopped");
+		}
 
         /// <summary>
         /// Puts ESP board in a stand-by state, i.e. stops sniffing

@@ -11,8 +11,8 @@ namespace Panopticon
     {
         internal static Room externRoom = new Room("External", 0, 0);
         internal String roomName;
-        internal Double xlength;
-        internal Double ylength;
+        internal Double xlength; //cm
+        internal Double ylength; //cm
         internal int stationcount;
         internal int devicecount;
         private HashSet<Device> devicesInRoom = new HashSet<Device>();

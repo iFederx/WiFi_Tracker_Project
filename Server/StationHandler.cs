@@ -12,30 +12,38 @@ namespace Panopticon
     class StationHandler
     {
         internal Socket socket;
+		internal string macAddress = null;
         internal bool isBlinking = false;
         internal bool isOn = true;
-        internal StationHandler(Socket socket)
+        internal StationHandler(Socket _socket, string _macAddress)
         {
-            this.socket = socket;
+            socket = _socket;
+			macAddress = _macAddress;
         }
 
-        public bool SetSocket(Socket socket)
+        public bool SetSocket(Socket _socket)
         {
-            this.socket = socket;
+            socket = _socket;
             return true;
         }
 
         public Socket GetSocket()
         {
-            return this.socket;
+            return socket;
         }
         //TODO_FEDE: this class is used to send commands to a specific board. It will then have probably a constructor reuqesting the IP address of the remote board
         internal void switchLedBlink(bool blink)
         {
-            if (!isBlinking)
-                Protocol.ESP_BlinkStart(socket);
-            else
-                Protocol.ESP_BlinkStop(socket);
+			if (blink == false)
+			{
+				Protocol.ESP_BlinkStop(socket);
+				isBlinking = false;
+			}
+			else
+			{
+				Protocol.ESP_BlinkStart(socket);
+				isBlinking = true;
+			}    
         }
 
         internal void reboot()
@@ -45,6 +53,7 @@ namespace Panopticon
 
         internal void shutdown()
         {
+			//TODO: da rivedere
             if (!isOn)
                 Protocol.ESP_StandBy(socket);
             else

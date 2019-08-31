@@ -11,9 +11,9 @@
       Title="NewRoom">
 
     <Grid>
-        <TextBox HorizontalAlignment="Right" Height="20" Margin="0,75,20,0" TextWrapping="Wrap" Text="Room name" VerticalAlignment="Top" Width="120"/>
-        <TextBox HorizontalAlignment="Right" Height="20" Margin="0,115,20,0" TextWrapping="Wrap" Text="Room Width" VerticalAlignment="Top" Width="120"/>
-        <TextBox HorizontalAlignment="Right" Height="20" Margin="0,155,20,0" TextWrapping="Wrap" Text="Room Height" VerticalAlignment="Top" Width="120"/>
+        <TextBox x:Name="TB_RoomName" HorizontalAlignment="Right" Height="20" Margin="0,75,20,0" TextWrapping="Wrap" Text="Room Name" VerticalAlignment="Top" Width="120" Foreground="Gray" LostFocus="TextBoxName_LostFocus"/>
+        <TextBox x:Name="TB_RoomWidth" HorizontalAlignment="Right" Height="20" Margin="0,115,20,0" TextWrapping="Wrap" Text="Room Width" VerticalAlignment="Top" Width="120" Foreground="Gray" LostFocus="TextBoxWidth_LostFocus"/>
+        <TextBox x:Name="TB_RoomHeight" HorizontalAlignment="Right" Height="20" Margin="0,155,20,0" TextWrapping="Wrap" Text="Room Height" VerticalAlignment="Top" Width="120" Foreground="Gray" LostFocus="TextBoxHeight_LostFocus"/>
         <Label Content="Room name:" HorizontalAlignment="Left" Margin="71,70,0,0" VerticalAlignment="Top"/>
         <Label Content="Room width:" HorizontalAlignment="Left" Margin="71,110,0,0" VerticalAlignment="Top"/>
         <Label Content="Room height:" HorizontalAlignment="Left" Margin="67,150,0,0" VerticalAlignment="Top"/>

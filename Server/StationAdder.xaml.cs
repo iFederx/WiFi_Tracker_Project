@@ -19,11 +19,17 @@ namespace Panopticon
     /// </summary>
     public partial class StationAdder : Window
     {
-        public StationAdder()
+		public StationAdder()
         {
             InitializeComponent();
-
 			FrameNewStation.Content = new AddingStationPages.SelectRoom();
         }
-    }
+
+		internal StationAdder(Context _ctx, StationHandler _handler)
+		{
+			InitializeComponent();
+			this.Title += " (" + _handler.macAddress + ")";
+			FrameNewStation.Content = new AddingStationPages.SelectRoom(_ctx, _handler);
+		}
+	}
 }

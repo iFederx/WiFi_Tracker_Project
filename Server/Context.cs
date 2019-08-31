@@ -78,11 +78,13 @@ namespace Panopticon
         }
         public Station tryAddStation(String NameMAC, StationHandler handler, bool AllowAsynchronous) //Replace Object with the relevant type
         {
-            Station s=loadStation(NameMAC,handler);
-            if(s==null&&AllowAsynchronous) //this is already the check if a configuration for the station exists or not
+            Station s = loadStation(NameMAC, handler);
+            if (s==null && AllowAsynchronous) //this is already the check if a configuration for the station exists or not
             {
-                //TODO_FEDE: open GUI, get info, then from that guiThread call createStation & then saveStation
-                return null;
+				//DONE_FEDE: open GUI, get info, then from that guiThread call createStation & then saveStation
+				StationAdder sa1 = new StationAdder(this, handler);
+				sa1.Show();
+				return null; //TODO: è normale che se creo la station da GUI ritorno null?
             }
             return s;
         }
@@ -145,7 +147,7 @@ namespace Panopticon
             return databaseInt.removeStation(NameMAC);
         }
 
-        public Station createStation(Room room, String NameMAC, double X, double Y,StationHandler handler)
+        public Station createStation(Room room, String NameMAC, double X, double Y, StationHandler handler)
         {
             Station s = new Station();
             s.lastHearthbeat = DateTime.Now;

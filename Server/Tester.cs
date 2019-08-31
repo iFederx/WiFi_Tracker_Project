@@ -95,12 +95,7 @@ namespace Panopticon
 
 		public void testFEDE()
 		{
-			//quando ho bisogno di chiamare roba grafica, instanzio un delegato e lo invoco
-			//var d = new SafeCaller(ctx.guiPub.linkedwindow.NewStation);
-			//Application.Current.Dispatcher.Invoke(d);
-
 			Console.WriteLine("Programma avviato");
-			//Connection.StartConnection();
 
 			Thread socketListener = new Thread(new ThreadStart(Connection.StartConnection));
 			socketListener.Start();
