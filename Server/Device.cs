@@ -3,10 +3,9 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 
-
 namespace Panopticon
 {
-    class Device
+    public class Device
     {
         internal class Alias
         {

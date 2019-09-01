@@ -7,13 +7,13 @@ using System.Threading.Tasks;
 
 namespace Panopticon
 {
-    class Room
+    public class Room
     {
         internal static Room externRoom = new Room("External", 0, 0);
         internal static Room overallRoom = new Room("Overall", 0, 0);
         internal String roomName;
-        internal Double xlength;
-        internal Double ylength;
+        internal Double xlength; //cm
+        internal Double ylength; //cm
         internal int stationcount;
         internal int devicecount;
         private HashSet<Device> devicesInRoom = new HashSet<Device>();

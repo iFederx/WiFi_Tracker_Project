@@ -4,13 +4,18 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace Panopticon
 {
     class Tester
     {
-        public double dist2RSSI(double dist)
-        {           
+		public delegate void SafeCaller();
+		public double dist2RSSI(double dist)
+        {
+            /*if (dist < 1)
+                return -25;
+            return -30 * (Math.Log(dist, 5) + 1);*/
             return dist;
         }
         public double pos2dist(double x, double y, double sx, double sy)
@@ -89,5 +94,18 @@ namespace Panopticon
             }
         }
 
-    }
+		public void testFEDE()
+		{
+			Console.WriteLine("Programma avviato");
+
+			//TODO: da aggiungere ai thread, come primo
+			Thread socketListener = new Thread(new ThreadStart(Connection.StartConnection));
+			socketListener.Start();
+
+			//partiranno altri thread... (Dario-side)
+		}
+
+		
+
+	}
 }

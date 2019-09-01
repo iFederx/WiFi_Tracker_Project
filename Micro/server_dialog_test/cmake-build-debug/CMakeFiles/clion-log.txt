@@ -1,0 +1,65 @@
+"C:\Program Files\JetBrains\CLion 2017.3\bin\cmake\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - MinGW Makefiles" "C:\Users\cekke\Desktop\UNIVERSITA\POLITO\1°ANNO\2s_programmazione di sistema\progetto\sync_dialog"
+-- The C compiler identification is GNU 7.2.0
+-- The CXX compiler identification is GNU 7.2.0
+-- Check for working C compiler: C:/Program Files (x86)/mingw-w64/i686-7.2.0-posix-dwarf-rt_v5-rev1/mingw32/bin/gcc.exe
+-- Check for working C compiler: C:/Program Files (x86)/mingw-w64/i686-7.2.0-posix-dwarf-rt_v5-rev1/mingw32/bin/gcc.exe -- broken
+CMake Error at C:/Program Files/JetBrains/CLion 2017.3/bin/cmake/share/cmake-3.9/Modules/CMakeTestCCompiler.cmake:51 (message):
+  The C compiler "C:/Program Files
+  (x86)/mingw-w64/i686-7.2.0-posix-dwarf-rt_v5-rev1/mingw32/bin/gcc.exe" is
+  not able to compile a simple test program.
+
+  It fails with the following output:
+
+   Change Dir: C:/Users/cekke/Desktop/UNIVERSITA/POLITO/1Â°ANNO/2s_programmazione di sistema/progetto/sync_dialog/cmake-build-debug/CMakeFiles/CMakeTmp
+
+  
+
+  Run Build
+  Command:"C:/PROGRA~2/MINGW-~1/I686-7~1.0-P/mingw32/bin/mingw32-make.exe"
+  "cmTC_435bb/fast"
+
+  C:/PROGRA~2/MINGW-~1/I686-7~1.0-P/mingw32/bin/mingw32-make.exe -f
+  CMakeFiles\cmTC_435bb.dir\build.make CMakeFiles/cmTC_435bb.dir/build
+
+  mingw32-make.exe[1]: Entering directory
+  'C:/Users/cekke/Desktop/UNIVERSITA/POLITO/1â–‘ANNO/2s_programmazione di
+  sistema/progetto/sync_dialog/cmake-build-debug/CMakeFiles/CMakeTmp'
+
+  Building C object CMakeFiles/cmTC_435bb.dir/testCCompiler.c.obj
+
+  C:\PROGRA~2\MINGW-~1\I686-7~1.0-P\mingw32\bin\gcc.exe -o
+  CMakeFiles\cmTC_435bb.dir\testCCompiler.c.obj -c
+  "C:\Users\cekke\Desktop\UNIVERSITA\POLITO\1â”¬â–‘ANNO\2s_programmazione di
+  sistema\progetto\sync_dialog\cmake-build-debug\CMakeFiles\CMakeTmp\testCCompiler.c"
+
+
+  gcc.exe: error:
+  C:\Users\cekke\Desktop\UNIVERSITA\POLITO\1â”¬â–‘ANNO\2s_programmazione di
+  sistema\progetto\sync_dialog\cmake-build-debug\CMakeFiles\CMakeTmp\testCCompiler.c:
+  No such file or directory
+
+  gcc.exe: fatal error: no input files
+
+  compilation terminated.
+
+  mingw32-make.exe[1]: *** [CMakeFiles\cmTC_435bb.dir\build.make:65:
+  CMakeFiles/cmTC_435bb.dir/testCCompiler.c.obj] Error 1
+
+  mingw32-make.exe[1]: Leaving directory
+  'C:/Users/cekke/Desktop/UNIVERSITA/POLITO/1â–‘ANNO/2s_programmazione di
+  sistema/progetto/sync_dialog/cmake-build-debug/CMakeFiles/CMakeTmp'
+
+  mingw32-make.exe: *** [Makefile:125: cmTC_435bb/fast] Error 2
+
+  
+
+  
+
+  CMake will not be able to correctly generate this project.
+Call Stack (most recent call first):
+  CMakeLists.txt:2 (project)
+
+
+-- Configuring incomplete, errors occurred!
+See also "C:/Users/cekke/Desktop/UNIVERSITA/POLITO/1Â°ANNO/2s_programmazione di sistema/progetto/sync_dialog/cmake-build-debug/CMakeFiles/CMakeOutput.log".
+See also "C:/Users/cekke/Desktop/UNIVERSITA/POLITO/1Â°ANNO/2s_programmazione di sistema/progetto/sync_dialog/cmake-build-debug/CMakeFiles/CMakeError.log".

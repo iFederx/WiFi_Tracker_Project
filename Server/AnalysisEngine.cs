@@ -34,6 +34,7 @@ namespace Panopticon
         {
             AnalysisQueue.Add(p);
         }
+
         public void analyzerProcess()
         {
             t = new CancellationTokenSource(10000);
@@ -54,6 +55,7 @@ namespace Panopticon
                 }
             }
         }
+
         private void analyzePacket(Packet p)
         {
             Device d;
@@ -91,8 +93,8 @@ namespace Panopticon
             totalerror += error;
             System.Diagnostics.Debug.Print("Error: " + error);
             System.Diagnostics.Debug.Print("Mean Error: " + totalerror/nerrors);
-            deviceMap.upsert(d.identifier, d, (old, cur) => { return cur; });//single thread safe only. To make it multithread i should also copy other fields
-        }
+            deviceMap.upsert(d.identifier, d, (old, cur) => { return cur; });//single thread safe only. To make it multithread i should also copy other fields     
+		}
 
         private void coalesceAnonymous()
         {

@@ -21,8 +21,10 @@ namespace Panopticon
         internal readonly DatabaseInterface databaseInt;
         List<Publisher> publishers;
         Aggregator aggregator;
+		internal FileParser packetizer;
         LinkedList<Thread> threads = new LinkedList<Thread>();
         internal readonly GuiInterface guiPub;
+		
         public Context()
         {
             stations = new ConcurrentDictionary<String, Station>();
@@ -37,6 +39,8 @@ namespace Panopticon
             aggregator = new Aggregator(publishers);
             publishers.Add(aggregator);
             analyzer = new AnalysisEngine(publishers, deviceMap);
+            calibrator = new Calibrator(analyzer);
+			packetizer = new FileParser(this);
         }
 
         public void orchestrate()
@@ -47,10 +51,13 @@ namespace Panopticon
             databaseT.Start();
             Thread aggregatorT = new Thread(new ThreadStart(aggregator.aggregatorProcess));
             aggregatorT.Start();
+			Thread packetizerT = new Thread(new ThreadStart(packetizer.packetizerProcess));
+			packetizerT.Start();
             threads.AddLast(analyzerT);
             threads.AddLast(databaseT);
             threads.AddLast(aggregatorT);
-        }
+			threads.AddLast(packetizerT);
+		}
         public Analyzer getAnalyzer()
         {
            return analyzer;
@@ -58,11 +65,13 @@ namespace Panopticon
        
         public Station tryAddStation(String NameMAC, StationHandler handler, bool AllowAsynchronous) //Replace Object with the relevant type
         {
-            Station s=loadStation(NameMAC,handler);
-            if(s==null&&AllowAsynchronous) //this is already the check if a configuration for the station exists or not
+            Station s = loadStation(NameMAC, handler);
+            if (s==null && AllowAsynchronous) //this is already the check if a configuration for the station exists or not
             {
-                //TODO_FEDE: open GUI, get info, then from that guiThread call createStation & then saveStation
-                return null;
+				//DONE_FEDE: open GUI, get info, then from that guiThread call createStation & then saveStation
+				StationAdder sa1 = new StationAdder(this, handler);
+				sa1.Show();
+				return null; //TODO: è normale che se creo la station da GUI ritorno null?
             }
             return s;
         }
@@ -121,7 +130,7 @@ namespace Panopticon
             return databaseInt.removeStation(NameMAC);
         }
 
-        public Station createStation(Room room, String NameMAC, double X, double Y,StationHandler handler)
+        public Station createStation(Room room, String NameMAC, double X, double Y, StationHandler handler)
         {
             Station s = new Station();
             s.lastHearthbeat = DateTime.Now;
@@ -213,6 +222,7 @@ namespace Panopticon
             analyzer.kill();
             databasePub.kill();
             aggregator.kill();
+			packetizer.kill();
             foreach(Thread t in threads)
             {
                 t.Join();

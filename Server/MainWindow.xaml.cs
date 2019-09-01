@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -19,6 +20,7 @@ using static Panopticon.Publisher;
 
 namespace Panopticon
 {
+    
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
@@ -368,6 +370,7 @@ namespace Panopticon
         {
             ctx = context;
             ctx.guiPub.linkedwindow = this;
+			GuiInterface.statlinkedwindow = this; //aggiunto da FEDE (necessario in Protocol.Command)
             InitializeComponent();
             int h = 0;
             int min = 0;
@@ -909,7 +912,86 @@ namespace Panopticon
             if (e.Key == Key.Enter)
                 dvcinfo_search_Click(null,null);
         }
-    }
 
-       
+		/// <summary>
+		/// This method open a window dedicated to register a new Station (ESP board)
+		/// </summary>
+		public void NewStation(string _macAddress, Socket _socket)
+		{
+			
+			StationHandler handler = new StationHandler(_socket, _macAddress, ctx);
+			ctx.tryAddStation(handler.macAddress, handler, true);
+			//StationAdder sa1 = new StationAdder(ctx, handler);
+			//sa1.Show();
+		}
+
+		/*
+            StationAdder sa1 = new StationAdder();
+			sa1.Show();
+
+            
+            Console.WriteLine("Programma avviato");
+            //Connection.StartConnection();
+
+            //Console.ReadLine();
+            
+            Thread socketListener = new Thread(new ThreadStart(Connection.StartConnection));
+            socketListener.Start();
+            double[] x = { dist2RSSI(0), dist2RSSI(10), dist2RSSI(20), dist2RSSI(30), dist2RSSI(40)};
+            double[] y = { 0, 10,20, 30, 40 };
+            Context ctx = new Context();
+            Thread backgroundProcessManager = new Thread(new ThreadStart(ctx.orchestrate));
+            backgroundProcessManager.Start();
+			
+            //TODO FEDE: aprire finestra creazione stanza
+            PositionTools.Room r = ctx.createRoom("TestRoom", 25, 25);
+            StationHandler sh1 = null, sh2 = null, sh3 = null;
+            //funzione che non so dove sarà chiamata
+            //sh1 = new StationHandler(socket);
+            Station s1=ctx.createStation(r, "0.0", 0, 0,sh1);
+            PositionTools.calibrateInterpolators(y, x, s1);
+            Station s2 = ctx.createStation(r, "25.0", 25, 0,sh2);
+            PositionTools.calibrateInterpolators(y, x, s2);
+            Station s3 = ctx.createStation(r, "0.25", 0, 25,sh3);
+            PositionTools.calibrateInterpolators(y, x, s3);
+            
+            //formazione di un oggetto Packet
+            Packet p = new Packet("abcde928", "Alice33Test", DateTime.Now, "", "", 0);
+            p.received(s1, dist2RSSI(12.5));
+            p.received(s2, dist2RSSI(12.5));
+            p.received(s3, dist2RSSI(Math.Sqrt(12.5 * 12.5 + 25 * 25)));
+            ctx.getAnalyzer().sendToAnalysisQueue(p);
+
+            Thread.Sleep(1500);
+
+            p = new Packet("abcde928e", "Fastweb25Test", DateTime.Now, "", "", 0);
+            p.received(s1, dist2RSSI(25));
+            p.received(s2, dist2RSSI(Math.Sqrt(25 * 25 + 25 * 25)));
+            p.received(s3, dist2RSSI(0));
+            ctx.getAnalyzer().sendToAnalysisQueue(p);
+
+            Thread.Sleep(12000);
+
+            //ctx.switchCalibration(true, r);
+
+            p = new Packet("abcde928", "Fastweb25Test", DateTime.Now, "", "", 0);
+            p.received(s1, dist2RSSI(25));
+            p.received(s2, dist2RSSI(Math.Sqrt(25 * 25 + 25 * 25)));
+            p.received(s3, dist2RSSI(0));
+            ctx.getAnalyzer().sendToAnalysisQueue(p);
+
+            //ctx.switchCalibration(false,r);
+
+            p = new Packet("abcde929", "Polito", DateTime.Now, "", "", 0);
+            p.received(s1, dist2RSSI(0));
+            p.received(s2, dist2RSSI(25));
+            p.received(s3, dist2RSSI(25));
+            ctx.getAnalyzer().sendToAnalysisQueue(p);
+
+            Thread.Sleep(8000);
+            ctx.getAnalyzer().kill();
+		*/
+	}
+
+
 }

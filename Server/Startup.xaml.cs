@@ -20,22 +20,27 @@ namespace Panopticon
     /// </summary>
     public partial class Startup : Window
     {
+		/// </summary>
         public Startup()
         {
             InitializeComponent();
         }
+
         private void Window_ContentRendered(object sender, EventArgs e)
         {
             Context ctx = new Context();
-            MainWindow mn = new MainWindow(ctx);
+			MainWindow mn = new MainWindow(ctx);
             ctx.loadRooms();
             ctx.orchestrate();
             mn.Show();
             this.Close();
-            Thread testerT = new Thread(new ThreadStart(new Tester(ctx).test));
+            Thread testerT = new Thread(new ThreadStart(new Tester(ctx).testFEDE));
             testerT.Start();
+
+			
             
-        }
-    }
+
+		}
+	}
 }
 

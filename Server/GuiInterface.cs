@@ -11,6 +11,8 @@ namespace Panopticon
     {
         internal volatile MainWindow linkedwindow = null;
         internal volatile Room linkedroom = null;
+		public static MainWindow statlinkedwindow; //TODO: alternative?
+
         internal override int SupportedOperations
         {
             get

@@ -19,7 +19,7 @@ namespace Panopticon
             }
         }
         internal List<Reception> Receivings = new List<Reception>();
-        internal Packet(String _sendingMAC, String _requestedSSID, DateTime _timestamp, String _hash, String _htcapabilities,Int64 _sequenceNumber)
+        internal Packet(String _sendingMAC, String _requestedSSID, DateTime _timestamp, String _hash, String _htcapabilities, Int64 _sequenceNumber)
         {
             SendingMAC = _sendingMAC;
             RequestedSSID = _requestedSSID;
@@ -33,7 +33,7 @@ namespace Panopticon
             Receivings.Add(new Reception(ReceivingStation, RSSI));
         }
         internal String SendingMAC;
-        internal String RequestedSSID;//null if no requested SSID
+        internal String RequestedSSID; //null if no requested SSID
         internal DateTime Timestamp;
         internal String Hash;
         internal String HTCapabilities;

@@ -5,7 +5,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{0F4BBF0C-6CE5-4360-8B52-A5E3549E8F4C}</ProjectGuid>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Panopticon</RootNamespace>
     <AssemblyName>Panopticon</AssemblyName>
@@ -33,6 +33,9 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Npgsql, Version=4.0.7.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7, processorArchitecture=MSIL">
@@ -85,17 +88,29 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="AddingStationPages\AddToRoom.xaml.cs">
+      <DependentUpon>AddToRoom.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="AddingStationPages\NewRoom.xaml.cs">
+      <DependentUpon>NewRoom.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="AddingStationPages\SelectRoom.xaml.cs">
+      <DependentUpon>SelectRoom.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Aggregator.cs" />
     <Compile Include="Analyzer.cs" />
     <Compile Include="ConcurrentCircular.cs" />
     <Compile Include="ConcurrentDictionaryStack.cs" />
+    <Compile Include="Connection.cs" />
     <Compile Include="Context.cs" />
     <Compile Include="DatabaseInterface.cs" />
     <Compile Include="DatabasePublisher.cs" />
     <Compile Include="Device.cs" />
+    <Compile Include="FileParser.cs" />
     <Compile Include="GuiInterface.cs" />
     <Compile Include="Packet.cs" />
     <Compile Include="PositionTools.cs" />
+    <Compile Include="Protocol.cs" />
     <Compile Include="Publisher.cs" />
     <Compile Include="Graphics.cs" />
     <Compile Include="Room.cs" />
@@ -103,8 +118,24 @@
       <DependentUpon>Startup.xaml</DependentUpon>
     </Compile>
     <Compile Include="Station.cs" />
+    <Compile Include="StationAdder.xaml.cs">
+      <DependentUpon>StationAdder.xaml</DependentUpon>
+    </Compile>
     <Compile Include="StationHandler.cs" />
     <Compile Include="Tester.cs" />
+    <Compile Include="Utilities.cs" />
+    <Page Include="AddingStationPages\AddToRoom.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="AddingStationPages\NewRoom.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="AddingStationPages\SelectRoom.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -121,6 +152,10 @@
     <Page Include="Startup.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="StationAdder.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
   <ItemGroup>
