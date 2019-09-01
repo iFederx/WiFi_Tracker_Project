@@ -39,7 +39,7 @@ namespace Panopticon
             aggregator = new Aggregator(publishers);
             publishers.Add(aggregator);
             analyzer = new AnalysisEngine(publishers, deviceMap);
-            calibrator = new Calibrator(analyzer);
+            //calibrator = new Calibrator(analyzer);
 			packetizer = new FileParser(this);
         }
 

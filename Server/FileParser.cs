@@ -180,7 +180,7 @@ namespace Panopticon
                     }
                 }
                 
-                if (HASH != "" && HASH.Length < 40)
+                if (HASH!="" && HASH.Length<40 && RSSI!="" && TIME!="")
                 {
 					if (!packets.ContainsKey(HASH))
 					{
