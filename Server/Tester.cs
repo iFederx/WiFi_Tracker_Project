@@ -97,6 +97,7 @@ namespace Panopticon
 		{
 			Console.WriteLine("Programma avviato");
 
+			//TODO: da aggiungere ai thread, come primo
 			Thread socketListener = new Thread(new ThreadStart(Connection.StartConnection));
 			socketListener.Start();
 

@@ -17,8 +17,7 @@ namespace Panopticon
 		public delegate void SafeNewStation(string _string, Socket socket);
 
 		private const int BUFFER_SIZE = 2048;
-		
-        
+		static readonly Dictionary<Socket, string> macAddresses = new Dictionary<Socket,string>(); //only in this case, in the MAC addresses there aren't semi-columns (:)
         /// <summary>
         /// Interprets the command received through the socket           
         /// </summary>
@@ -29,12 +28,12 @@ namespace Panopticon
             int fileSize = 0;
             int timestamp = 0;
 			DateTime timestampDT = new DateTime();
-			string boardName = "ciao"; //recuperarlo da Station
 
 			if (text.IndexOf("REGISTER(") > -1)
             {
                 int offset = text.IndexOf("REGISTER(");//----------------------------------------------------------
                 string macAddress = text.Substring(offset+9, 17);
+				macAddresses.Add(socket, macAddress.Replace(@":", string.Empty));
                 Console.WriteLine("An ESP board with MAC: " + macAddress + " has requested access");
 				//TODO
 				//verificare se esiste già la schedina
@@ -44,23 +43,13 @@ namespace Panopticon
 
 				//apro finestra configurazione nuova scheda
 				var d = new SafeNewStation(GuiInterface.statlinkedwindow.NewStation);
-				Application.Current.Dispatcher.Invoke(d, macAddress, socket);
+				Application.Current.Dispatcher.Invoke(d, macAddress.Replace(@":", string.Empty), socket);
 
 				byte[] data = Encoding.UTF8.GetBytes("ACCEPT\r\n");
                 socket.Send(data); //blocking method
-
 				
-				//codice da spostare-----------------verrà gestito in StationHandler
                 int result = ESP_SyncClock(socket);
                 if (result == -1) return -1;
-				/*
-                Console.Write("Blinking... ");
-                ESP_BlinkStart(socket);
-                Thread.Sleep(40000);
-                ESP_BlinkStop(socket);
-                Console.Write("stop");
-				//-----------------------------------
-				*/
             }
             else if ((x = text.IndexOf("FILE")) > -1)
             {
@@ -104,22 +93,20 @@ namespace Panopticon
 					timestampDT = FileParser.TimeFromUnixTimestamp(timestamp);
                     toReceive = fileSize - received + 14;
 				}
-                
-                //creazione file di ricezione
-                string receivingFolderPath = "./Received/" + boardName + "/";
-                //creare cartella se non esiste
-                if (!Directory.Exists(receivingFolderPath))
-                {
-                    Directory.CreateDirectory(receivingFolderPath);
-                }
+
+				//creazione file di ricezione
+				string mac = macAddresses[socket];
+				if (mac == null) mac = "other";
+                string receivingFolderPath = "./Received/" + mac + "/";
+				FileParser.CheckFolder(receivingFolderPath);
 				
                 //string fileName = "prova.txt";
-				string timeString = timestampDT.ToString("_yyyyMMdd_HHmmss");
-				string fileName = boardName + timeString + ".txt";
+				string timeString = timestampDT.ToString("yyyyMMdd_HHmmss");
+				string fileName = timeString + ".txt";
                 string filePath = receivingFolderPath + fileName;
                 FileStream fs = File.Open(filePath, FileMode.Create);
 
-                //TODO: capire se 1) si devono ricevere altri byte o 2) si ha già tutto
+                //DONE: capire se 1) si devono ricevere altri byte o 2) si ha già tutto
                 //scrivo quello che ho ricevuto
                 fs.Write(data, 14, data.Length - 14); //13 perché salto "FILE\r\n BBBB TTTT"
                 
@@ -139,15 +126,10 @@ namespace Panopticon
                 
                 Console.WriteLine("Client:{0} connected & File {1} started received.", socket.RemoteEndPoint, fileName);
 
-                var prova = FileParser.Parse(@filePath, new Station());
+				//TODO: sarà spostato
+				//Dictionary<String, Packet> packets = FileParser.Parse(@filePath, new Station()); //TODO: Station assente
+				//TODO: spedire lista packets a qualcuno
 
-                //Console.WriteLine(DateTime.Now);
-                //Console.WriteLine(prova.ToString());
-
-                
-
-
-                
 
             }
 
@@ -234,7 +216,7 @@ namespace Panopticon
         {
             byte[] data = Encoding.UTF8.GetBytes("OKLED\r\n");
             socket.Send(data); //blocking method
-			Console.Write("Blinking stopped");
+			Console.WriteLine("Blinking stopped");
 		}
 
         /// <summary>

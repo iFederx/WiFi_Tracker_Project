@@ -307,7 +307,7 @@ namespace Panopticon
 		public void NewStation(string _macAddress, Socket _socket)
 		{
 			
-			StationHandler handler = new StationHandler(_socket, _macAddress);
+			StationHandler handler = new StationHandler(_socket, _macAddress, ctx);
 			ctx.tryAddStation(handler.macAddress, handler, true);
 			//StationAdder sa1 = new StationAdder(ctx, handler);
 			//sa1.Show();

@@ -4,19 +4,117 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Collections.Concurrent;
+using System.Threading;
 
 namespace Panopticon
 {
     class FileParser
     {
-        /// <summary>
-        /// This static method reads an ESP input file and returns a List of Packet objects
-        /// </summary>
-        public static Dictionary<String, Packet> Parse(String filePath, Station receivingStation)
+		internal Context ctx;
+		private List<FileSystemWatcher> watchers;
+		ConcurrentDictionary<string, MetaPacket> metaPackets; //the key is the hash
+		volatile bool killed = false;
+		int sleepTime = 1200;
+
+		public FileParser(Context _ctx)
+		{
+			ctx = _ctx;
+			watchers = new List<FileSystemWatcher>();
+			metaPackets = new ConcurrentDictionary<string, MetaPacket>();
+		}
+
+		public struct MetaPacket
+		{
+			public Packet packet;
+			public DateTime queueInsertionTime;
+			public Room room;
+
+			public MetaPacket(Packet _tempPacket, DateTime _now, Room _room) : this()
+			{
+				packet = _tempPacket;
+				queueInsertionTime = _now;
+				room = _room;
+			}
+		}
+		public void kill()
+		{
+			killed = true;
+		}
+
+		internal void AddWatcher(string _mac) //metodo da chiamare per ogni Station creata
+		{
+			var watcher = new FileSystemWatcher();
+			watcher.Path = "./Received/" + _mac + "/";
+			watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName;
+			watcher.Filter = "*.txt";
+			watcher.Changed += new FileSystemEventHandler(OnChanged);
+			watcher.EnableRaisingEvents = true;
+			watchers.Add(watcher);
+		}
+
+		private void OnChanged(object source, FileSystemEventArgs e)
+		{
+			Console.WriteLine(e.ChangeType + " file: " + @e.FullPath);
+			string[] directories = e.FullPath.Split('/');
+			int folderCount = directories.Length;
+			Station s = ctx.getStation(directories[2]);
+			Parse(e.FullPath, s);
+
+		}
+
+		internal void packetizerProcess()
+		{
+			//throw new NotImplementedException();
+			/*
+			 * potrebbe essere un processo che legge packets ogni minuto e:
+			 * - manda in analisi i packet maturi, rimuovendoli dalla struttura dati
+			 * (maturo: con un numero di ricezioni uguale al numero di station nella stanza (o station-1, ma almeno 2))
+			 * - elimina i packet non maturi più vecchi di 5/10 minuti
+			 */
+
+			//per ogni unità nella coda ordinata
+			while (!killed)
+			{
+				Thread.Sleep(sleepTime);
+				foreach (MetaPacket metapak in metaPackets.Values)
+				{
+					if ((metapak.queueInsertionTime - DateTime.Now).TotalMinutes > 10)
+					{
+						//getto via il metapaket
+						MetaPacket trash;
+						metaPackets.TryRemove(metapak.packet.Hash, out trash);
+
+					}
+					else if (metapak.room.stationcount == metapak.packet.Receivings.Count)
+					{
+						//se sono qui, il pacchetto è "maturo"
+						if (ctx.checkStationAliveness(metapak.room))
+						{
+							//le stazioni ci sono ancora tutte
+							ctx.getAnalyzer().sendToAnalysisQueue(metapak.packet);
+							//lo rimuovo dalla coda
+							MetaPacket trash;
+							metaPackets.TryRemove(metapak.packet.Hash, out trash);
+						}
+						else //una stazione si è disconnessa
+						{
+							//TODO_FEDE: completare
+						}
+					}
+				}
+			}
+
+		}
+
+		/// <summary>
+		/// This method reads an ESP input file and returns a List of Packet objects
+		/// </summary>
+		public void Parse(String filePath, Station receivingStation)
         {
             string line;
             StreamReader file = new StreamReader(@filePath);
-            Dictionary<String,Packet> packets = new Dictionary<string, Packet>();
+            Dictionary<String,Packet> packets = new Dictionary<string, Packet>(); //the key is the hash
             while ((line = file.ReadLine()) != null)
             {
                 string Type = "", SubType = "", RSSI = "", SRC = "", seq_num = "", TIME = "", HASH = "", SSID_id = "", SSID_lenght = "", SSID = "", HT_id = "", HT_cap_len = "", HT_cap_str = "";
@@ -41,7 +139,7 @@ namespace Panopticon
                             break;
 
                         case " SRC":
-                            SRC = fieldSplit[1];
+                            SRC = fieldSplit[1].Replace(@":", string.Empty);
                             break;
 
                         case " seq_num":
@@ -83,31 +181,47 @@ namespace Panopticon
                 }
                 
                 if (HASH != "" && HASH.Length < 40)
-                { 
-                    if (packets.ContainsKey(HASH))
-                    {
-                        //if a packet is present, I add a Reception to it
-                        packets[HASH].received(receivingStation, double.Parse(RSSI)); //si da solo crea internamente un oggetto Reception
-                    }
-                    else
-                    {
-                        //else, I instantiate a new Packet
-                        Packet tempPacket = new Packet(SRC, SSID, TimeFromUnixTimestamp(int.Parse(TIME)), HASH, HT_cap_str, long.Parse(seq_num));
-                        tempPacket.received(receivingStation, double.Parse(RSSI));
-                        packets.Add(HASH, tempPacket);
-                        
-                    }
+                {
+					if (!packets.ContainsKey(HASH))
+					{
+						Packet packet = new Packet(SRC, SSID, TimeFromUnixTimestamp(int.Parse(TIME)), HASH, HT_cap_str, long.Parse(seq_num));
+						packet.received(receivingStation, double.Parse(RSSI));
+						packets.Add(HASH, packet);
+					}
                 }
             }
 			file.Close();
-            return packets;
+
+			//aggiungo i dati del file appena letto, alla struttura thread-safe
+			foreach (Packet pak in packets.Values)
+			{
+				string hash = pak.Hash;
+				if (metaPackets.ContainsKey(hash))
+				{
+					metaPackets[hash].packet.received(receivingStation, pak.Receivings.First<Packet.Reception>().RSSI);
+				}
+				else
+				{
+					var mp = new MetaPacket(pak, DateTime.Now, receivingStation.location.room);
+					metaPackets.TryAdd(hash, mp);
+				}
+			}	
         }
+
+		internal static void CheckFolder(string receivingFolderPath)
+		{
+			//crea cartella, se non esiste
+			if (!Directory.Exists(receivingFolderPath))
+			{
+				Directory.CreateDirectory(receivingFolderPath);
+			}
+		}
 
 		/// <summary>
 		/// The aim of this method is to convert a unix timestamp, based on
 		/// seconds from the epoch, into a DateTime, based on .NET ticks (1 tick = 1 ns)
 		/// </summary>
-        public static DateTime TimeFromUnixTimestamp(int unixTimestamp)
+		public static DateTime TimeFromUnixTimestamp(int unixTimestamp)
         {
             DateTime unixYear0 = new DateTime(1970, 1, 1);
             long unixTimeStampInTicks = unixTimestamp * TimeSpan.TicksPerSecond;

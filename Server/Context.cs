@@ -22,8 +22,10 @@ namespace Panopticon
         DatabaseInterface databaseInt;
         List<Publisher> publishers;
         Aggregator aggregator;
+		internal FileParser packetizer;
         LinkedList<Thread> threads = new LinkedList<Thread>();
         internal readonly GuiInterface guiPub;
+		
         public Context()
         {
             stations = new ConcurrentDictionary<String, Station>();
@@ -39,6 +41,7 @@ namespace Panopticon
             publishers.Add(aggregator);
             analyzer = new AnalysisEngine(publishers, deviceMap);
             calibrator = new Calibrator(analyzer);
+			packetizer = new FileParser(this);
         }
 
         public void orchestrate()
@@ -49,10 +52,13 @@ namespace Panopticon
             databaseT.Start();
             Thread aggregatorT = new Thread(new ThreadStart(aggregator.aggregatorProcess));
             aggregatorT.Start();
+			Thread packetizerT = new Thread(new ThreadStart(packetizer.packetizerProcess));
+			packetizerT.Start();
             threads.AddLast(analyzerT);
             threads.AddLast(databaseT);
             threads.AddLast(aggregatorT);
-        }
+			threads.AddLast(packetizerT);
+		}
         public Analyzer getAnalyzer()
         {
             if (calibrator.inCalibration)
@@ -250,6 +256,7 @@ namespace Panopticon
             calibrator.kill(); //should not be necessary
             databasePub.kill();
             aggregator.kill();
+			packetizer.kill();
             foreach(Thread t in threads)
             {
                 t.Join();

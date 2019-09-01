@@ -15,10 +15,13 @@ namespace Panopticon
 		internal string macAddress = null;
         internal bool isBlinking = false;
         internal bool isOn = true;
-        internal StationHandler(Socket _socket, string _macAddress)
+        internal StationHandler(Socket _socket, string _macAddress, Context ctx)
         {
             socket = _socket;
 			macAddress = _macAddress;
+			string receivingFolderPath = "./Received/" + macAddress + "/";
+			FileParser.CheckFolder(receivingFolderPath);
+			ctx.packetizer.AddWatcher(macAddress);
         }
 
         public bool SetSocket(Socket _socket)

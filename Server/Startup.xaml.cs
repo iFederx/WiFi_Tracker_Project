@@ -25,6 +25,7 @@ namespace Panopticon
         {
             InitializeComponent();
         }
+
         private void Window_ContentRendered(object sender, EventArgs e)
         {
             Context ctx = new Context();
