@@ -49,7 +49,7 @@ namespace Panopticon
                 }
                 catch (OperationCanceledException)
                 {
-                    coalesceAnonymous();
+					coalesceAnonymous();
                     householdCleaning();
                     t = new CancellationTokenSource(10000);
                 }
@@ -74,7 +74,7 @@ namespace Panopticon
                 {
                     d.anonymous = true;
                     d.identifier = "ANON-" +DateTime.Now.ToShortDateString()+"."+DateTime.Now.ToShortTimeString()+"-"+ d.MAC.GetHashCode().ToString("X").Substring(0,4);
-                    anoniDevices.Add(p.SendingMAC, d.identifier);
+                    anoniDevices.Add(p.SendingMAC, d.identifier); //DARIO: eccezione qui
                 }
             }
             if (p.RequestedSSID != null && !d.requestedSSIDs.ContainsKey(p.RequestedSSID))
@@ -87,14 +87,15 @@ namespace Panopticon
             if (d.lastPosition!=null && d.lastPosition.positionDate.AddSeconds(3) > p.Timestamp && d.lastPosition.room==p.Receivings[0].ReceivingStation.location.room)
                 return;
             locateAndPublish(d, p);
-            //DEBUG
+			//DARIO: ho commentato questa zona, probabilmente adibita al debug, che generava un'eccezione
+            /*/DEBUG
             double error = Math.Sqrt(Math.Pow((d.lastPosition.X - p.testposition.X),2) + Math.Pow((d.lastPosition.Y - p.testposition.Y),2));
             nerrors++;
             totalerror += error;
             System.Diagnostics.Debug.Print("Error: " + error);
             System.Diagnostics.Debug.Print("Mean Error: " + totalerror/nerrors);
             deviceMap.upsert(d.identifier, d, (old, cur) => { return cur; });//single thread safe only. To make it multithread i should also copy other fields 
-			
+			*/
 		}
 
         private void coalesceAnonymous()

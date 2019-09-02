@@ -13,7 +13,10 @@ namespace Panopticon
 		public delegate void SafeCaller();
 		public double dist2RSSI(double dist)
         {
-            /*if (dist < 1)
+            //DARIO:
+			// è giusta la versione commentata?
+			
+			/*if (dist < 1)
                 return -25;
             return -30 * (Math.Log(dist, 5) + 1);*/
             return dist;
@@ -102,7 +105,6 @@ namespace Panopticon
 			Thread socketListener = new Thread(new ThreadStart(Connection.StartConnection));
 			socketListener.Start();
 
-			//partiranno altri thread... (Dario-side)
 		}
 
 		

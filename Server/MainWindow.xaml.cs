@@ -370,7 +370,7 @@ namespace Panopticon
         {
             ctx = context;
             ctx.guiPub.linkedwindow = this;
-			GuiInterface.statlinkedwindow = this; //aggiunto da FEDE (necessario in Protocol.Command)
+			GuiInterface.statlinkedwindow = this; //FEDE (necessario in Protocol.Command)
             InitializeComponent();
             int h = 0;
             int min = 0;

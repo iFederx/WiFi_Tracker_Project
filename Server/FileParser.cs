@@ -15,7 +15,7 @@ namespace Panopticon
 		private List<FileSystemWatcher> watchers;
 		ConcurrentDictionary<string, MetaPacket> metaPackets; //the key is the hash
 		volatile bool killed = false;
-		int sleepTime = 1200;
+		int sleepTime = 60000;
 
 		public FileParser(Context _ctx)
 		{
@@ -65,7 +65,6 @@ namespace Panopticon
 
 		internal void packetizerProcess()
 		{
-			//throw new NotImplementedException();
 			/*
 			 * potrebbe essere un processo che legge packets ogni minuto e:
 			 * - manda in analisi i packet maturi, rimuovendoli dalla struttura dati

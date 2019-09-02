@@ -149,7 +149,7 @@ namespace Panopticon
 
         public Station getStation(String NameMAC)
         {
-            return stations[NameMAC];
+            return stations[NameMAC]; //DARIO: KeyNotFoundException: all'improvviso stations era vuota
         }
         public IEnumerable<Room> getRooms()
         {

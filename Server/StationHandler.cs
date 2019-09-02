@@ -34,7 +34,7 @@ namespace Panopticon
         {
             return socket;
         }
-        //TODO_FEDE: this class is used to send commands to a specific board. It will then have probably a constructor reuqesting the IP address of the remote board
+        //DONE_FEDE: this class is used to send commands to a specific board. It will then have probably a constructor reuqesting the IP address of the remote board
         internal void switchLedBlink(bool blink)
         {
 			if (blink == false)
