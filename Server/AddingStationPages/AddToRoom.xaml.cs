@@ -41,7 +41,8 @@ namespace Panopticon.AddingStationPages
 			handler = _handler;
 			Label_RoomName.Content = room.roomName;
 			handler.switchLedBlink(true);
-			AdjustRoomSize(room);
+			GridRoom.Width = room.xlength;
+			GridRoom.Height = room.ylength;
 			
 			int i = FindWindowByMAC(handler.macAddress, maxN);
 			if (i != maxN)
@@ -55,6 +56,8 @@ namespace Panopticon.AddingStationPages
 
 		private void AdjustRoomSize(Room room)
 		{
+			//TODO: eliminare l'intero metodo
+			// ...non sapevo esistesse la ViewBox :_(
 			double maxVal = Math.Max(room.xlength, room.ylength);
 			double minVal = Math.Min(room.xlength, room.ylength);
 			if (maxVal > maxRoomDimension) //una delle due dimensioni supera la massima consentita

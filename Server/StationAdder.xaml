@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Panopticon"
         mc:Ignorable="d"
-        Title="Add a new Station" MinHeight="350" MinWidth="350"  Height="450" Width="450">
+        Title="Add a new Station" MinHeight="350" MinWidth="350"  Height="450" Width="450" Icon="Resources\Board3.ico" Closed="Window_Closed">
 
     <Frame x:Name="FrameNewStation" NavigationUIVisibility="Hidden" />
 

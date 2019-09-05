@@ -7,6 +7,11 @@
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
     mc:Ignorable="d"
         Title="Panopticon" Height="650" Width="900" WindowStartupLocation="CenterScreen" WindowState="Maximized" ContentRendered="Window_ContentRendered" Closed="Window_Closed" MinWidth="700" MinHeight="700">
+    <Window.Resources>
+        <ContextMenu x:Key="cmRxClick">
+            <MenuItem Header="Remove station from the room" Click="RemoveStation_Click" CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=Parent}"/>
+        </ContextMenu>
+    </Window.Resources>
     <Grid>
         <ScrollViewer VerticalScrollBarVisibility="Auto" Width="200" Margin="0,0,0,0" HorizontalAlignment="Left">
             <StackPanel Name="roomlistpanel" HorizontalAlignment="Left" Width="200"/>

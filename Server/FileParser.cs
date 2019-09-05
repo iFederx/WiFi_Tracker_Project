@@ -16,6 +16,7 @@ namespace Panopticon
 		ConcurrentDictionary<string, MetaPacket> metaPackets; //the key is the hash
 		volatile bool killed = false;
 		int sleepTime = 60000;
+		volatile int stationGC = 0;
 
 		public FileParser(Context _ctx)
 		{
@@ -58,17 +59,20 @@ namespace Panopticon
 			Console.WriteLine(e.ChangeType + " file: " + @e.FullPath);
 			string[] directories = e.FullPath.Split('/');
 			int folderCount = directories.Length;
-			Station s = ctx.getStation(directories[2]);
-			Parse(e.FullPath, s);
-
+			//TODO: chiudere connessione con station se la station non è presente in stations
+			if (ctx.StationConfigured(directories[2])) //true se la station è presente in stations
+			{
+				Station s = ctx.getStation(directories[2]);
+				Parse(e.FullPath, s);
+			}
 		}
 
 		internal void packetizerProcess()
 		{
 			/*
-			 * potrebbe essere un processo che legge packets ogni minuto e:
+			 * processo che legge packets ogni minuto e:
 			 * - manda in analisi i packet maturi, rimuovendoli dalla struttura dati
-			 * (maturo: con un numero di ricezioni uguale al numero di station nella stanza (o station-1, ma almeno 2))
+			 * (maturo: con un numero di ricezioni uguale al numero di station nella stanza (ma almeno 2)
 			 * - elimina i packet non maturi più vecchi di 5/10 minuti
 			 */
 
@@ -76,6 +80,8 @@ namespace Panopticon
 			while (!killed)
 			{
 				Thread.Sleep(sleepTime);
+				stationGC++;
+				stationGC %= 2; //ogni quanti minuti chiamo checkStationAliveness()
 				foreach (MetaPacket metapak in metaPackets.Values)
 				{
 					if ((metapak.queueInsertionTime - DateTime.Now).TotalMinutes > 10)
@@ -85,23 +91,18 @@ namespace Panopticon
 						metaPackets.TryRemove(metapak.packet.Hash, out trash);
 
 					}
-					else if (metapak.room.stationcount == metapak.packet.Receivings.Count)
+					else if (metapak.room.stationcount == metapak.packet.Receivings.Count && metapak.room.stationcount >= 2) //DARIO: giusto che le schedine nella stanza debbano essere almeno 2 per mandare il packet in analisi?
 					{
 						//se sono qui, il pacchetto è "maturo"
-						if (ctx.checkStationAliveness(metapak.room))
-						{
-							//le stazioni ci sono ancora tutte
-							ctx.getAnalyzer().sendToAnalysisQueue(metapak.packet);
-							//lo rimuovo dalla coda
-							MetaPacket trash;
-							metaPackets.TryRemove(metapak.packet.Hash, out trash);
-						}
-						else //una stazione si è disconnessa
-						{
-							//TODO_FEDE: completare
-						}
+						ctx.getAnalyzer().sendToAnalysisQueue(metapak.packet);
+						//lo rimuovo dalla coda
+						MetaPacket trash;
+						metaPackets.TryRemove(metapak.packet.Hash, out trash);
 					}
 				}
+				if (stationGC == 1)
+					foreach (Room r in ctx.getRooms())
+						ctx.checkStationAliveness(r);
 			}
 
 		}

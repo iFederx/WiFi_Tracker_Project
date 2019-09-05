@@ -289,9 +289,13 @@ namespace Panopticon
 
         internal bool saveStationInfo(StationInfo si)
         {
-            string shint = Convert.ToBase64String(si.shortInterpolator);
+			/* //DARIO: null --> eccezione
+			string shint = Convert.ToBase64String(si.shortInterpolator); 
             string lgint = Convert.ToBase64String(si.longInterpolator);
-            String query = getSql(SqlEvent.Insert, "stations",
+			*/
+			string shint = "temp";
+			string lgint = "temp";
+			String query = getSql(SqlEvent.Insert, "stations",
                             new SqlVariable("namemac", si.NameMAC, SqlType.String),
                             new SqlVariable("roomname", si.RoomName, SqlType.String),
                             new SqlVariable("xpos", si.X.ToString(CultureInfo.InvariantCulture), SqlType.Numeric),

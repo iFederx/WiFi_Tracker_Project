@@ -278,7 +278,8 @@ namespace Panopticon
             s_gui.Fill = Brushes.Red;
             s_gui.Stroke = Brushes.Red;
             s_gui.Cursor = Cursors.Hand;
-            lock(guilock)
+			s_gui.MouseRightButtonDown += new MouseButtonEventHandler(Rectangle_MouseLeftButtonDown);
+			lock (guilock)
             {
                 Canvas.SetLeft(s_gui, s.location.X * lvtrck_canvas.Width / selectedRoom.room.xlength);
                 Canvas.SetTop(s_gui, s.location.Y * lvtrck_canvas.Height / selectedRoom.room.ylength);
@@ -286,11 +287,40 @@ namespace Panopticon
                 List<UIElement> lst = new List<UIElement>();
                 lst.Add(s_gui);
                 uiElements.Add(s, lst);
-            }            
+            }          
         }
 
-        
-        internal void removeRoom(Room r)
+		private void Rectangle_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+		{
+			ContextMenu cm = this.FindResource("cmRxClick") as ContextMenu;
+			cm.PlacementTarget = sender as Rectangle;
+			cm.IsOpen = true;
+		}
+
+		private void RemoveStation_Click(object sender, RoutedEventArgs e)
+		{
+			//DARIO: devo poter rimuovere la stanza solo se non è remota?
+			MenuItem mi = sender as MenuItem;
+			Rectangle r = null;
+			if (mi != null)
+			{
+				ContextMenu cm = mi.CommandParameter as ContextMenu;
+				if (cm != null)
+				{
+					r = cm.PlacementTarget as Rectangle;
+					if (r != null)
+					{
+						string name = r.ToolTip as String;
+						name = name.Remove(0,8);
+						ctx.removeStation(name);
+						ctx.deleteStation(name);
+					}
+				}
+			}
+			
+		}
+
+		internal void removeRoom(Room r)
         {
             lock(guilock)
             {
@@ -918,11 +948,8 @@ namespace Panopticon
 		/// </summary>
 		public void NewStation(string _macAddress, Socket _socket)
 		{
-			
 			StationHandler handler = new StationHandler(_socket, _macAddress, ctx);
 			ctx.tryAddStation(handler.macAddress, handler, true);
-			//StationAdder sa1 = new StationAdder(ctx, handler);
-			//sa1.Show();
 		}
 
 		/*

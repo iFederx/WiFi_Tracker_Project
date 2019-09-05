@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -19,6 +21,8 @@ namespace Panopticon
     /// </summary>
     public partial class StationAdder : Window
     {
+		Context ctx;
+		StationHandler handler;
 		public StationAdder()
         {
             InitializeComponent();
@@ -30,6 +34,16 @@ namespace Panopticon
 			InitializeComponent();
 			this.Title += " (" + _handler.macAddress + ")";
 			FrameNewStation.Content = new AddingStationPages.SelectRoom(_ctx, _handler);
+			ctx = _ctx;
+			handler = _handler;
+		}
+
+		private void Window_Closed(object sender, EventArgs e)
+		{
+			if (!ctx.StationConfigured(handler.macAddress))
+			{
+				Protocol.ESP_Reboot(handler.socket);
+			}
 		}
 	}
 }

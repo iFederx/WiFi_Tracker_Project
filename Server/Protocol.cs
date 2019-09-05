@@ -119,17 +119,11 @@ namespace Panopticon
                     toReceive = toReceive - received;
                     //scrivo
                     fs.Write(data, 0, received);
-                    
                 }
                 
                 fs.Close(); //chiudo il file
                 
                 Console.WriteLine("Client:{0} connected & File {1} started received.", socket.RemoteEndPoint, fileName);
-
-				//TODO: sarà spostato
-				//Dictionary<String, Packet> packets = FileParser.Parse(@filePath, new Station()); //TODO: Station assente
-				//TODO: spedire lista packets a qualcuno
-
 
             }
 

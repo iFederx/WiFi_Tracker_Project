@@ -30,10 +30,12 @@
         <Label Content="Nome stanza" x:Name="Label_RoomName" Grid.Column="1" Grid.Row="0" Grid.ColumnSpan="2" HorizontalAlignment="Center" VerticalContentAlignment="Center" FontWeight="Bold" FontSize="14"/>
         <Button Content="Cancel"  Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="3" Width="90" Height="24" Margin="10,0,20,0" Click="Button_Cancel"/>
         <Button Content="Confirm" x:Name="Button_ConfirmPosition" Grid.Column="2" Grid.ColumnSpan="2" Grid.Row="3" Width="90" Height="24" Margin="0" IsEnabled="False" Click="Button_ConfirmNewStation"/>
+        <Viewbox Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="4">
         <Grid x:Name="GridRoom" Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="2" MouseMove="Grid_MouseMove" Background="LightGray" Height="150" Width="240" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" MouseDown="Grid_NewPosition" Margin="10">
             <Canvas x:Name="Canvas_Room" HorizontalAlignment="Left" Height="150" VerticalAlignment="Top" Width="240">
                 <Ellipse x:Name="Ellipse_StationPosition" Fill="Red" Height="7" Canvas.Left="50" Stroke="Red" Canvas.Top="50" Width="7" Visibility="Hidden"/>
             </Canvas>
         </Grid>
+        </Viewbox>
     </Grid>
 </Page>

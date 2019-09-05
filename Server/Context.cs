@@ -39,7 +39,7 @@ namespace Panopticon
             aggregator = new Aggregator(publishers);
             publishers.Add(aggregator);
             analyzer = new AnalysisEngine(publishers, deviceMap);
-            //calibrator = new Calibrator(analyzer);
+            //calibrator = new Calibrator(analyzer); //da merge: probabilmente da rimuovere
 			packetizer = new FileParser(this);
         }
 
@@ -107,7 +107,7 @@ namespace Panopticon
             Room room=getRoom(roomName);
             s.location = new PositionTools.Position(x,y,room);
             locker.EnterWriteLock();
-            room.addStation(s);
+            room.addStation(s); //DARIO: se è una stazione che aveva perso connessione e si è riconnessa?
             stations[s.NameMAC] = s;
             locker.ExitWriteLock();
             foreach (Publisher pb in publishers)
@@ -151,6 +151,12 @@ namespace Panopticon
         {
             return stations[NameMAC]; //DARIO: KeyNotFoundException: all'improvviso stations era vuota
         }
+		public bool StationConfigured(String NameMAC)
+		{
+			if (stations.ContainsKey(NameMAC))
+				return true;
+			else return false;
+		}
         public IEnumerable<Room> getRooms()
         {
             return rooms.Values.ToArray<Room>();
@@ -163,6 +169,7 @@ namespace Panopticon
         {
             Station s;
             stations.TryRemove(NameMAC,out s);
+			Protocol.ESP_Reboot(s.handler.socket); //FEDE
             Room room=s.location.room;
             locker.EnterWriteLock();
             room.removeStation(s);
@@ -171,7 +178,7 @@ namespace Panopticon
                 if (pb.supportsOperation(Publisher.DisplayableType.StationUpdate))
                     pb.publishStationUpdate(room,s,Publisher.EventType.Disappear);
         }
-        public void removeRoom(String NameMAC)
+        public void removeRoom(String NameMAC) //TODO: da agganciare da qualche parte
         {
             Room room = rooms[NameMAC];
             locker.EnterWriteLock();

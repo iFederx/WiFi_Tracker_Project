@@ -85,6 +85,11 @@ namespace Panopticon
                 clientSockets.Remove(current);
                 return;
             }
+			catch (ObjectDisposedException)
+			{
+				clientSockets.Remove(current);
+				return;
+			}
 
             byte[] recBuf = new byte[received];
             Array.Copy(buffer, recBuf, received);
