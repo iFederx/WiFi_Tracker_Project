@@ -15,9 +15,7 @@ namespace Panopticon
         Dictionary<String, String> anoniDevices = new Dictionary<string, string>(); //mac, corresponding id
         volatile CancellationTokenSource t;
         volatile bool killed = false;
-        //DEBUG
-        double totalerror = 0;
-        int nerrors = 0;
+        
         List<Publisher> publishers;
         public AnalysisEngine(List<Publisher> pb, ConcurrentDictionaryStack<String, Device> dm)
         {
@@ -60,11 +58,11 @@ namespace Panopticon
         {
             Device d;
             bool anew;
-            String id = p.SendingMAC;
-            String id2;
-            if (anoniDevices.TryGetValue(id, out id2))
-                id = id2;
-            if (anew=!deviceMap.getKey(id, out d))
+            String mac = p.SendingMAC;
+            String permanent_identifier;
+            if (!anoniDevices.TryGetValue(mac, out permanent_identifier))
+                permanent_identifier = mac;
+            if (anew=!deviceMap.getKey(permanent_identifier, out d))
             {
                 d = new Device();
                 d.MAC = p.SendingMAC;
@@ -87,13 +85,7 @@ namespace Panopticon
             if (d.lastPosition!=null && d.lastPosition.positionDate.AddSeconds(3) > p.Timestamp && d.lastPosition.room==p.Receivings[0].ReceivingStation.location.room)
                 return;
             locateAndPublish(d, p);
-			//DARIO: ho commentato questa zona, probabilmente adibita al debug, che generava un'eccezione
-            /*/DEBUG
-            double error = Math.Sqrt(Math.Pow((d.lastPosition.X - p.testposition.X),2) + Math.Pow((d.lastPosition.Y - p.testposition.Y),2));
-            nerrors++;
-            totalerror += error;
-            System.Diagnostics.Debug.Print("Error: " + error);
-            System.Diagnostics.Debug.Print("Mean Error: " + totalerror/nerrors);*/
+			
             deviceMap.upsert(d.identifier, d, (old, cur) => { return cur; });//single thread safe only. To make it multithread i should also copy other fields 
 			
 		}
@@ -178,7 +170,7 @@ namespace Panopticon
         private void locateAndPublish(Device d,Packet p)
         {
             Room oldRoom =(d.lastPosition!=null)?d.lastPosition.room:null;
-            PositionTools.Position newposition = PositionTools.triangulate(p.Receivings);
+            PositionTools.Position newposition = PositionTools.triangulate(p.Receivings,p.Timestamp);
             Publisher.EventType e = Publisher.EventType.Update;
             newposition.positionDate = p.Timestamp;
             if (oldRoom==null)

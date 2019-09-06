@@ -114,10 +114,10 @@ namespace Panopticon
                 R = r;
             }
         }
-        internal static Position triangulate(List<Packet.Reception> receivings)
+        internal static Position triangulate(List<Packet.Reception> receivings, DateTime receptiontime)
         {
             Position p = new Position(0, 0, receivings[0].ReceivingStation.location.room);
-            p.positionDate = DateTime.Now;
+            p.positionDate = receptiontime;
             if (receivings.Count() > 2)
             {
                 Circle[] circles = new Circle[receivings.Count];
@@ -210,7 +210,7 @@ namespace Panopticon
 
         private static double Rssi2Dis(Station receivingStation, double RSSI)
         {
-            return RSSI;//simulate ^4 power with 3 point interpolator
+            return Math.Pow(10, ((-41 - RSSI) / (5.4 * 10)));
         }
 
         private static Point triangulate(Circle a, Circle b, Circle c)
