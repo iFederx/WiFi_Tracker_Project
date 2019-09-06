@@ -165,8 +165,6 @@ namespace Panopticon
             internal String RoomName;
             internal Double X;
             internal Double Y;
-            internal Byte[] shortInterpolator;
-            internal Byte[] longInterpolator;
         }
         internal struct RoomInfo
         {
@@ -232,8 +230,6 @@ namespace Panopticon
                 new SqlVariable("roomname", null, SqlType.Column),
                 new SqlVariable("xpos", null, SqlType.Column),
                 new SqlVariable("ypos", null, SqlType.Column),
-                new SqlVariable("shortintrp", null, SqlType.Column),
-                new SqlVariable("longintrp", null, SqlType.Column),
                 new SqlVariable("namemac", NameMAC, SqlType.String, true));
             using (ConnectionHandle conn = new ConnectionHandle(connectionpool))
             {
@@ -248,8 +244,6 @@ namespace Panopticon
                             si2.RoomName = reader.GetString(0);
                             si2.X = reader.GetFloat(1);
                             si2.Y = reader.GetFloat(2);
-                            si2.shortInterpolator = Convert.FromBase64String(reader.GetString(3));
-                            si2.longInterpolator = Convert.FromBase64String(reader.GetString(4));
                             si = si2;
                         }
                         else
@@ -289,19 +283,11 @@ namespace Panopticon
 
         internal bool saveStationInfo(StationInfo si)
         {
-			/* //DARIO: null --> eccezione
-			string shint = Convert.ToBase64String(si.shortInterpolator); 
-            string lgint = Convert.ToBase64String(si.longInterpolator);
-			*/
-			string shint = "temp";
-			string lgint = "temp";
 			String query = getSql(SqlEvent.Insert, "stations",
                             new SqlVariable("namemac", si.NameMAC, SqlType.String),
                             new SqlVariable("roomname", si.RoomName, SqlType.String),
                             new SqlVariable("xpos", si.X.ToString(CultureInfo.InvariantCulture), SqlType.Numeric),
-                            new SqlVariable("ypos", si.Y.ToString(CultureInfo.InvariantCulture), SqlType.Numeric),
-                            new SqlVariable("shortintrp", shint, SqlType.String),
-                            new SqlVariable("longintrp", lgint, SqlType.String));
+                            new SqlVariable("ypos", si.Y.ToString(CultureInfo.InvariantCulture), SqlType.Numeric));
             return performNonQuery(query);
         }        
 

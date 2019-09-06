@@ -47,7 +47,7 @@ namespace Panopticon
                 }
                 catch (OperationCanceledException)
                 {
-					coalesceAnonymous();
+					findSameAnonimous();
                     householdCleaning();
                     t = new CancellationTokenSource(10000);
                 }
@@ -72,7 +72,7 @@ namespace Panopticon
                 {
                     d.anonymous = true;
                     d.identifier = "ANON-" +DateTime.Now.ToShortDateString()+"."+DateTime.Now.ToShortTimeString()+"-"+ d.MAC.GetHashCode().ToString("X").Substring(0,4);
-                    anoniDevices.Add(p.SendingMAC, d.identifier); //DARIO: eccezione qui
+                    anoniDevices.Add(p.SendingMAC, d.identifier); 
                 }
             }
             if (p.RequestedSSID != null && !d.requestedSSIDs.ContainsKey(p.RequestedSSID))
@@ -89,44 +89,80 @@ namespace Panopticon
             deviceMap.upsert(d.identifier, d, (old, cur) => { return cur; });//single thread safe only. To make it multithread i should also copy other fields 
 			
 		}
-
-        private void coalesceAnonymous()
+        void mergeAnonimous(Device A, Device B, int score)
+        {
+            if (A.firstPosition.positionDate > B.firstPosition.positionDate)
+            {
+                Device temp = B;
+                B = A;
+                A = temp;
+            }
+            // B is new identity, A is old one
+            PositionTools.Position oldApos = new PositionTools.Position(A.lastPosition);
+            oldApos.positionDate = B.firstPosition.positionDate;
+            placeInRoomAndPublish(A.lastPosition.room, A, oldApos, Publisher.EventType.Disappear);
+            B.firstPosition = A.firstPosition;
+            B.aliases.PushRange(A.aliases.ToArray());
+            B.aliases.Push(new Device.Alias(A.MAC, score));
+            foreach (String ssid in A.requestedSSIDs.Keys)
+                B.requestedSSIDs.TryAdd(ssid, 0);
+            deviceMap.remove(B.identifier);
+            foreach (Publisher pb in publishers)
+                if (pb.supportsOperation(Publisher.DisplayableType.Rename))
+                    pb.publishRename(B.identifier, A.identifier);
+            B.identifier = A.identifier;
+            deviceMap.upsert(B.identifier, B, (d1, d2) => { return d2; });
+            anoniDevices.Remove(A.MAC);
+            anoniDevices[B.MAC] = B.identifier;
+        }
+        private int scoreDeviceSimilarity(Device A, Device B)
+        {
+            int score=0;
+            Device first;
+            Device second;
+            if (A.firstPosition.positionDate > B.firstPosition.positionDate)
+            {
+                second = A;
+                first = B;
+            }
+            else
+            {
+                first = A;
+                second = B;
+            }
+            if (first.lastPosition.positionDate.AddMinutes(3) > DateTime.Now || first.lastPosition.positionDate > second.firstPosition.positionDate || first.lastPosition.room != second.firstPosition.room)
+                return 0;
+            //Nearness of appearning and disappearing time
+            score += Math.Max(0, 70 - (int)second.firstPosition.positionDate.Subtract(first.lastPosition.positionDate).TotalSeconds);
+            // Nearness of appearing and disappearing position
+            if (first.lastPosition.uncertainity != double.MaxValue && second.firstPosition.uncertainity != double.MaxValue)
+                score += Math.Max(0, 40 - 7 * (int)first.lastPosition.Subtract(second.firstPosition).Module());
+            // Close MACs - some devices when change id just increment a counter
+            if (Math.Abs(Convert.ToInt64(first.MAC, 16) - Convert.ToInt64(second.MAC, 16)) < 2)
+                score += 100;
+            // Same HT Capabilities
+            if (first.HTCapabilities != null && first.HTCapabilities == second.HTCapabilities)
+                score += 30;
+            return score;
+        }
+        private void findSameAnonimous()
         {
             List<String> anoni=anoniDevices.Values.ToList<String>();
             Device A=null;
             Device B=null;
-            Device first;
-            Device second;
             int maxpoint;
             Device bestMatch=null;
             int curpoint;
-            for(int i=0;i<anoni.Count;i++)
+            for (int i=0;i<anoni.Count;i++)
             {
-                deviceMap.getKey(anoni[i], out A);
+                if (!deviceMap.getKey(anoni[i], out A))
+                    continue;
                 maxpoint = 0;
                 for(int j=i+1;j<anoni.Count;j++)
                 {
-                    deviceMap.getKey(anoni[j], out B);
-                    curpoint = 0;
-                    if(A.firstPosition.positionDate>B.firstPosition.positionDate)
-                    {
-                        second = A;
-                        first = B;
-                    }
-                    else
-                    {
-                        first = A;
-                        second = B;
-                    }
-                    if (first.lastPosition.positionDate.AddMinutes(3) > DateTime.Now || first.lastPosition.positionDate > second.firstPosition.positionDate || first.lastPosition.room!=second.firstPosition.room)
+                    if (!deviceMap.getKey(anoni[j], out B))
                         continue;
-                    curpoint += Math.Max(0, 70 - (int)second.firstPosition.positionDate.Subtract(first.lastPosition.positionDate).TotalSeconds);
-                    if(first.lastPosition.uncertainity!=double.MaxValue&&second.firstPosition.uncertainity!=double.MaxValue)
-                        curpoint += Math.Max(0, 40 - 7 * (int)first.lastPosition.Subtract(second.firstPosition).Module());
-                    if (Math.Abs(Convert.ToInt64(first.MAC, 16) - Convert.ToInt64(second.MAC, 16)) < 2)
-                        curpoint += 100;
-                    if (first.HTCapabilities != null && first.HTCapabilities == second.HTCapabilities)
-                        curpoint += 30;
+                    curpoint = scoreDeviceSimilarity(A, B);
                     if (curpoint>maxpoint)
                     {
                         maxpoint = Math.Min(100,curpoint);
@@ -136,28 +172,8 @@ namespace Panopticon
                 if(maxpoint>50)
                 {
                     B = bestMatch;
-                    if(A.firstPosition.positionDate>bestMatch.firstPosition.positionDate)
-                    {
-                        B = A;
-                        A = bestMatch;
-                    }
-                    PositionTools.Position oldApos = new PositionTools.Position(A.lastPosition);
-                    oldApos.positionDate = B.firstPosition.positionDate;
-                    placeInRoomAndPublish(A.lastPosition.room,A,oldApos,Publisher.EventType.Disappear);
-                    B.firstPosition = A.firstPosition;
-                    B.aliases.PushRange(A.aliases.ToArray());
-                    B.aliases.Push(new Device.Alias(A.MAC, maxpoint));
-                    foreach (String ssid in A.requestedSSIDs.Keys)
-                        B.requestedSSIDs.TryAdd(ssid, 0);
-                    deviceMap.remove(B.identifier);
-                    foreach (Publisher pb in publishers)
-                        if(pb.supportsOperation(Publisher.DisplayableType.Rename))
-                            pb.publishRename(B.identifier, A.identifier);
-                    B.identifier = A.identifier;
-                    deviceMap.upsert(B.identifier,B,(d1,d2)=> { return d2; });
-                    anoniDevices.Remove(A.MAC);
-                    anoniDevices[B.MAC]= B.identifier;
                     
+                    mergeAnonimous(B, A, maxpoint);
                 }
             }
         }
