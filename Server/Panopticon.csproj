@@ -102,7 +102,6 @@
     </Compile>
     <Compile Include="Aggregator.cs" />
     <Compile Include="Analyzer.cs" />
-    <Compile Include="ConcurrentCircular.cs" />
     <Compile Include="ConcurrentDictionaryStack.cs" />
     <Compile Include="Connection.cs" />
     <Compile Include="Context.cs" />

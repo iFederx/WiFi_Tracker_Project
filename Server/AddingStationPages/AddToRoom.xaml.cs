@@ -138,7 +138,7 @@ namespace Panopticon.AddingStationPages
 			//tryAddStation è già stato chiamato (ha lanciato la GUI)
 			if (handler.isBlinking) handler.switchLedBlink(false);
 			Station s = ctx.createStation(room, handler.macAddress, meterX, meterY, handler);
-			//ctx.saveStation(s); //TODO: de-commentare per salvare su DB
+			ctx.saveStation(s); //TODO: de-commentare per salvare su DB
 			int i = FindWindowByMAC(handler.macAddress, maxN);
 			if (i != maxN)
 			{
