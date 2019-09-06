@@ -12,10 +12,10 @@ namespace Panopticon
     {
         private class AvgBucket
         {
-            internal double avg;
-            internal double lastval;
-            internal DateTime lastvalTime;
-            internal DateTime avgTimeBase;
+            internal double tenminutestotal;
+            internal double onesecond;
+            internal int count;
+            internal DateTime tenminutelast;
             internal Room room;
             internal bool dirty;
         }
@@ -44,20 +44,21 @@ namespace Panopticon
                 ab = new AvgBucket();
                 lock (ab)
                 {
-                    ab.avg = 0;
-                    ab.lastval = 0;
+                    ab.tenminutestotal = 0;
+                    ab.onesecond = 0;
                     ab.room = r;
-                    ab.lastvalTime = DateTime.Now;
+                    ab.count = 0;
                     ab.dirty = true;
+                    ab.tenminutelast = DateTime.Now;
                 }                
                 stats.TryAdd(r, ab);
             }
             else if(e==EventType.Disappear)
             {
                 stats.TryRemove(r,out ab);
-                updateRoomStat(ab, ab.lastval, DateTime.Now);
+                updateRoomStat(ab, ab.onesecond, DateTime.Now);
                 foreach (Publisher pb in propagate)
-                    pb.publishStat(ab.avg, ab.room, ab.lastvalTime, StatType.TenMinuteAverageDeviceCount);
+                    pb.publishStat(ab.count>0?ab.tenminutestotal/ab.count:0, ab.room, DateTime.Now, StatType.TenMinuteAverageDeviceCount);
             }
         }
 
@@ -78,9 +79,7 @@ namespace Panopticon
         {
             lock(ab)
             {
-                ab.avg = (ab.avg * (ab.lastvalTime - ab.avgTimeBase).TotalMilliseconds + ab.lastval * (statTime - ab.lastvalTime).TotalMilliseconds) / (statTime - ab.avgTimeBase).TotalMilliseconds;
-                ab.lastval = instantaneousPeopleCount;
-                ab.lastvalTime = statTime;
+                ab.onesecond = instantaneousPeopleCount;
                 ab.dirty = true;
             }            
         }
@@ -94,21 +93,18 @@ namespace Panopticon
                 {
                     lock(ab)
                     {
+                        ab.count++;
+                        ab.tenminutestotal += ab.onesecond;
                         if (ab.dirty)
                             foreach (Publisher pb in propagate)//supports stat by default, or wouldn't be here
-                                pb.publishStat(ab.lastval, ab.room, ab.lastvalTime, StatType.OneSecondDeviceCount);
-                        if (ab.lastvalTime >= ab.avgTimeBase.AddMinutes(10))
-                        {
+                                pb.publishStat(ab.onesecond, ab.room, DateTime.Now, StatType.OneSecondDeviceCount);
+                       if(ab.tenminutelast.AddMinutes(10)<DateTime.Now)
+                       {
                             foreach (Publisher pb in propagate)
-                                pb.publishStat(ab.avg, ab.room, ab.lastvalTime, StatType.TenMinuteAverageDeviceCount);
-                            ab.avg = ab.lastval;
-                            ab.avgTimeBase = ab.lastvalTime;
-                        }
-                        else if (ab.lastvalTime.AddMinutes(10) <= DateTime.Now)
-                        {
-                            DateTime newTime= ab.avgTimeBase.AddMinutes(10);
-                            ab.avg = (ab.avg * (ab.lastvalTime - ab.avgTimeBase).TotalMilliseconds + ab.lastval * (newTime - ab.lastvalTime).TotalMilliseconds) / (newTime - ab.avgTimeBase).TotalMilliseconds;
-                            ab.lastvalTime = newTime;
+                                pb.publishStat(ab.count>0?ab.tenminutestotal/ab.count:0, ab.room, DateTime.Now, StatType.TenMinuteAverageDeviceCount);
+                            ab.tenminutestotal = 0;
+                            ab.count = 0;
+                            ab.tenminutelast = DateTime.Now;
                         }
                         ab.dirty = false;                            
                     }

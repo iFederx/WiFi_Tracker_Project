@@ -101,14 +101,12 @@ namespace Panopticon
                     {
                         d_gui = new List<UIElement>();
                         Ellipse d_gui_e = new Ellipse();
-                        d_gui_e.Height = selectedRoom.room.xlength / 2;
-                        d_gui_e.Width = selectedRoom.room.ylength / 2;
+                        d_gui_e.Height = 6;
+                        d_gui_e.Width = 6;
                         d_gui_e.ToolTip = "Device " + deviceIdentifier;
                         d_gui_e.Tag = deviceIdentifier;
                         Brush color = Graphics.FancyColorCreator.randomBrush(deviceIdentifier.GetHashCode());
                         d_gui_e.Fill = color.Clone();
-                        if (lastPosition.uncertainity == double.MaxValue)
-                            d_gui_e.Fill.Opacity = 0;
                         d_gui_e.Stroke = d_gui_e.Fill;
                         d_gui_e.Cursor = Cursors.Hand;
                         d_gui_e.MouseDown += opendeviceinfo;
@@ -125,6 +123,10 @@ namespace Panopticon
                         canvas.Children.Add(d_gui_e);
                         uielem.Add(deviceIdentifier, d_gui);
                     }
+                    if (lastPosition.uncertainity == double.MaxValue)
+                        ((Ellipse)d_gui[0]).Fill.Opacity = 0;
+                    else
+                        ((Ellipse)d_gui[0]).Fill.Opacity = 1;
                     Canvas.SetLeft(d_gui[0], lastPosition.X * canvas.Width / selectedRoom.room.xlength);
                     Canvas.SetTop(d_gui[0], lastPosition.Y * canvas.Height / selectedRoom.room.ylength);
                 }
@@ -204,22 +206,24 @@ namespace Panopticon
                 if (selectedRoom.room != Room.externRoom)
                 {
                     lvtrck_viewbox.Child = null;
-                    lvtrck_border.Width = selectedRoom.room.xlength * 20.5;
-                    lvtrck_border.Height = selectedRoom.room.ylength * 20.5;
-                    lvtrck_canvas.Width = selectedRoom.room.xlength * 20;
-                    lvtrck_canvas.Height = selectedRoom.room.ylength * 20;
+                    double reference = Math.Max(selectedRoom.room.xlength, selectedRoom.room.ylength);
+                    double multiplier = 500; //eventually dependant on DPI
+                    lvtrck_border.Width = selectedRoom.room.xlength/reference * multiplier * 1.04;
+                    lvtrck_border.Height = selectedRoom.room.ylength/reference * multiplier * 1.04;
+                    lvtrck_canvas.Width = selectedRoom.room.xlength / reference * multiplier;
+                    lvtrck_canvas.Height = selectedRoom.room.ylength / reference * multiplier;
                     lvtrck_viewbox.Child = lvtrck_border;
                     trackrlp_viewbox.Child = null;
-                    trackrlp_border.Width = selectedRoom.room.xlength * 20.5;
-                    trackrlp_border.Height = selectedRoom.room.ylength * 20.5;
-                    trackrlp_canvas.Width = selectedRoom.room.xlength * 20;
-                    trackrlp_canvas.Height = selectedRoom.room.ylength * 20;
+                    trackrlp_border.Width = selectedRoom.room.xlength / reference * multiplier * 1.04;
+                    trackrlp_border.Height = selectedRoom.room.ylength / reference * multiplier * 1.04;
+                    trackrlp_canvas.Width = selectedRoom.room.xlength / reference * multiplier;
+                    trackrlp_canvas.Height = selectedRoom.room.ylength / reference * multiplier;
                     trackrlp_viewbox.Child = trackrlp_border;
                     rmstats_viewbox.Visibility = Visibility.Visible;
                     rmstats_heatlabel.Visibility = Visibility.Visible;
                     rmstats_viewbox.Child = null;
-                    rmstats_border.Width = selectedRoom.room.xlength * 20;
-                    rmstats_border.Height = selectedRoom.room.ylength * 20;
+                    rmstats_border.Width = selectedRoom.room.xlength / reference * multiplier;
+                    rmstats_border.Height = selectedRoom.room.ylength / reference * multiplier;
                     rmstats_viewbox.Child = rmstats_border;
                     foreach (Station s in selectedRoom.room.getStations())
                         drawStation(s);
@@ -271,14 +275,14 @@ namespace Panopticon
             if (uiElements.ContainsKey(s)) // could be that room just loaded with a new station, and this information arrives later
                 return;
             Rectangle s_gui = new Rectangle();
-            s_gui.Height = selectedRoom.room.xlength / 3;
-            s_gui.Width = selectedRoom.room.ylength / 3;
-            s_gui.ToolTip = "Station " + s.NameMAC;
+            s_gui.Height = 3;
+            s_gui.Width = 3;
+            s_gui.ToolTip = "Station " + s.NameMAC + " - click to delete";
             s_gui.Tag = s;
             s_gui.Fill = Brushes.Red;
             s_gui.Stroke = Brushes.Red;
             s_gui.Cursor = Cursors.Hand;
-			s_gui.MouseRightButtonDown += new MouseButtonEventHandler(Rectangle_MouseLeftButtonDown);
+			s_gui.MouseLeftButtonDown += new MouseButtonEventHandler(Rectangle_MouseLeftButtonDown);
 			lock (guilock)
             {
                 Canvas.SetLeft(s_gui, s.location.X * lvtrck_canvas.Width / selectedRoom.room.xlength);

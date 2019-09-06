@@ -19,7 +19,7 @@
         <TabControl x:Name="tabControl" Margin="200,0,0,0" SelectionChanged="tabControl_SelectionChanged">
             <TabItem x:Name="lvtrck" Header="Live tracking">
                 <Grid>
-                    <Viewbox Margin="10,80,210,200" x:Name="lvtrck_viewbox" HorizontalAlignment="Center" Stretch="Uniform">
+                    <Viewbox Margin="10,80,210,200" x:Name="lvtrck_viewbox" HorizontalAlignment="Center">
                         <Border x:Name="lvtrck_border" BorderBrush="Black" BorderThickness="2">
                             <Canvas x:Name="lvtrck_canvas" HorizontalAlignment="Left" VerticalAlignment="Top"/>
                         </Border>
