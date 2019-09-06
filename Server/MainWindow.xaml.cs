@@ -101,8 +101,8 @@ namespace Panopticon
                     {
                         d_gui = new List<UIElement>();
                         Ellipse d_gui_e = new Ellipse();
-                        d_gui_e.Height = 6;
-                        d_gui_e.Width = 6;
+                        d_gui_e.Height = Math.Max(selectedRoom.room.xlength/2,selectedRoom.room.ylength/2);
+                        d_gui_e.Width = d_gui_e.Height;
                         d_gui_e.ToolTip = "Device " + deviceIdentifier;
                         d_gui_e.Tag = deviceIdentifier;
                         Brush color = Graphics.FancyColorCreator.randomBrush(deviceIdentifier.GetHashCode());
@@ -127,8 +127,8 @@ namespace Panopticon
                         ((Ellipse)d_gui[0]).Fill.Opacity = 0;
                     else
                         ((Ellipse)d_gui[0]).Fill.Opacity = 1;
-                    Canvas.SetLeft(d_gui[0], lastPosition.X * canvas.Width / selectedRoom.room.xlength);
-                    Canvas.SetTop(d_gui[0], lastPosition.Y * canvas.Height / selectedRoom.room.ylength);
+                    Canvas.SetLeft(d_gui[0], lastPosition.X * canvas.Width * 0.995 / selectedRoom.room.xlength);
+                    Canvas.SetTop(d_gui[0], lastPosition.Y * canvas.Height * 0.995 / selectedRoom.room.ylength);
                 }
                 else
                 {
@@ -208,14 +208,14 @@ namespace Panopticon
                     lvtrck_viewbox.Child = null;
                     double reference = Math.Max(selectedRoom.room.xlength, selectedRoom.room.ylength);
                     double multiplier = 500; //eventually dependant on DPI
-                    lvtrck_border.Width = selectedRoom.room.xlength/reference * multiplier * 1.04;
-                    lvtrck_border.Height = selectedRoom.room.ylength/reference * multiplier * 1.04;
+                    lvtrck_border.Width = selectedRoom.room.xlength/reference * multiplier * 1.025;
+                    lvtrck_border.Height = selectedRoom.room.ylength/reference * multiplier * 1.025;
                     lvtrck_canvas.Width = selectedRoom.room.xlength / reference * multiplier;
                     lvtrck_canvas.Height = selectedRoom.room.ylength / reference * multiplier;
                     lvtrck_viewbox.Child = lvtrck_border;
                     trackrlp_viewbox.Child = null;
-                    trackrlp_border.Width = selectedRoom.room.xlength / reference * multiplier * 1.04;
-                    trackrlp_border.Height = selectedRoom.room.ylength / reference * multiplier * 1.04;
+                    trackrlp_border.Width = selectedRoom.room.xlength / reference * multiplier * 1.025;
+                    trackrlp_border.Height = selectedRoom.room.ylength / reference * multiplier * 1.025;
                     trackrlp_canvas.Width = selectedRoom.room.xlength / reference * multiplier;
                     trackrlp_canvas.Height = selectedRoom.room.ylength / reference * multiplier;
                     trackrlp_viewbox.Child = trackrlp_border;
@@ -275,8 +275,8 @@ namespace Panopticon
             if (uiElements.ContainsKey(s)) // could be that room just loaded with a new station, and this information arrives later
                 return;
             Rectangle s_gui = new Rectangle();
-            s_gui.Height = 3;
-            s_gui.Width = 3;
+            s_gui.Height = Math.Max(selectedRoom.room.xlength/3,selectedRoom.room.ylength/3);
+            s_gui.Width = s_gui.Height;
             s_gui.ToolTip = "Station " + s.NameMAC + " - click to delete";
             s_gui.Tag = s;
             s_gui.Fill = Brushes.Red;
@@ -692,7 +692,7 @@ namespace Panopticon
                 stats.macs = ctx.databaseInt.loadFrequentMacs(month, year, room.roomName);
                 if (room != Room.externRoom)
                 {
-                    stats.heatmaps = ctx.databaseInt.loadHeathmaps(null, room.roomName, room.xlength, room.ylength, month, year);
+                    stats.heatmaps = ctx.databaseInt.loadHeathmaps(null, room.roomName, room.xlength, room.ylength, month, year,2);
                     hmap = Graphics.createheatmap(stats.heatmaps[stats.selectedday]);
                 }
             }
@@ -903,7 +903,7 @@ namespace Panopticon
                 return;
             }
             Room dvcstatroom = ((Room)dvcinfo_room.SelectedItem);
-            DeviceStats ds = ctx.databaseInt.loadDeviceStats(fromdate.Value, fromtime, todate.Value, totime, dvcinfo_idtextbox.Text, dvcstatroom.roomName, dvcstatroom == Room.overallRoom, dvcstatroom != Room.externRoom && dvcstatroom != Room.overallRoom, dvcstatroom.xlength, dvcstatroom.ylength);
+            DeviceStats ds = ctx.databaseInt.loadDeviceStats(fromdate.Value, fromtime, todate.Value, totime, dvcinfo_idtextbox.Text, dvcstatroom.roomName, dvcstatroom == Room.overallRoom, dvcstatroom != Room.externRoom && dvcstatroom != Room.overallRoom, dvcstatroom.xlength, dvcstatroom.ylength,2);
             if (ds == null)
             {
                 dvcinfo_loadstatus.Content = "No data";

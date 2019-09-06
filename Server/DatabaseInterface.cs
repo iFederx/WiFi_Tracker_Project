@@ -512,12 +512,12 @@ namespace Panopticon
             return res;
         }
 
-        internal int[][,] loadHeathmaps(object p, string roomname, double xlength, double ylength, int selectedmonth, int selectedyear)
+        internal int[][,] loadHeathmaps(object p, string roomname, double xlength, double ylength, int selectedmonth, int selectedyear, double resolution)
         {
             int numdays = dayspermonth(selectedmonth, selectedyear);
             int[][,] res = new int[numdays + 1][,];
             for(int j=0;j<numdays+1;j++)
-                res[j]= new int[(int)xlength+1, (int)ylength + 1];
+                res[j]= new int[(int)(resolution*xlength)+1, (int)(resolution*ylength) + 1];
             String query = getSql(SqlEvent.Select, "devicespositions",
                new SqlVariable("xpos"),
                new SqlVariable("ypos"),
@@ -533,7 +533,7 @@ namespace Panopticon
                     {
                         while (reader.Read())
                         {
-                            res[(int)(reader.GetDouble(2))][(int)(reader.GetDouble(0)), (int)(reader.GetDouble(1))] += 1;
+                            res[(int)(reader.GetDouble(2))][(int)(resolution*reader.GetDouble(0)), (int)(resolution*reader.GetDouble(1))] += 1;
                         }
                     }
                 }
@@ -663,11 +663,11 @@ namespace Panopticon
             internal Dictionary<String, Int32> roommap = new Dictionary<string, int>();
         }
 
-        internal DeviceStats loadDeviceStats(DateTime fromdate, string fromtime, DateTime todate, string totime, string deviceid, string roomname, bool loadroommap, bool loadheathmap, double xlen, double ylen)
+        internal DeviceStats loadDeviceStats(DateTime fromdate, string fromtime, DateTime todate, string totime, string deviceid, string roomname, bool loadroommap, bool loadheathmap, double xlen, double ylen, double htresolution)
         {
             DeviceStats ds = new DeviceStats();
             if(loadheathmap)
-                ds.heatmap =  new int[(int)xlen + 1, (int)ylen + 1];
+                ds.heatmap =  new int[(int)(htresolution*xlen) + 1, (int)(htresolution*ylen) + 1];
             if (loadroommap)
                 ds.roommap.Add("__OVERALL__", 0);
             ds.timeperday = new Double[(int)todate.Subtract(fromdate).TotalDays + 1];
@@ -691,7 +691,7 @@ namespace Panopticon
                         while (reader.Read())
                         {
                             if (loadheathmap)
-                                ds.heatmap[(int)reader.GetDouble(0), (int)reader.GetDouble(1)] += 1;
+                                ds.heatmap[(int)(htresolution*reader.GetDouble(0)), (int)(htresolution*reader.GetDouble(1))] += 1;
                             if (loadroommap)
                             {
                                 ds.roommap["__OVERALL__"] += 1;
