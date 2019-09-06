@@ -44,12 +44,12 @@ namespace Panopticon.AddingStationPages
 			GridRoom.Width = room.xlength;
 			GridRoom.Height = room.ylength;
 			
-			int i = FindWindowByMAC(handler.macAddress, maxN);
+			/*int i = FindWindowByMAC(handler.macAddress, maxN);
 			if (i != maxN)
 			{
 				Application.Current.Windows[i].MinWidth = GridRoom.Width + 100;
 				Application.Current.Windows[i].MinHeight = GridRoom.Height + 200;
-			}
+			}*/
 			//TODO: ci starebbe vedere le Station già presenti, magari in blu
 			
 		}

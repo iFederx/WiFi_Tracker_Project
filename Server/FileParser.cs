@@ -91,7 +91,7 @@ namespace Panopticon
 						metaPackets.TryRemove(metapak.packet.Hash, out trash);
 
 					}
-					else if (metapak.room.stationcount == metapak.packet.Receivings.Count && metapak.room.stationcount >= 2) //DARIO: giusto che le schedine nella stanza debbano essere almeno 2 per mandare il packet in analisi?
+					else if (metapak.room.stationcount == metapak.packet.Receivings.Count)
 					{
 						//se sono qui, il pacchetto è "maturo"
 						ctx.getAnalyzer().sendToAnalysisQueue(metapak.packet);
