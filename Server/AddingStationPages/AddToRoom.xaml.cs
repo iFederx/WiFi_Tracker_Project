@@ -27,6 +27,7 @@ namespace Panopticon.AddingStationPages
 		static int maxRoomDimension = 300; //dpi
 		static int minRoomDimension = 200; //dpi
 		static int maxN = 20;
+		int radius = 1;
 
 		public AddToRoom()
         {
@@ -41,17 +42,31 @@ namespace Panopticon.AddingStationPages
 			handler = _handler;
 			Label_RoomName.Content = room.roomName;
 			handler.switchLedBlink(true);
-			GridRoom.Width = room.xlength;
-			GridRoom.Height = room.ylength;
+			if (GridRoom.Width > 100 || GridRoom.Height > 100)
+			{
+				GridRoom.Width = room.xlength;
+				GridRoom.Height = room.ylength;
+				Canvas_Room.Width = room.xlength;
+				Canvas_Room.Height = room.ylength;
+			}
+			else
+			{
+				GridRoom.Width = room.xlength * 100;
+				GridRoom.Height = room.ylength * 100;
+				Canvas_Room.Width = room.xlength * 100;
+				Canvas_Room.Height = room.ylength * 100;
+			}
 			
+
 			/*int i = FindWindowByMAC(handler.macAddress, maxN);
 			if (i != maxN)
 			{
 				Application.Current.Windows[i].MinWidth = GridRoom.Width + 100;
 				Application.Current.Windows[i].MinHeight = GridRoom.Height + 200;
 			}*/
+
 			//TODO: ci starebbe vedere le Station già presenti, magari in blu
-			
+
 		}
 
 		private void AdjustRoomSize(Room room)
@@ -105,8 +120,8 @@ namespace Panopticon.AddingStationPages
 			if (meterY < 0) meterY = 0;
 			if (meterX > room.xlength) meterX = room.xlength;
 			if (meterY > room.ylength) meterY = room.ylength;
-			xLabel.Content = meterX.ToString("X: 0.## cm");
-			yLabel.Content = meterY.ToString("Y: 0.## cm");
+			xLabel.Content = meterX.ToString("X: 0.## m");
+			yLabel.Content = meterY.ToString("Y: 0.## m");
 
 		}
 
@@ -118,11 +133,17 @@ namespace Panopticon.AddingStationPages
 			if (meterY < 0) meterY = 0;
 			if (meterX > room.xlength) meterX = room.xlength;
 			if (meterY > room.ylength) meterY = room.ylength;
-			LastX.Content = meterX.ToString("Last X: 0.## cm");
-			LastY.Content = meterY.ToString("Last Y: 0.## cm");
+			LastX.Content = meterX.ToString("Last X: 0.## m");
+			LastY.Content = meterY.ToString("Last Y: 0.## m");
 			Button_ConfirmPosition.IsEnabled = true;
-			Ellipse_StationPosition.SetValue(Canvas.LeftProperty, Mouse.GetPosition(this.GridRoom).X-3);
-			Ellipse_StationPosition.SetValue(Canvas.TopProperty, Mouse.GetPosition(this.GridRoom).Y-3);
+			//TODO: calcolo raggio
+			double max = Math.Max(GridRoom.Height, GridRoom.Width);
+			max /= 50;
+			radius = Convert.ToInt32(max);
+			Ellipse_StationPosition.Width = 2 * radius + 1;
+			Ellipse_StationPosition.Height = 2 * radius + 1;
+			Ellipse_StationPosition.SetValue(Canvas.LeftProperty, Mouse.GetPosition(this.GridRoom).X-radius);
+			Ellipse_StationPosition.SetValue(Canvas.TopProperty, Mouse.GetPosition(this.GridRoom).Y-radius);
 			if (!Ellipse_StationPosition.IsVisible)
 				Ellipse_StationPosition.Visibility = Visibility.Visible;
 		}
@@ -138,7 +159,7 @@ namespace Panopticon.AddingStationPages
 			//tryAddStation è già stato chiamato (ha lanciato la GUI)
 			if (handler.isBlinking) handler.switchLedBlink(false);
 			Station s = ctx.createStation(room, handler.macAddress, meterX, meterY, handler);
-			ctx.saveStation(s); //TODO: de-commentare per salvare su DB
+			ctx.saveStation(s); //salvataggio su DB
 			int i = FindWindowByMAC(handler.macAddress, maxN);
 			if (i != maxN)
 			{
