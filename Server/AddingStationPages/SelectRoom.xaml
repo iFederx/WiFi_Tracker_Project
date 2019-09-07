@@ -26,6 +26,7 @@
 
             </StackPanel>
         </ScrollViewer>
+        <Image Source="/Panopticon;component/Resources/sync.png" Height="24" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="41,0,227,42" MouseDown="Image_RechargeRooms"/>
         <Button x:Name="ButtonNewRoom" Content="Add a new Room" Click="Button_AddNewRoom"  Height="20" Width="120" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,45" />
         <Button x:Name ="But_Continue" Content="Continue" Click="Button_Continue" HorizontalAlignment="Right" IsEnabled="False" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="75"/>
 

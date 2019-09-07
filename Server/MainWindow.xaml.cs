@@ -315,7 +315,7 @@ namespace Panopticon
 					if (r != null)
 					{
 						string name = r.ToolTip as String;
-						name = name.Remove(0,8);
+						name = name.Substring(8, 12);
 						ctx.removeStation(name);
 						ctx.deleteStation(name);
 					}
