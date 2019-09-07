@@ -82,5 +82,9 @@ namespace Panopticon.AddingStationPages
 			this.NavigationService.Navigate(new AddToRoom(ctx, r, handler));
 		}
 
+		private void Image_RechargeRooms(object sender, MouseButtonEventArgs e)
+		{
+			//TODO: implementare ricarica stanze
+		}
 	}
 }
