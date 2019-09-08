@@ -127,7 +127,7 @@ namespace Panopticon
                {
                     double weight = Math.Pow(1 / (-pr.RSSI - 25), 3);
                     xavg += pr.ReceivingStation.location.X * weight;
-                    xavg += pr.ReceivingStation.location.Y * weight;
+                    yavg += pr.ReceivingStation.location.Y * weight;
                     vote += weight;
                 }
                 xavg /= vote;
