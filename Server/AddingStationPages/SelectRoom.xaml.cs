@@ -35,6 +35,14 @@ namespace Panopticon.AddingStationPages
 			InitializeComponent();
 			ctx = _ctx;
 			handler = _handler;
+			ReloadRooms();
+		}
+
+		/// <summary>
+		/// Invoke this method to load/reload list of rooms in SelectRoom.xaml
+		/// </summary>
+		void ReloadRooms()
+		{
 			defaultColor = ((Button)RoomsContainer.Children[1]).Background;
 			RoomsContainer.Children.RemoveRange(0, RoomsContainer.Children.Count);
 			foreach (Room r in ctx.getRooms())
@@ -84,7 +92,7 @@ namespace Panopticon.AddingStationPages
 
 		private void Image_RechargeRooms(object sender, MouseButtonEventArgs e)
 		{
-			//TODO: implementare ricarica stanze
+			ReloadRooms();
 		}
 	}
 }

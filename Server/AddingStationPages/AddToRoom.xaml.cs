@@ -42,6 +42,8 @@ namespace Panopticon.AddingStationPages
 			handler = _handler;
 			Label_RoomName.Content = room.roomName;
 			handler.switchLedBlink(true);
+
+			//dimensiono graficamente la stanza
 			if (GridRoom.Width > 100 || GridRoom.Height > 100)
 			{
 				GridRoom.Width = room.xlength;
@@ -56,7 +58,11 @@ namespace Panopticon.AddingStationPages
 				Canvas_Room.Width = room.xlength * 100;
 				Canvas_Room.Height = room.ylength * 100;
 			}
-			
+
+			//calcolo raggio
+			ComputeRadius();
+
+			LoadStations();
 
 			/*int i = FindWindowByMAC(handler.macAddress, maxN);
 			if (i != maxN)
@@ -67,6 +73,19 @@ namespace Panopticon.AddingStationPages
 
 			//TODO: ci starebbe vedere le Station già presenti, magari in blu
 
+		}
+
+		void LoadStations()
+		{
+			foreach (Station s in room.getStations())
+			{
+				//disegno stazione
+				Ellipse e = new Ellipse() { Width = 2*radius, Height = 2*radius, Fill = Brushes.Blue };
+				Canvas_Room.Children.Add(e);
+				r2g(s.location.X, 0);
+				Canvas.SetLeft(e, r2g(s.location.X, 0)-radius);
+				Canvas.SetTop(e, r2g(s.location.Y, 1)-radius);
+			}
 		}
 
 		private void AdjustRoomSize(Room room)
@@ -124,6 +143,22 @@ namespace Panopticon.AddingStationPages
 			yLabel.Content = meterY.ToString("Y: 0.## m");
 
 		}
+		/// <summary>
+		/// It returns a measure converted in a graphic measure (ready to be used as graphic coordinate)
+		/// The 2nd argument will be 0 for X, 1 for Y
+		/// </summary>
+		double r2g(double realMeasure, int XorY) //real to graphic (measure)
+		{
+			if (XorY == 0)
+			{
+				return realMeasure / room.xlength * this.GridRoom.Width;
+			}
+			else if (XorY == 1)
+			{
+				return realMeasure / room.ylength * this.GridRoom.Height;
+			}
+			else throw new Exception();
+		}
 
 		private void Grid_NewPosition(object sender, MouseButtonEventArgs e)
 		{
@@ -136,16 +171,19 @@ namespace Panopticon.AddingStationPages
 			LastX.Content = meterX.ToString("Last X: 0.## m");
 			LastY.Content = meterY.ToString("Last Y: 0.## m");
 			Button_ConfirmPosition.IsEnabled = true;
-			//TODO: calcolo raggio
-			double max = Math.Max(GridRoom.Height, GridRoom.Width);
-			max /= 50;
-			radius = Convert.ToInt32(max);
 			Ellipse_StationPosition.Width = 2 * radius + 1;
 			Ellipse_StationPosition.Height = 2 * radius + 1;
 			Ellipse_StationPosition.SetValue(Canvas.LeftProperty, Mouse.GetPosition(this.GridRoom).X-radius);
 			Ellipse_StationPosition.SetValue(Canvas.TopProperty, Mouse.GetPosition(this.GridRoom).Y-radius);
 			if (!Ellipse_StationPosition.IsVisible)
 				Ellipse_StationPosition.Visibility = Visibility.Visible;
+		}
+
+		void ComputeRadius()
+		{
+			double max = Math.Max(GridRoom.Height, GridRoom.Width);
+			max /= 50;
+			radius = Convert.ToInt32(max);
 		}
 
 		private void Button_Cancel(object sender, RoutedEventArgs e)
