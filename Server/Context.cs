@@ -58,7 +58,7 @@ namespace Panopticon
             threads.AddLast(aggregatorT);
 			threads.AddLast(packetizerT);
 		}
-        public Analyzer getAnalyzer()
+        public AnalysisEngine getAnalyzer()
         {
            return analyzer;
         }

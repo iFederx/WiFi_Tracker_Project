@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Panopticon
 {
-    class AnalysisEngine:Analyzer
+    class AnalysisEngine
     {
         ConcurrentDictionaryStack<String, Device> deviceMap; //id, corresponding device
         BlockingCollection<Packet> AnalysisQueue = new BlockingCollection<Packet>(new ConcurrentQueue<Packet>());
@@ -102,7 +102,8 @@ namespace Panopticon
             oldApos.positionDate = B.firstPosition.positionDate;
             placeInRoomAndPublish(A.lastPosition.room, A, oldApos, Publisher.EventType.Disappear);
             B.firstPosition = A.firstPosition;
-            B.aliases.PushRange(A.aliases.ToArray());
+            if(A.aliases.Count>0)
+                B.aliases.PushRange(A.aliases.ToArray());
             B.aliases.Push(new Device.Alias(A.MAC, score));
             foreach (String ssid in A.requestedSSIDs.Keys)
                 B.requestedSSIDs.TryAdd(ssid, 0);

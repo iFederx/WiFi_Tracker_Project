@@ -101,8 +101,8 @@ namespace Panopticon
                     {
                         d_gui = new List<UIElement>();
                         Ellipse d_gui_e = new Ellipse();
-                        d_gui_e.Height = Math.Max(selectedRoom.room.xlength/2,selectedRoom.room.ylength/2);
-                        d_gui_e.Width = d_gui_e.Height;
+                        d_gui_e.Height = 10;
+                        d_gui_e.Width = 10;
                         d_gui_e.ToolTip = "Device " + deviceIdentifier;
                         d_gui_e.Tag = deviceIdentifier;
                         Brush color = Graphics.FancyColorCreator.randomBrush(deviceIdentifier.GetHashCode());
@@ -275,8 +275,8 @@ namespace Panopticon
             if (uiElements.ContainsKey(s)) // could be that room just loaded with a new station, and this information arrives later
                 return;
             Rectangle s_gui = new Rectangle();
-            s_gui.Height = Math.Max(selectedRoom.room.xlength/3,selectedRoom.room.ylength/3);
-            s_gui.Width = s_gui.Height;
+            s_gui.Height = 10;
+            s_gui.Width = 10;
             s_gui.ToolTip = "Station " + s.NameMAC + " - click to delete";
             s_gui.Tag = s;
             s_gui.Fill = Brushes.Red;
@@ -863,6 +863,10 @@ namespace Panopticon
 
         private void clearAdvancedDeviceStat()
         {
+            dvcinfo_extralabel.Visibility = Visibility.Hidden;
+            dvcinfo_detectionlabel.Visibility = Visibility.Hidden;
+            dvcinfo_lowerstats.Visibility = Visibility.Hidden;
+            dvcinfo_upperhistogram.Visibility = Visibility.Hidden;
             dvcinfo_heatmapborder.Visibility = Visibility.Hidden;
             dvcinfo_heatmapimage.Visibility = Visibility.Hidden;
             dvcinfo_heatmapimage.Source = null;
@@ -935,6 +939,10 @@ namespace Panopticon
                 dvcinfo_heatmapborder.Height = 20 * dvcstatroom.ylength;
                 dvcinfo_extralabel.Content = "Positions heatmap";
             }
+            dvcinfo_extralabel.Visibility = Visibility.Visible;
+            dvcinfo_detectionlabel.Visibility = Visibility.Visible;
+            dvcinfo_lowerstats.Visibility = Visibility.Visible;
+            dvcinfo_upperhistogram.Visibility = Visibility.Visible;
             Graphics.drawHistogram(dvcinfo_dayspresent, ds.timeperday, (double val, int i, object data) => { return ((DateTime)data).AddDays(i).ToString("dd/MM/yyyy")+" - "+((int)val)+" minutes"; }, fromdate.Value, null, weekhistcolors, weekhistcolors, (int)fromdate.Value.DayOfWeek,null,null);
             Graphics.drawHistogram(dvcinfo_hourspresent, ds.pingsperhour, (double val, int i, object data) => { return ((int)i / 6).ToString("00") + ":" + ((i % 6) * 10).ToString("00") + " - " + val; }, null, null, timehistcolors, timehistcolors, 0,null,null);
             dvcinfo_loadstatus.Content = "";
