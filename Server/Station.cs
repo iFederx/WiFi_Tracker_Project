@@ -12,5 +12,9 @@ namespace Panopticon
         internal String NameMAC;
         internal DateTime lastHearthbeat;
         internal StationHandler handler=null;
+        internal void hearbeat()
+        {
+            lastHearthbeat = DateTime.Now;
+        }
     }
 }

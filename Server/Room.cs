@@ -4,16 +4,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Panopticon.PositionTools;
 
 namespace Panopticon
 {
-    public class Room
+    internal class Room
     {
         internal static Room externRoom = new Room("External", 0, 0);
         internal static Room overallRoom = new Room("Overall", 0, 0);
         internal String roomName;
-        internal Double xlength; //cm
-        internal Double ylength; //cm
+        internal Vector2D size; //in meters
         internal int stationcount;
         internal int devicecount;
         private HashSet<Device> devicesInRoom = new HashSet<Device>();
@@ -21,11 +21,10 @@ namespace Panopticon
         private Object slocker = new Object();
         private Object dlocker = new Object();
 
-        public Room(String room_Name, Double x_length, Double y_length)
+        internal Room(String room_Name, Double x_length, Double y_length)
         {
             this.roomName = room_Name;
-            this.xlength = x_length;
-            this.ylength = y_length;
+            this.size = new Vector2D(x_length, y_length);
         }
         public override bool Equals(object obj)
         {

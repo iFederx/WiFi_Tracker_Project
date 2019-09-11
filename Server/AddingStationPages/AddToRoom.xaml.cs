@@ -46,17 +46,17 @@ namespace Panopticon.AddingStationPages
 			//dimensiono graficamente la stanza
 			if (GridRoom.Width > 100 || GridRoom.Height > 100)
 			{
-				GridRoom.Width = room.xlength;
-				GridRoom.Height = room.ylength;
-				Canvas_Room.Width = room.xlength;
-				Canvas_Room.Height = room.ylength;
+				GridRoom.Width = room.size.X;
+				GridRoom.Height = room.size.Y;
+				Canvas_Room.Width = room.size.X;
+				Canvas_Room.Height = room.size.Y;
 			}
 			else
 			{
-				GridRoom.Width = room.xlength * 100;
-				GridRoom.Height = room.ylength * 100;
-				Canvas_Room.Width = room.xlength * 100;
-				Canvas_Room.Height = room.ylength * 100;
+				GridRoom.Width = room.size.X * 100;
+				GridRoom.Height = room.size.Y * 100;
+				Canvas_Room.Width = room.size.X * 100;
+				Canvas_Room.Height = room.size.Y * 100;
 			}
 
 			//calcolo raggio
@@ -92,22 +92,22 @@ namespace Panopticon.AddingStationPages
 		{
 			//TODO: eliminare l'intero metodo
 			// ...non sapevo esistesse la ViewBox :_(
-			double maxVal = Math.Max(room.xlength, room.ylength);
-			double minVal = Math.Min(room.xlength, room.ylength);
+			double maxVal = Math.Max(room.size.X, room.size.Y);
+			double minVal = Math.Min(room.size.X, room.size.Y);
 			if (maxVal > maxRoomDimension) //una delle due dimensioni supera la massima consentita
 			{
 				GridRoom.Height = maxRoomDimension;
-				GridRoom.Width = room.xlength / room.ylength * GridRoom.Height;
+				GridRoom.Width = room.size.X / room.size.Y * GridRoom.Height;
 			}
 			else if (minVal < minRoomDimension) //una delle due dimensioni è troppo piccola
 			{
 				GridRoom.Height = maxRoomDimension;
-				GridRoom.Width = room.xlength / room.ylength * GridRoom.Height;
+				GridRoom.Width = room.size.X / room.size.Y * GridRoom.Height;
 			}
 			else
 			{
-				GridRoom.Width = room.xlength;
-				GridRoom.Height = room.ylength;
+				GridRoom.Width = room.size.X;
+				GridRoom.Height = room.size.Y;
 			}
 		}
 
@@ -133,12 +133,14 @@ namespace Panopticon.AddingStationPages
 			//room.xlenght è la dimensione in cm della stanza
 			//GridRoom.Width è la dimensione in dpi della stanza
 
-			double meterX = Mouse.GetPosition(this.GridRoom).X / this.GridRoom.Width * room.xlength;
-			double meterY = Mouse.GetPosition(this.GridRoom).Y / this.GridRoom.Height * room.ylength;
+			double meterX = Mouse.GetPosition(this.GridRoom).X / this.GridRoom.Width * room.size.X;
+			double meterY = Mouse.GetPosition(this.GridRoom).Y / this.GridRoom.Height * room.size.Y;
 			if (meterX < 0) meterX = 0;
 			if (meterY < 0) meterY = 0;
-			if (meterX > room.xlength) meterX = room.xlength;
-			if (meterY > room.ylength) meterY = room.ylength;
+			if (meterX > room.size.X)
+                meterX = room.size.X;
+			if (meterY > room.size.Y)
+                meterY = room.size.Y;
 			xLabel.Content = meterX.ToString("X: 0.## m");
 			yLabel.Content = meterY.ToString("Y: 0.## m");
 
@@ -151,23 +153,25 @@ namespace Panopticon.AddingStationPages
 		{
 			if (XorY == 0)
 			{
-				return realMeasure / room.xlength * this.GridRoom.Width;
+				return realMeasure / room.size.X * this.GridRoom.Width;
 			}
 			else if (XorY == 1)
 			{
-				return realMeasure / room.ylength * this.GridRoom.Height;
+				return realMeasure / room.size.Y * this.GridRoom.Height;
 			}
 			else throw new Exception();
 		}
 
 		private void Grid_NewPosition(object sender, MouseButtonEventArgs e)
 		{
-			meterX = Mouse.GetPosition(this.GridRoom).X / this.GridRoom.Width * room.xlength;
-			meterY = Mouse.GetPosition(this.GridRoom).Y / this.GridRoom.Height * room.ylength;
+			meterX = Mouse.GetPosition(this.GridRoom).X / this.GridRoom.Width * room.size.X;
+			meterY = Mouse.GetPosition(this.GridRoom).Y / this.GridRoom.Height * room.size.Y;
 			if (meterX < 0) meterX = 0;
 			if (meterY < 0) meterY = 0;
-			if (meterX > room.xlength) meterX = room.xlength;
-			if (meterY > room.ylength) meterY = room.ylength;
+			if (meterX > room.size.X)
+                meterX = room.size.X;
+			if (meterY > room.size.Y)
+                meterY = room.size.Y;
 			LastX.Content = meterX.ToString("Last X: 0.## m");
 			LastY.Content = meterY.ToString("Last Y: 0.## m");
 			Button_ConfirmPosition.IsEnabled = true;
