@@ -65,10 +65,20 @@ namespace Panopticon
        
         public Station tryAddStation(String NameMAC, StationHandler handler, bool AllowAsynchronous) //Replace Object with the relevant type
         {
-            Station s = loadStation(NameMAC, handler);
+            // check if not attempting reconnection
+            locker.EnterReadLock(); //lock to avoid removal if reconnecting
+            Station s = getStation(NameMAC);
+            if(s!=null) // s is reconnecting after losing contact
+            {
+                // TODO FEDE? what to do with the old and the new station handler?
+                s.hearbeat();
+                locker.ExitReadLock();
+                return s;
+            }
+            locker.ExitReadLock();
+            s = loadStation(NameMAC, handler);
             if (s==null && AllowAsynchronous) //this is already the check if a configuration for the station exists or not
             {
-				//DONE_FEDE: open GUI, get info, then from that guiThread call createStation & then saveStation
 				StationAdder sa1 = new StationAdder(this, handler);
 				sa1.Show();
 				return null; //TODO: è normale che se creo la station da GUI ritorno null?
@@ -86,7 +96,7 @@ namespace Panopticon
 
         public bool saveRoom(Room room)
         {
-            return databaseInt.saveRoom(room.roomName,room.xlength,room.ylength);
+            return databaseInt.saveRoom(room.roomName,room.size.X,room.size.Y);
         }
         public bool deleteRoom(String RoomName)
         {
@@ -98,7 +108,7 @@ namespace Panopticon
             if (si == null)
                 return null;
             Station s=new Station();
-            s.lastHearthbeat = DateTime.Now;
+            s.hearbeat();
             s.NameMAC = NameMAC;
             s.handler = handler;
             String roomName=si.Value.RoomName;
@@ -107,7 +117,7 @@ namespace Panopticon
             Room room=getRoom(roomName);
             s.location = new PositionTools.Position(x,y,room);
             locker.EnterWriteLock();
-            room.addStation(s); //DARIO: se è una stazione che aveva perso connessione e si è riconnessa?
+            room.addStation(s);
             stations[s.NameMAC] = s;
             locker.ExitWriteLock();
             foreach (Publisher pb in publishers)
@@ -149,7 +159,7 @@ namespace Panopticon
 
         public Station getStation(String NameMAC)
         {
-            return stations[NameMAC]; //DARIO: KeyNotFoundException: all'improvviso stations era vuota
+            return stations.ContainsKey(NameMAC)?stations[NameMAC]:null;
         }
 		public bool StationConfigured(String NameMAC)
 		{
@@ -178,9 +188,9 @@ namespace Panopticon
                 if (pb.supportsOperation(Publisher.DisplayableType.StationUpdate))
                     pb.publishStationUpdate(room,s,Publisher.EventType.Disappear);
         }
-        public void removeRoom(String NameMAC) //TODO: da agganciare da qualche parte
+        public void removeRoom(String RoomName) //TODO: da agganciare da qualche parte
         {
-            Room room = rooms[NameMAC];
+            Room room = rooms[RoomName];
             locker.EnterWriteLock();
             foreach (Station s in room.getStations())
             {
@@ -198,9 +208,14 @@ namespace Panopticon
             {
                 if (s.lastHearthbeat.AddMinutes(5)<DateTime.Now)
                 {
-                    ris = false;
-                    removeStation(s.NameMAC);
-                    break;
+                    locker.EnterWriteLock();
+                    if(s.lastHearthbeat.AddMinutes(5) < DateTime.Now) // check again: was in readmode, may have reconnected now and updated
+                    {
+                        ris = false;
+                        removeStation(s.NameMAC);
+                        // here there was a break. why? for fear of modifying the iterating collection? but it should already have been cached
+                    }
+                    locker.ExitWriteLock();
                 }
             }
             locker.ExitUpgradeableReadLock();

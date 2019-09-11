@@ -16,6 +16,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using static Panopticon.DatabaseInterface;
+using static Panopticon.PositionTools;
 using static Panopticon.Publisher;
 
 namespace Panopticon
@@ -33,7 +34,7 @@ namespace Panopticon
         Dictionary<object, List<UIElement>> uiElements = new Dictionary<object, List<UIElement>>();
         Stats loadedstats = null;
         Replay loadedreplay = null;
-        String[] months = { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
+        String[] months = { "Jan.", "Feb.", "March", "Apr.", "May", "June", "July", "Aug.", "Sept.", "Oct.", "Nov.", "Dec." };
         Brush[] weekhistcolors = { Brushes.Red, Brushes.Green, Brushes.Blue, Brushes.Brown, Brushes.Orange, Brushes.Violet, Brushes.Pink};
         Brush[] timehistcolors = { Brushes.Red, Brushes.Green };
         internal class Stats
@@ -99,11 +100,12 @@ namespace Panopticon
                 {
                     if(!uielem.TryGetValue(deviceIdentifier, out d_gui))
                     {
+                        String ttip = "Device " + deviceIdentifier;
                         d_gui = new List<UIElement>();
                         Ellipse d_gui_e = new Ellipse();
                         d_gui_e.Height = 10;
                         d_gui_e.Width = 10;
-                        d_gui_e.ToolTip = "Device " + deviceIdentifier;
+                        d_gui_e.ToolTip = ttip;
                         d_gui_e.Tag = deviceIdentifier;
                         Brush color = Graphics.FancyColorCreator.randomBrush(deviceIdentifier.GetHashCode());
                         d_gui_e.Fill = color.Clone();
@@ -112,7 +114,7 @@ namespace Panopticon
                         d_gui_e.MouseDown += opendeviceinfo;
                         d_gui.Add(d_gui_e);
                         TextBlock lab = new TextBlock();
-                        lab.Text = "Device " + deviceIdentifier;
+                        lab.Text = ttip;
                         lab.FontSize = 16;
                         lab.Foreground = color.Clone();
                         lab.Tag = deviceIdentifier;
@@ -127,8 +129,12 @@ namespace Panopticon
                         ((Ellipse)d_gui[0]).Fill.Opacity = 0;
                     else
                         ((Ellipse)d_gui[0]).Fill.Opacity = 1;
-                    Canvas.SetLeft(d_gui[0], lastPosition.X * canvas.Width * 0.995 / selectedRoom.room.xlength);
-                    Canvas.SetTop(d_gui[0], lastPosition.Y * canvas.Height * 0.995 / selectedRoom.room.ylength);
+                    // DEBUG
+                    ((Ellipse)d_gui[0]).ToolTip = "Device " + deviceIdentifier + " " + lastPosition.tag;
+                    Vector2D canvassize = new Vector2D(lvtrck_canvas.Width, lvtrck_canvas.Height);
+                    Vector2D point = lastPosition.Multiply(canvassize).Divide(selectedRoom.room.size).Clip(Vector2D.Zero, canvassize.AddScalar(-10));
+                    Canvas.SetLeft(d_gui[0], point.X);
+                    Canvas.SetTop(d_gui[0], point.Y);
                 }
                 else
                 {
@@ -205,24 +211,26 @@ namespace Panopticon
                 if (selectedRoom.room != Room.externRoom)
                 {
                     lvtrck_viewbox.Child = null;
-                    double reference = Math.Max(selectedRoom.room.xlength, selectedRoom.room.ylength);
+                    double reference = Math.Max(selectedRoom.room.size.X, selectedRoom.room.size.Y);
                     double multiplier = 500; //eventually dependant on DPI
-                    lvtrck_border.Width = selectedRoom.room.xlength/reference * multiplier * 1.025;
-                    lvtrck_border.Height = selectedRoom.room.ylength/reference * multiplier * 1.025;
-                    lvtrck_canvas.Width = selectedRoom.room.xlength / reference * multiplier;
-                    lvtrck_canvas.Height = selectedRoom.room.ylength / reference * multiplier;
+                    Vector2D canvassize = selectedRoom.room.size.MultiplyScalar(multiplier / reference);
+                    Vector2D bordersize = canvassize.AddScalar(4);
+                    lvtrck_border.Width = bordersize.X;
+                    lvtrck_border.Height = bordersize.Y;
+                    lvtrck_canvas.Width = canvassize.X;
+                    lvtrck_canvas.Height = canvassize.Y;
                     lvtrck_viewbox.Child = lvtrck_border;
                     trackrlp_viewbox.Child = null;
-                    trackrlp_border.Width = selectedRoom.room.xlength / reference * multiplier * 1.025;
-                    trackrlp_border.Height = selectedRoom.room.ylength / reference * multiplier * 1.025;
-                    trackrlp_canvas.Width = selectedRoom.room.xlength / reference * multiplier;
-                    trackrlp_canvas.Height = selectedRoom.room.ylength / reference * multiplier;
+                    trackrlp_border.Width = bordersize.X;
+                    trackrlp_border.Height = bordersize.Y;
+                    trackrlp_canvas.Width = canvassize.X;
+                    trackrlp_canvas.Height = canvassize.Y;
                     trackrlp_viewbox.Child = trackrlp_border;
                     rmstats_viewbox.Visibility = Visibility.Visible;
                     rmstats_heatlabel.Visibility = Visibility.Visible;
                     rmstats_viewbox.Child = null;
-                    rmstats_border.Width = selectedRoom.room.xlength / reference * multiplier;
-                    rmstats_border.Height = selectedRoom.room.ylength / reference * multiplier;
+                    rmstats_border.Width = canvassize.X;
+                    rmstats_border.Height = canvassize.Y;
                     rmstats_viewbox.Child = rmstats_border;
                     foreach (Station s in selectedRoom.room.getStations())
                         drawStation(s);
@@ -282,8 +290,10 @@ namespace Panopticon
 			s_gui.MouseLeftButtonDown += new MouseButtonEventHandler(Rectangle_MouseLeftButtonDown);
 			lock (guilock)
             {
-                Canvas.SetLeft(s_gui, s.location.X * lvtrck_canvas.Width / selectedRoom.room.xlength);
-                Canvas.SetTop(s_gui, s.location.Y * lvtrck_canvas.Height / selectedRoom.room.ylength);
+                Vector2D canvassize = new Vector2D(lvtrck_canvas.Width, lvtrck_canvas.Height);
+                Vector2D point = s.location.Multiply(canvassize).Divide(selectedRoom.room.size).Clip(Vector2D.Zero,canvassize.AddScalar(-10));
+                Canvas.SetLeft(s_gui, point.X);
+                Canvas.SetTop(s_gui, point.Y);
                 lvtrck_canvas.Children.Add(s_gui);
                 List<UIElement> lst = new List<UIElement>();
                 lst.Add(s_gui);
@@ -293,32 +303,13 @@ namespace Panopticon
 
 		private void Rectangle_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
 		{
-			ContextMenu cm = this.FindResource("cmRxClick") as ContextMenu;
-			cm.PlacementTarget = sender as Rectangle;
-			cm.IsOpen = true;
-		}
-
-
-		private void RemoveStation_Click(object sender, RoutedEventArgs e)
-		{
-			MenuItem mi = sender as MenuItem;
-			Rectangle r = null;
-			if (mi != null)
-			{
-				ContextMenu cm = mi.CommandParameter as ContextMenu;
-				if (cm != null)
-				{
-					r = cm.PlacementTarget as Rectangle;
-					if (r != null)
-					{
-						string name = r.ToolTip as String;
-						name = name.Substring(8, 12);
-						ctx.removeStation(name);
-						ctx.deleteStation(name);
-					}
-				}
-			}
-			
+            Station s = ((Station)((Rectangle)sender).Tag);
+            MessageBoxResult r = MessageBox.Show("Delete station " + s.NameMAC + "?","Delete station",MessageBoxButton.YesNo);
+			if(r==MessageBoxResult.Yes)
+            {
+                ctx.removeStation(s.NameMAC);
+                ctx.deleteStation(s.NameMAC);
+            }
 		}
 
 		internal void removeRoom(Room r)
@@ -381,7 +372,7 @@ namespace Panopticon
             ri.stationcount.Margin = new Thickness(0, 0, 15, 0);
             ri.stationcount.HorizontalAlignment = HorizontalAlignment.Right;
             ri.stationcount.VerticalAlignment = VerticalAlignment.Bottom;
-            ri.container.MouseDown += selectRoom;
+            ri.container.MouseLeftButtonDown += selectRoom;
             ri.container.MouseEnter += doColorIn;
             ri.container.MouseLeave += doColorOut;
             if (room != Room.externRoom)
@@ -690,7 +681,7 @@ namespace Panopticon
                 stats.macs = ctx.databaseInt.loadFrequentMacs(month, year, room.roomName);
                 if (room != Room.externRoom)
                 {
-                    stats.heatmaps = ctx.databaseInt.loadHeathmaps(null, room.roomName, room.xlength, room.ylength, month, year,2);
+                    stats.heatmaps = ctx.databaseInt.loadHeathmaps(null, room.roomName, room.size.X, room.size.Y, month, year,2);
                     hmap = Graphics.createheatmap(stats.heatmaps[stats.selectedday]);
                 }
             }
@@ -904,7 +895,7 @@ namespace Panopticon
                 return;
             }
             Room dvcstatroom = ((Room)dvcinfo_room.SelectedItem);
-            DeviceStats ds = ctx.databaseInt.loadDeviceStats(fromdate.Value, fromtime, todate.Value, totime, dvcinfo_idtextbox.Text, dvcstatroom.roomName, dvcstatroom == Room.overallRoom, dvcstatroom != Room.externRoom && dvcstatroom != Room.overallRoom, dvcstatroom.xlength, dvcstatroom.ylength,2);
+            DeviceStats ds = ctx.databaseInt.loadDeviceStats(fromdate.Value, fromtime, todate.Value, totime, dvcinfo_idtextbox.Text, dvcstatroom.roomName, dvcstatroom == Room.overallRoom, dvcstatroom != Room.externRoom && dvcstatroom != Room.overallRoom, dvcstatroom.size.X, dvcstatroom.size.Y,2);
             if (ds == null)
             {
                 dvcinfo_loadstatus.Content = "No data";
@@ -932,8 +923,8 @@ namespace Panopticon
                 dvcinfo_heatmapimage.Visibility = Visibility.Visible;
                 dvcinfo_heatmapborder.Visibility = Visibility.Visible;
                 dvcinfo_heatmapimage.Source = Graphics.createheatmap(ds.heatmap);
-                dvcinfo_heatmapborder.Width = 20 * dvcstatroom.xlength;
-                dvcinfo_heatmapborder.Height = 20 * dvcstatroom.ylength;
+                dvcinfo_heatmapborder.Width = 20 * dvcstatroom.size.X;
+                dvcinfo_heatmapborder.Height = 20 * dvcstatroom.size.Y;
                 dvcinfo_extralabel.Content = "Positions heatmap";
             }
             dvcinfo_extralabel.Visibility = Visibility.Visible;
@@ -960,7 +951,6 @@ namespace Panopticon
 			StationHandler handler = new StationHandler(_socket, _macAddress, ctx);
 			ctx.tryAddStation(handler.macAddress, handler, true);
 		}
-
 	}
 
 

@@ -9,27 +9,53 @@ namespace Panopticon
     class PositionTools
     {
         private const double EXTERNAL_MARGIN = 3;
-        public class Point
+        public class Vector2D
         {
+            public static Vector2D Zero = new Vector2D(0, 0);
             public double X;
             public double Y;
-            public Point(double x, double y)
+            public Vector2D(double x, double y)
             {
                 X = x;
                 Y = y;
             }
-            public Point(Point a)
+            public Vector2D(Vector2D a)
             {
                 X = a.X;
                 Y = a.Y;
             }
-            public Point Add(Point b)
+            public Vector2D Add(Vector2D b)
             {
-                return new Point(X + b.X, Y + b.Y);
+                return new Vector2D(X + b.X, Y + b.Y);
             }
-            public Point Subtract(Point b)
+
+            public Vector2D _Add(Vector2D b)
             {
-                return new Point(X - b.X, Y - b.Y);
+                X += b.X;
+                Y += b.Y;
+                return this;
+            }
+
+            public Vector2D AddScalar(double s)
+            {
+                return new Vector2D(X + s, Y + s);
+            }
+            public Vector2D _AddScalar(double s)
+            {
+                X += s;
+                Y += s;
+                return this;
+            }
+            public Vector2D Subtract(Vector2D b)
+            {
+                return new Vector2D(X - b.X, Y - b.Y);
+            }
+
+            public Vector2D _Subtract(Vector2D b)
+            {
+                X -= b.X;
+                Y -= b.Y;
+                return this;
             }
 
             public double Module()
@@ -37,42 +63,105 @@ namespace Panopticon
                 return Math.Sqrt(X * X + Y * Y);
             }
 
-            public double Dot(Point b)
+            public double Dot(Vector2D b)
             {
                 return X * b.X + Y * b.Y;
             }
-
-            public Point MultiplyScalar(double scalar)
+            public Vector2D Multiply(Vector2D b)
             {
-                return new Point(X * scalar, Y * scalar);
+                return new Vector2D(X * b.X, Y * b.Y);
             }
-            public Point DivideScalar(double scalar)
+            public Vector2D _Multiply(Vector2D b)
             {
-                return new Point(X / scalar, Y / scalar);
+                X *= b.X;
+                Y *= b.Y;
+                return this;
+            }
+            public Vector2D MultiplyScalar(double scalar)
+            {
+                return new Vector2D(X * scalar, Y * scalar);
             }
 
-            public Point Normalize(bool redirection)
+            public Vector2D _MultiplyScalar(double scalar)
+            {
+                X *= scalar;
+                Y *= scalar;
+                return this;
+            }
+            public Vector2D Divide(Vector2D b)
+            {
+                return new Vector2D(X / b.X, Y / b.Y);
+            }
+            public Vector2D _Divide(Vector2D b)
+            {
+                X /= b.X;
+                Y /= b.Y;
+                return this;
+            }
+            public Vector2D DivideScalar(double scalar)
+            {
+                return new Vector2D(X / scalar, Y / scalar);
+            }
+            public Vector2D _DivideScalar(double scalar)
+            {
+                X /= scalar;
+                Y /= scalar;
+                return this;
+            }
+            public Vector2D Clip(Vector2D min, Vector2D max)
+            {
+                double nx = X < min.X ? min.X : X;
+                nx = nx > max.X ? max.X : nx;
+                double ny = Y < min.Y ? min.Y : Y;
+                ny = ny > max.Y ? max.X : ny;
+                return new Vector2D(nx, ny);
+            }
+            public Vector2D _Clip(Vector2D min, Vector2D max)
+            {
+                double nx = X < min.X ? min.X : X;
+                nx = nx > max.X ? max.X : nx;
+                double ny = Y < min.Y ? min.Y : Y;
+                ny = ny > max.Y ? max.X : ny;
+                X = nx;
+                Y = ny;
+                return this;
+            }
+
+            public Vector2D Normalize(bool redirection)
             {
                 double mod = this.Module();
                 if (mod == 0)
-                    return new Point(0, 0);
+                    return new Vector2D(0, 0);
                 if (X < 0 && redirection)
                     mod *= -1;
-                return new Point(X / mod, Y / mod);
+                return new Vector2D(X / mod, Y / mod);
             }
 
-            public void import(Point p)
+            public Vector2D _Normalize(bool redirection)
+            {
+                double mod = this.Module();
+                if (mod == 0)
+                    return new Vector2D(0, 0);
+                if (X < 0 && redirection)
+                    mod *= -1;
+                X /= mod;
+                Y /= mod;
+                return this;
+            }
+
+            public void _Import(Vector2D p)
             {
                 this.X = p.X;
                 this.Y = p.Y;
             }
         }
 
-        public class Position : Point
+        public class Position : Vector2D
         {
             internal double uncertainity;
             internal Room room;
             internal DateTime positionDate;
+            internal String tag;
             public Position(double x, double y, Room r) : base(x, y)
             {
                 room = r;
@@ -83,12 +172,12 @@ namespace Panopticon
                 uncertainity=u;
             }
 
-            public Position(Point a, Room r) : base(a)
+            public Position(Vector2D a, Room r) : base(a)
             {
                 room = r;
             }
 
-            public Position(Point a,Room r, Double u):base(a)
+            public Position(Vector2D a,Room r, Double u):base(a)
             {
                 room = r;
                 uncertainity = u;
@@ -101,7 +190,7 @@ namespace Panopticon
                 uncertainity = a.uncertainity;
             }
         }
-        class Circle : Point
+        class Circle : Vector2D
         {
             public double R;
 
@@ -109,16 +198,17 @@ namespace Panopticon
             {
                 R = r;
             }
-            public Circle(Point a, double r) : base(a)
+            public Circle(Vector2D a, double r) : base(a)
             {
                 R = r;
             }
         }
         internal static Position triangulate(List<Packet.Reception> receivings, DateTime receptiontime)
         {
-            Position p = new Position(0, 0, receivings[0].ReceivingStation.location.room);
-            Point accumulator = new Point(0, 0);
+            Position p = new Position(Vector2D.Zero, receivings[0].ReceivingStation.location.room);
+            Vector2D accumulator = new Vector2D(Vector2D.Zero);
             p.positionDate = receptiontime;
+            String tag = ""; // DEBUG
             if (receivings.Count() > 2)
             {
                 double minrssi = 0;
@@ -126,6 +216,7 @@ namespace Panopticon
                 double vote = 0;
                 foreach(Packet.Reception pr in receivings)
                 {
+                    tag += (Environment.NewLine + pr.RSSI + " " + pr.ReceivingStation.NameMAC);
                     minrssi = pr.RSSI < minrssi ? pr.RSSI : minrssi;
                     avgrssi += pr.RSSI;
                     double weight = Math.Pow(1 / (-(pr.RSSI>26?pr.RSSI:26) - 25), 3);
@@ -134,21 +225,24 @@ namespace Panopticon
                 }
                 avgrssi /= receivings.Count();
                 accumulator = accumulator.DivideScalar(vote);
+                tag += Environment.NewLine + "avg: " + accumulator.X + " " + accumulator.Y;
                 if (avgrssi < -90 || (avgrssi < -70 && minrssi < -55))
                     p = new Position(0, 0, Room.externRoom);
                 else
                 {
                     if (receivings.Count() == 3)
                     {
-                        Point tr = triangulate_circles(receivings);
+                        Vector2D tr = triangulate_circles(receivings).Clip(Vector2D.Zero,p.room.size);
+                        tag += Environment.NewLine + "tri: " + tr.X + " " + tr.Y;
                         if (tr != null)
                             accumulator = accumulator.MultiplyScalar(0.8).Add(tr.MultiplyScalar(0.2));
                     }
-                    p.import(accumulator);
+                    p._Import(accumulator);
                 }
             }
             else
                 p.uncertainity = double.MaxValue;
+            p.tag = tag;
             return p;
         }
         private static double rssi2dis(double rssi)
@@ -158,25 +252,25 @@ namespace Panopticon
             double dist = Math.Pow(2, rssi / 8) - 1;
             return dist;
         }
-        private static Point triangulate_circles(List<Packet.Reception> receivings)
+        private static Vector2D triangulate_circles(List<Packet.Reception> receivings)
         {
             Circle a = new Circle(receivings[0].ReceivingStation.location, rssi2dis(receivings[0].RSSI));
             Circle b = new Circle(receivings[1].ReceivingStation.location, rssi2dis(receivings[1].RSSI));
             Circle c = new Circle(receivings[2].ReceivingStation.location, rssi2dis(receivings[2].RSSI));
-            Point col1 = a.Subtract(b).Normalize(true);
-            Point col2 = b.Subtract(c).Normalize(true);
+            Vector2D col1 = a.Subtract(b).Normalize(true);
+            Vector2D col2 = b.Subtract(c).Normalize(true);
             if (col1.Subtract(col2).Module() < 0.1)
             {
                 return null;
             }
-            Point ex = b.Subtract(a).Normalize(false);
+            Vector2D ex = b.Subtract(a).Normalize(false);
             double i = ex.Dot(c.Subtract(a));
-            Point ey = (c.Subtract(a).Subtract(ex.MultiplyScalar(i))).Normalize(false);
+            Vector2D ey = (c.Subtract(a).Subtract(ex.MultiplyScalar(i))).Normalize(false);
             double d = b.Subtract(a).Module();
             double j = ey.Dot(c.Subtract(a));
             double x = (a.R * a.R - b.R * b.R + d * d) / (2 * d);
             double y = (a.R * a.R - c.R * c.R + i * i + j * j) / (2 * j) - i * x / j;
-            return new Point(a.Add(ex.MultiplyScalar(x)).Add(ey.MultiplyScalar(y)));
+            return new Vector2D(a.Add(ex.MultiplyScalar(x)).Add(ey.MultiplyScalar(y)));
         }
     }
 }
