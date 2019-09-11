@@ -56,13 +56,13 @@
                     <TextBlock x:Name="trackrlp_ReplayInfo" Text="No loaded replay." Margin="0,28,10,0" VerticalAlignment="Top" Height="20" HorizontalAlignment="Right" FontStyle="Italic" FontFamily="Segoe UI"/>
                     <TextBlock x:Name="trackrlp_time" HorizontalAlignment="Right" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Margin="0,67,55,0" Width="150" Height="21" FontSize="16"/>
                     <Grid HorizontalAlignment="Stretch" Height="33" Margin="10,67,210,0" VerticalAlignment="Top" Width="Auto">
-                        <Grid Height="33" Width="170" HorizontalAlignment="Center" Name="trackrlp_controls" Visibility="Hidden">
+                        <Grid Height="33" Width="170" HorizontalAlignment="Center" Name="trackrlp_controls" Visibility="Visible">
                             <Image ToolTip="Back 10 seconds" Cursor="Hand" x:Name="back" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="20" Margin="0,8,0,0" MouseDown="back_MouseDown" Source="Resources/placeholder.png" />
-                            <Image ToolTip="Half speed" Cursor="Hand" x:Name="slower" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="20" Margin="25,8,0,0" MouseDown="slower_MouseDown" Source="Resources/placeholder.png" />
-                            <Image ToolTip="Pause" Cursor="Hand" x:Name="pause" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="20" Margin="50,8,0,0" MouseDown="pause_MouseDown" Source="Resources/placeholder.png" />
-                            <Image ToolTip="Play" Cursor="Hand" x:Name="play" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="20" Margin="75,8,0,0" MouseDown="play_MouseDown" Source="Resources/placeholder.png" />
-                            <Image ToolTip="Reset" Cursor="Hand" x:Name="reset" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="20" Margin="100,8,0,0" MouseDown="reset_MouseDown" Source="Resources/placeholder.png"/>
-                            <Image ToolTip="Double Speed" Cursor="Hand" x:Name="faster" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="20" Margin="125,8,0,0" MouseDown="faster_MouseDown" Source="Resources/placeholder.png" />
+                            <Image ToolTip="Half speed" Cursor="Hand" x:Name="slower" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="20" Margin="25,8,0,0" MouseDown="slower_MouseDown" Source="Resources/slowerButton.png" />
+                            <Image ToolTip="Pause" Cursor="Hand" x:Name="pause" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="20" Margin="50,8,0,0" MouseDown="pause_MouseDown" Source="Resources/pauseButton.png" />
+                            <Image ToolTip="Play" Cursor="Hand" x:Name="play" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="20" Margin="75,8,0,0" MouseDown="play_MouseDown" Source="Resources/playButton.png" />
+                            <Image ToolTip="Reset" Cursor="Hand" x:Name="reset" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="20" Margin="100,8,0,0" MouseDown="reset_MouseDown" Source="Resources/stopButton.png"/>
+                            <Image ToolTip="Double Speed" Cursor="Hand" x:Name="faster" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="20" Margin="125,8,0,0" MouseDown="faster_MouseDown" Source="Resources/fasterButton.png" />
                             <Image ToolTip="Forward 10 seconds" Cursor="Hand" x:Name="forward" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="20" Margin="150,8,0,0" MouseDown="forward_MouseDown" Source="Resources/placeholder.png" />
                         </Grid>
                     </Grid>
@@ -81,8 +81,8 @@
                         </Grid.ColumnDefinitions>
                         <Border Grid.Column="0" Height="230" VerticalAlignment="Top" BorderBrush="LightGray" BorderThickness="0,0,1,1" Margin="10,70,0,0">
                             <Grid>
-                                <Image ToolTip="Previous Month" Cursor="Hand" x:Name="rmstats_premonth" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="20" Margin="0,0,0,0"  Source="Resources/placeholder.png" MouseDown="rmstats_premonth_MouseDown" />
-                                <Image ToolTip="Next Month" Cursor="Hand" x:Name="rmstats_nextmonth" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="20" Margin="23,0,0,0"  Source="Resources/placeholder.png" MouseDown="rmstats_nextmonth_MouseDown" />
+                                <Image ToolTip="Previous Month" Cursor="Hand" x:Name="rmstats_premonth" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="20" Margin="0,0,0,0"  Source="Resources/previousMonth.png" MouseDown="rmstats_premonth_MouseDown" />
+                                <Image ToolTip="Next Month" Cursor="Hand" x:Name="rmstats_nextmonth" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="20" Margin="23,0,0,0"  Source="Resources/nextMonth.png" MouseDown="rmstats_nextmonth_MouseDown" />
                                 <TextBlock Text="Max devices per day in April 2019" Margin="46,0,0,0" Name="rmstats_daylabel"  HorizontalAlignment="Left" Height="20" VerticalAlignment="Top"></TextBlock>
                                 <Viewbox Margin="0,20,0,0" VerticalAlignment="Top" Stretch="Fill">
                                     <Canvas Name="rmstats_maxday" HorizontalAlignment="Left" Height="100" Margin="0,0,0,0" VerticalAlignment="Top" Width="250"/>
