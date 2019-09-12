@@ -63,23 +63,24 @@ namespace Panopticon
            return analyzer;
         }
        
-        public Station tryAddStation(String NameMAC, StationHandler handler, bool AllowAsynchronous) //Replace Object with the relevant type
+        public Station tryAddStation(String NameMAC, StationHandler _handler, bool AllowAsynchronous) //Replace Object with the relevant type
         {
             // check if not attempting reconnection
             locker.EnterReadLock(); //lock to avoid removal if reconnecting
             Station s = getStation(NameMAC);
             if(s!=null) // s is reconnecting after losing contact
             {
-                // TODO FEDE? what to do with the old and the new station handler?
+				//DONE_FEDE: what to do with the old and the new station handler?
+				s.handler = _handler; //updating handler
                 s.hearbeat();
                 locker.ExitReadLock();
                 return s;
             }
             locker.ExitReadLock();
-            s = loadStation(NameMAC, handler);
+            s = loadStation(NameMAC, _handler); //search Station in DB
             if (s==null && AllowAsynchronous) //this is already the check if a configuration for the station exists or not
             {
-				StationAdder sa1 = new StationAdder(this, handler);
+				StationAdder sa1 = new StationAdder(this, _handler);
 				sa1.Show();
 				return null; //TODO: è normale che se creo la station da GUI ritorno null?
             }

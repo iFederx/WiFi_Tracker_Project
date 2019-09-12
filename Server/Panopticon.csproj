@@ -193,12 +193,6 @@
     </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\Board2.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Resources\Board3.ico" />
-  </ItemGroup>
-  <ItemGroup>
     <Resource Include="Resources\PanopticonLogo.ico" />
   </ItemGroup>
   <ItemGroup>
@@ -222,10 +216,7 @@
     <Resource Include="Resources\slowerButton.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\newBoard.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Resources\newStation.png" />
+    <Resource Include="Resources\newStation64.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

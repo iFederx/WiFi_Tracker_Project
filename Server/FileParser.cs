@@ -12,7 +12,7 @@ namespace Panopticon
     class FileParser
     {
 		internal Context ctx;
-		private List<FileSystemWatcher> watchers;
+		private Dictionary<string,FileSystemWatcher> watchers;
 		ConcurrentDictionary<string, MetaPacket> metaPackets; //the key is the hash
 		volatile bool killed = false;
 		int sleepTime = 30000;
@@ -21,7 +21,7 @@ namespace Panopticon
 		public FileParser(Context _ctx)
 		{
 			ctx = _ctx;
-			watchers = new List<FileSystemWatcher>();
+			watchers = new Dictionary<string,FileSystemWatcher>();
 			metaPackets = new ConcurrentDictionary<string, MetaPacket>();
 		}
 
@@ -40,18 +40,27 @@ namespace Panopticon
 		}
 		public void kill()
 		{
+			foreach (string key in watchers.Keys)
+			{
+				watchers[key].Dispose();
+				watchers.Remove(key);
+			}
+
 			killed = true;
 		}
 
 		internal void AddWatcher(string _mac) //metodo da chiamare per ogni Station creata
 		{
-			var watcher = new FileSystemWatcher();
-			watcher.Path = "./Received/" + _mac + "/";
-			watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName;
-			watcher.Filter = "*.txt";
-			watcher.Changed += new FileSystemEventHandler(OnChanged);
-			watcher.EnableRaisingEvents = true;
-			watchers.Add(watcher);
+			if (!watchers.ContainsKey(_mac))
+			{
+				var watcher = new FileSystemWatcher();
+				watcher.Path = "./Received/" + _mac + "/";
+				watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName;
+				watcher.Filter = "*.txt";
+				watcher.Changed += new FileSystemEventHandler(OnChanged);
+				watcher.EnableRaisingEvents = true;
+				watchers.Add(_mac, watcher);
+			}
 		}
 
 		private void OnChanged(object source, FileSystemEventArgs e)
@@ -63,6 +72,7 @@ namespace Panopticon
 			if (ctx.StationConfigured(directories[2])) //true se la station è presente in stations
 			{
 				Station s = ctx.getStation(directories[2]);
+				s.hearbeat();
 				Parse(e.FullPath, s);
 			}
 		}
