@@ -351,6 +351,10 @@ namespace Panopticon
             ri.container.Child = gr;
             ri.container.BorderThickness = new Thickness(0, 0, 0, 1);
             ri.container.BorderBrush = Brushes.Gray;
+			if (room.roomName == "External")
+				ri.container.ToolTip = "Room External";
+			else
+				ri.container.ToolTip = "Room "  + room.roomName + " - right click to delete";
             ri.roomname = new TextBlock();
             ri.roomname.Width = roomlistpanel.Width - 20;
             ri.roomname.TextWrapping = TextWrapping.Wrap;
@@ -375,8 +379,12 @@ namespace Panopticon
             ri.container.MouseLeftButtonDown += selectRoom;
             ri.container.MouseEnter += doColorIn;
             ri.container.MouseLeave += doColorOut;
-            if (room != Room.externRoom)
-                gr.Children.Add(ri.stationcount);
+			if (room != Room.externRoom)
+			{
+				gr.Children.Add(ri.stationcount);
+				ri.container.MouseRightButtonDown += DeleteRoom_MouseRightButtonDown;
+			}
+                
             gr.Cursor = Cursors.Hand;
             
             lock(guilock)
@@ -387,8 +395,19 @@ namespace Panopticon
             }
             
         }
-        
-        internal MainWindow(Context context)
+
+		private void DeleteRoom_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
+		{
+			Room roomToDelete = ((RoomInfoGUI)((Border)sender).Tag).room;
+			MessageBoxResult r = MessageBox.Show("Delete room " + roomToDelete.roomName + "?", "Delete room", MessageBoxButton.YesNo);
+			if (r == MessageBoxResult.Yes)
+			{
+				ctx.removeRoom(roomToDelete.roomName);
+				ctx.deleteRoom(roomToDelete.roomName);
+			}
+		}
+
+		internal MainWindow(Context context)
         {
             ctx = context;
             ctx.guiPub.linkedwindow = this;
@@ -431,7 +450,13 @@ namespace Panopticon
 
         private void Window_Closed(object sender, EventArgs e)
         {
-			//TODO: mandare segnale REBOOT a tutte le stations
+			//mando segnale REBOOT a tutte le stations
+			foreach (Room r in ctx.getRooms())
+				foreach (Station s in r.getStations())
+				{
+					s.handler.reboot();
+				}
+			
             ctx.kill();
         }
 

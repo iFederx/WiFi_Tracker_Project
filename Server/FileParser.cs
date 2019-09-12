@@ -15,7 +15,7 @@ namespace Panopticon
 		private List<FileSystemWatcher> watchers;
 		ConcurrentDictionary<string, MetaPacket> metaPackets; //the key is the hash
 		volatile bool killed = false;
-		int sleepTime = 60000;
+		int sleepTime = 30000;
 		volatile int stationGC = 0;
 
 		public FileParser(Context _ctx)

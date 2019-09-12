@@ -188,7 +188,7 @@ namespace Panopticon
                 if (pb.supportsOperation(Publisher.DisplayableType.StationUpdate))
                     pb.publishStationUpdate(room,s,Publisher.EventType.Disappear);
         }
-        public void removeRoom(String RoomName) //TODO: da agganciare da qualche parte
+        public void removeRoom(String RoomName)
         {
             Room room = rooms[RoomName];
             locker.EnterWriteLock();
@@ -197,7 +197,8 @@ namespace Panopticon
                 removeStation(s.NameMAC);
                 deleteStation(s.NameMAC);
             }
-            rooms.TryRemove(room.roomName,out room);
+            rooms.TryRemove(room.roomName, out room);
+			guiPub.linkedwindow.removeRoom(room); //DARIO: ho aggiunto io, mancava la propagazione sulla GUI
             locker.ExitWriteLock();
         }
         public bool checkStationAliveness(Room room)
@@ -213,7 +214,8 @@ namespace Panopticon
                     {
                         ris = false;
                         removeStation(s.NameMAC);
-                        // here there was a break. why? for fear of modifying the iterating collection? but it should already have been cached
+                        // D: here there was a break. why? for fear of modifying the iterating collection? but it should already have been cached
+						// F: it was only for testing this portion of code. Delete all comments when you see ;)
                     }
                     locker.ExitWriteLock();
                 }
