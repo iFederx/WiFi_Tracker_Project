@@ -136,7 +136,7 @@ namespace Panopticon
             //Nearness of appearning and disappearing time
             score += Math.Max(0, 70 - (int)second.firstPosition.positionDate.Subtract(first.lastPosition.positionDate).TotalSeconds);
             // Nearness of appearing and disappearing position
-            if (first.lastPosition.uncertainity != double.MaxValue && second.firstPosition.uncertainity != double.MaxValue)
+            if (first.lastPosition.uncertainity < PositionTools.UNCERTAIN_POSITION && second.firstPosition.uncertainity < PositionTools.UNCERTAIN_POSITION)
                 score += Math.Max(0, 40 - 7 * (int)first.lastPosition.Subtract(second.firstPosition).Module());
             // Close MACs - some devices when change id just increment a counter
             if (Math.Abs(Convert.ToInt64(first.MAC, 16) - Convert.ToInt64(second.MAC, 16)) < 2)

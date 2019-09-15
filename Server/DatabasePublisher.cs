@@ -89,7 +89,7 @@ namespace Panopticon
                             Device d = (Device)item.arg1;
                             PositionTools.Position p = (PositionTools.Position)item.arg2;
                             EventType e = (EventType)item.argtype;
-                            DBInt.addDevicePosition(d.identifier,d.MAC,p.room.roomName,p.X,p.Y,p.positionDate,e);
+                            DBInt.addDevicePosition(d.identifier,d.MAC,p.room.roomName,p.X,p.Y,p.uncertainity,p.positionDate,e);
                             break;
                         }
                 }

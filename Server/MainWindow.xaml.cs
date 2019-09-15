@@ -120,12 +120,14 @@ namespace Panopticon
                         lab.Tag = deviceIdentifier;
                         lab.Cursor = Cursors.Hand;
                         lab.MouseDown += opendeviceinfo;
+                        lab.MouseEnter += enlargedevice;
+                        lab.MouseLeave += shrinkdevice;
                         d_gui.Add(lab);
                         panel.Children.Add(lab);
                         canvas.Children.Add(d_gui_e);
                         uielem.Add(deviceIdentifier, d_gui);
                     }
-                    if (lastPosition.uncertainity == double.MaxValue)
+                    if (lastPosition.uncertainity >= PositionTools.UNCERTAIN_POSITION)
                         ((Ellipse)d_gui[0]).Fill.Opacity = 0;
                     else
                         ((Ellipse)d_gui[0]).Fill.Opacity = 1;
@@ -450,14 +452,7 @@ namespace Panopticon
 
         private void Window_Closed(object sender, EventArgs e)
         {
-			//mando segnale REBOOT a tutte le stations
-			foreach (Room r in ctx.getRooms())
-				foreach (Station s in r.getStations())
-				{
-					s.handler.reboot();
-				}
-			
-            ctx.kill();
+			ctx.kill();
         }
 
         private void tabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -552,7 +547,7 @@ namespace Panopticon
                     currelem = loadedreplay.replaydata[loadedreplay.indexupto];
                     if (currelem.timestamp >= loadedreplay.at.AddSeconds(loadedreplay.intersec))
                         break;
-                    PositionTools.Position pos = new PositionTools.Position(currelem.xpos,currelem.ypos, loadedreplay.refroom);
+                    PositionTools.Position pos = new PositionTools.Position(currelem.xpos,currelem.ypos, loadedreplay.refroom,currelem.uncertainity);
                     EventType ev2 = EventType.Update;
                     if (currelem.prexpos < 0)
                         ev2 = EventType.MoveIn;
@@ -580,7 +575,7 @@ namespace Panopticon
                 DevicePosition currelem = loadedreplay.replaydata[loadedreplay.indexupto];
                 while (loadedreplay.indexupto>=0 && currelem.timestamp>=newtime)
                 {
-                    PositionTools.Position pos = new PositionTools.Position(currelem.prexpos, currelem.preypos, loadedreplay.refroom);
+                    PositionTools.Position pos = new PositionTools.Position(currelem.prexpos, currelem.preypos, loadedreplay.refroom, currelem.uncertainity);
                     EventType ev2 = EventType.Update;
                     if (currelem.prexpos < 0)
                         ev2 = EventType.MoveOut;
@@ -677,7 +672,7 @@ namespace Panopticon
                     currelem = loadedreplay.replaydata[loadedreplay.indexupto];
                     if (currelem.timestamp >= newtime)
                         break;
-                    PositionTools.Position pos = new PositionTools.Position(currelem.xpos, currelem.ypos, loadedreplay.refroom);
+                    PositionTools.Position pos = new PositionTools.Position(currelem.xpos, currelem.ypos, loadedreplay.refroom, currelem.uncertainity);
                     EventType ev2 = EventType.Update;
                     if (currelem.prexpos < 0)
                         ev2 = EventType.MoveIn;
@@ -706,7 +701,7 @@ namespace Panopticon
                 stats.macs = ctx.databaseInt.loadFrequentMacs(month, year, room.roomName);
                 if (room != Room.externRoom)
                 {
-                    stats.heatmaps = ctx.databaseInt.loadHeathmaps(null, room.roomName, room.size.X, room.size.Y, month, year,2);
+                    stats.heatmaps = ctx.databaseInt.loadHeathmaps(null, room.roomName, room.size.X, room.size.Y, month, year,2,UNCERTAIN_POSITION);
                     hmap = Graphics.createheatmap(stats.heatmaps[stats.selectedday]);
                 }
             }
@@ -835,6 +830,27 @@ namespace Panopticon
             dvcinfo_search_Click(null, null);
             dvinfo.RaiseEvent(e);
         }
+
+        private void enlargedevice(object sender, RoutedEventArgs e)
+        {
+            String mac = (String)((FrameworkElement)sender).Tag;
+            List<UIElement> d_gui;
+            if(uiElements.TryGetValue(mac, out d_gui))
+            {
+                ((Ellipse)d_gui[0]).Width = 15;
+                ((Ellipse)d_gui[0]).Height = 15;
+            }
+        }
+        private void shrinkdevice(object sender, RoutedEventArgs e)
+        {
+            String mac = (String)((FrameworkElement)sender).Tag;
+            List<UIElement> d_gui;
+            if (uiElements.TryGetValue(mac, out d_gui))
+            {
+                ((Ellipse)d_gui[0]).Width = 10;
+                ((Ellipse)d_gui[0]).Height = 10;
+            }
+        }
         private void dvcinfo_search_Click(object sender, RoutedEventArgs e)
         {
             dvcinfo_deviceid.Text = "Loading data...";
@@ -920,7 +936,7 @@ namespace Panopticon
                 return;
             }
             Room dvcstatroom = ((Room)dvcinfo_room.SelectedItem);
-            DeviceStats ds = ctx.databaseInt.loadDeviceStats(fromdate.Value, fromtime, todate.Value, totime, dvcinfo_idtextbox.Text, dvcstatroom.roomName, dvcstatroom == Room.overallRoom, dvcstatroom != Room.externRoom && dvcstatroom != Room.overallRoom, dvcstatroom.size.X, dvcstatroom.size.Y,2);
+            DeviceStats ds = ctx.databaseInt.loadDeviceStats(fromdate.Value, fromtime, todate.Value, totime, dvcinfo_idtextbox.Text, dvcstatroom.roomName, dvcstatroom == Room.overallRoom, dvcstatroom != Room.externRoom && dvcstatroom != Room.overallRoom, dvcstatroom.size.X, dvcstatroom.size.Y,2,PositionTools.UNCERTAIN_POSITION);
             if (ds == null)
             {
                 dvcinfo_loadstatus.Content = "No data";
@@ -937,7 +953,7 @@ namespace Panopticon
                 {
                     double count = (double)ds.roommap[rm] * 100.0 / (double)tot;
                     TextBlock tb = new TextBlock();
-                    tb.Text = rm + ": " + count + "%";
+                    tb.Text = rm + ": " + count.ToString("00.00") + "%";
                     tb.FontSize = 16;
                     dvcinfo_roomsmap.Children.Add(tb);
                 }

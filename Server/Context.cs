@@ -30,7 +30,15 @@ namespace Panopticon
             stations = new ConcurrentDictionary<String, Station>();
             deviceMap = new ConcurrentDictionaryStack<String, Device>();
             rooms = new ConcurrentDictionary<String, Room>();
-            databaseInt = new DatabaseInterface(Properties.Settings.Default.ConnectionString);
+            try
+            {
+                databaseInt = new DatabaseInterface(Properties.Settings.Default.ConnectionString);
+            }
+            catch
+            {
+                App.Current.Shutdown();
+                return;
+            }
             publishers = new List<Publisher>();
             databasePub = new DatabasePublisher(databaseInt);
             publishers.Add(databasePub);
@@ -46,12 +54,16 @@ namespace Panopticon
         public void orchestrate()
         {
             Thread analyzerT = new Thread(new ThreadStart(analyzer.analyzerProcess));
+            analyzerT.Name = "Analyzer thread";
             analyzerT.Start();
             Thread databaseT = new Thread(new ThreadStart(databasePub.databaseProcess));
+            databaseT.Name = "Database Thread";
             databaseT.Start();
             Thread aggregatorT = new Thread(new ThreadStart(aggregator.aggregatorProcess));
+            aggregatorT.Name = "Aggregator thread";
             aggregatorT.Start();
 			Thread packetizerT = new Thread(new ThreadStart(packetizer.packetizerProcess));
+            packetizerT.Name = "Packetizer thread";
 			packetizerT.Start();
             threads.AddLast(analyzerT);
             threads.AddLast(databaseT);
@@ -176,15 +188,17 @@ namespace Panopticon
         {
             return rooms[name];
         }
-        public void removeStation(String NameMAC)
+        public void removeStation(String NameMAC, bool takelock=true)
         {
             Station s;
             stations.TryRemove(NameMAC,out s);
 			Protocol.ESP_Reboot(s.handler.socket); //FEDE
             Room room=s.location.room;
-            locker.EnterWriteLock();
+            if(takelock)
+                locker.EnterWriteLock();
             room.removeStation(s);
-            locker.ExitWriteLock();
+            if(takelock)
+                locker.ExitWriteLock();
             foreach (Publisher pb in publishers)
                 if (pb.supportsOperation(Publisher.DisplayableType.StationUpdate))
                     pb.publishStationUpdate(room,s,Publisher.EventType.Disappear);
@@ -195,12 +209,14 @@ namespace Panopticon
             locker.EnterWriteLock();
             foreach (Station s in room.getStations())
             {
-                removeStation(s.NameMAC);
+                removeStation(s.NameMAC, false);
                 deleteStation(s.NameMAC);
             }
             rooms.TryRemove(room.roomName, out room);
-			guiPub.linkedwindow.removeRoom(room); //DARIO: ho aggiunto io, mancava la propagazione sulla GUI
             locker.ExitWriteLock();
+            foreach (Publisher pb in publishers)
+                if (pb.supportsOperation(Publisher.DisplayableType.RoomUpdate))
+                    pb.publishRoomUpdate(room, Publisher.EventType.Disappear);
         }
         public bool checkStationAliveness(Room room)
         {
@@ -244,6 +260,7 @@ namespace Panopticon
 
         public void kill()
         {
+            guiPub.kill();
             analyzer.kill();
             databasePub.kill();
             aggregator.kill();
@@ -251,6 +268,13 @@ namespace Panopticon
             foreach(Thread t in threads)
             {
                 t.Join();
+            }
+            foreach (Room r in getRooms())
+            {
+                foreach (Device d in r.getDevices())
+                    databaseInt.addDevicePosition(d.identifier, d.MAC, r.roomName, 0, 0,0, DateTime.Now, Publisher.EventType.Disappear);
+                foreach (Station s in r.getStations())
+                    s.handler.reboot();
             }
             databaseInt.close();
             Environment.Exit(0);
