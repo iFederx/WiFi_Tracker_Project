@@ -43,7 +43,7 @@ namespace Panopticon.AddingStationPages
 		/// </summary>
 		void ReloadRooms()
 		{
-			defaultColor = ((Button)RoomsContainer.Children[1]).Background;
+			defaultColor = (new Button()).Background;
 			RoomsContainer.Children.RemoveRange(0, RoomsContainer.Children.Count);
 			foreach (Room r in ctx.getRooms())
 			{
