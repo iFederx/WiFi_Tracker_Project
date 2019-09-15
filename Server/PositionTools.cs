@@ -9,6 +9,7 @@ namespace Panopticon
     class PositionTools
     {
         private const double EXTERNAL_MARGIN = 3;
+        internal const double UNCERTAIN_POSITION = 1000;
         public class Vector2D
         {
             public static Vector2D Zero = new Vector2D(0, 0);
@@ -219,7 +220,7 @@ namespace Panopticon
                     tag += (Environment.NewLine + pr.RSSI + " " + pr.ReceivingStation.NameMAC);
                     minrssi = pr.RSSI < minrssi ? pr.RSSI : minrssi;
                     avgrssi += pr.RSSI;
-                    double weight = Math.Pow(1 / (-(pr.RSSI>26?pr.RSSI:26) - 25), 3);
+                    double weight = Math.Pow(Math.E,(pr.RSSI + 25)/10);
                     accumulator = accumulator.Add(pr.ReceivingStation.location.MultiplyScalar(weight));
                     vote += weight;
                 }
@@ -241,7 +242,7 @@ namespace Panopticon
                 }
             }
             else
-                p.uncertainity = double.MaxValue;
+                p.uncertainity = UNCERTAIN_POSITION + 1;
             p.tag = tag;
             return p;
         }
