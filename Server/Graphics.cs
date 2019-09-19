@@ -57,7 +57,7 @@ namespace Panopticon
         {
             int xlen = (int)(20 * (heatmap.GetLength(0)-1));
             int ylen = (int)(20 * (heatmap.GetLength(1)-1));
-            Bitmap bitmap = new Bitmap(ylen, xlen, 0, 0, 0);
+            Bitmap bitmap = new Bitmap(ylen, xlen, 255, 255, 255);
             double max = 0;
             double min = double.MaxValue;
             for (int x = 0; x < heatmap.GetLength(0); x++)
@@ -70,7 +70,7 @@ namespace Panopticon
                         min = heatmap[x, y];
                 }
             }
-            for (int x = 0; x < xlen; x++)
+            for (int x = 0; x < xlen && max>0; x++)
             {
                 for (int y = 0; y < ylen; y++)
                 {
@@ -92,7 +92,7 @@ namespace Panopticon
             return bitmap.GetBitmap();
         }
 
-        internal static void drawHistogram(Canvas cv, IEnumerable<Double> data, Func<double,int,object,String> tooltipper, object tooltipdata, MouseButtonEventHandler onmousedown, Brush[] strokecolors, Brush[] fillcolors, int initialbrush, Func<double,int,object,object> tagger, object tagdata)
+        internal static void drawHistogram(Canvas cv, IEnumerable<Double> data, Func<double,int,object,String> tooltipper, object tooltipdata, MouseButtonEventHandler onmousedown, Brush[] strokecolors, Brush[] fillcolors, int initialbrush, Func<double,int,object,object> tagger, object tagdata,bool skipfirst=false)
         {
             cv.Children.Clear();
             double max = 0.001;
@@ -104,13 +104,15 @@ namespace Panopticon
                     max = d;
             }
             int i = 0;
+            if (skipfirst)
+                count--;
             double width = Math.Min(20,cv.Width / count);
             double margin = (cv.Width - count*width)/2;
             foreach (double d in data)
             {
                 Rectangle re = new Rectangle();
                 re.Height = d / max * cv.Height;
-                re.Width = width;
+                re.Width = (i==0&&skipfirst)?0:width;
                 re.Fill = fillcolors[(initialbrush + i) % fillcolors.Length];
                 re.Stroke = strokecolors[(i+ initialbrush) % strokecolors.Length];
                 re.VerticalAlignment = VerticalAlignment.Bottom;

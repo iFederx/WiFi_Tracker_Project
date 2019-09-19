@@ -337,6 +337,7 @@ namespace Panopticon
         {
             int numdays = dayspermonth(selectedmonth, selectedyear);
             double[][] res = new double[numdays + 1][];
+            double[] hourcount = new double[24];
             for(int i=0;i<numdays+1;i++)
                 res[i]=new double[24];
             
@@ -354,6 +355,7 @@ namespace Panopticon
                         while (reader.Read())
                         {
                             res[(int)reader.GetDouble(1)][(int)reader.GetDouble(2)] = reader.GetDouble(0);
+                            hourcount[(int)reader.GetDouble(2)] += 1;
                         }
                     }
                 }
@@ -362,7 +364,8 @@ namespace Panopticon
             {
                 for (int day = 1; day < res.GetLength(0);day++)
                     res[0][hour] += res[day][hour];
-                res[0][hour] /= res.GetLength(0);
+                if(hourcount[hour]>0)
+                    res[0][hour] /= hourcount[hour];
             }
             return res;
         }

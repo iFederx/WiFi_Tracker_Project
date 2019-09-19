@@ -230,7 +230,7 @@ namespace Panopticon
                     if(s.lastHearthbeat.AddMinutes(5) < DateTime.Now) // check again: was in readmode, may have reconnected now and updated
                     {
                         ris = false;
-                        removeStation(s.NameMAC);
+                        removeStation(s.NameMAC,false);
                         // D: here there was a break. why? for fear of modifying the iterating collection? but it should already have been cached
 						// F: it was only for testing this portion of code. Delete all comments when you see ;)
                     }
