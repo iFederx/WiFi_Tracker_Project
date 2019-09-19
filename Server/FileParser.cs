@@ -129,68 +129,83 @@ namespace Panopticon
             {
                 string Type = "", SubType = "", RSSI = "", SRC = "", seq_num = "", TIME = "", HASH = "", SSID_id = "", SSID_lenght = "", SSID = "", HT_id = "", HT_cap_len = "", HT_cap_str = "";
                 var fields = line.Split(',');
-                
+                string[] pures = fields;
                 foreach (string field in fields) //each cycle reads a line
                 {
                     var fieldSplit = field.Split('=');
+					
                     string fieldLabel = fieldSplit[0];
                     switch (fieldLabel)
                     {
                         case "Type":
-                            Type = fieldSplit[1];
+							pures = fieldSplit[1].Split('\0');
+							Type = pures[0];
                             break;
 
                         case " SubType":
-                            SubType = fieldSplit[1];
+							pures = fieldSplit[1].Split('\0');
+							SubType = pures[0];
                             break;
 
                         case " RSSI":
-                            RSSI = fieldSplit[1];
+							pures = fieldSplit[1].Split('\0');
+							RSSI = pures[0];
                             break;
 
                         case " SRC":
-                            SRC = fieldSplit[1].Replace(@":", string.Empty);
+							pures = fieldSplit[1].Split('\0');
+							SRC = pures[0].Replace(@":", string.Empty);
                             break;
 
                         case " seq_num":
-                            seq_num = fieldSplit[1];
+							pures = fieldSplit[1].Split('\0');
+							seq_num = pures[0];
                             break;
 
                         case " TIME":
-                            TIME = fieldSplit[1];
+							pures = fieldSplit[1].Split('\0');
+							TIME = pures[0];
                             break;
 
                         case " HASH":
-                            HASH = fieldSplit[1];
+							pures = fieldSplit[1].Split('\0');
+							HASH = pures[0];
                             break;
 
                         case " SSID_id":
-                            SSID_id = fieldSplit[1];
+
+							pures = fieldSplit[1].Split('\0');
+							SSID_id = pures[0];
                             break;
 
                         case " SSID_lenght":
-                            SSID_lenght = fieldSplit[1];
+							pures = fieldSplit[1].Split('\0');
+							SSID_lenght = pures[0];
                             break;
 
                         case " SSID":
-                            SSID = fieldSplit[1];
+							pures = fieldSplit[1].Split('\0');
+							SSID = pures[0];
                             break;
 
                         case " HT_id":
-                            HT_id = fieldSplit[1];
+							pures = fieldSplit[1].Split('\0');
+							HT_id = pures[0];
                             break;
 
                         case " HT_cap_len":
-                            HT_cap_len = fieldSplit[1];
+							pures = fieldSplit[1].Split('\0');
+							HT_cap_len = pures[0];
                             break;
 
                         case " HT_cap_str":
-                            HT_cap_str = fieldSplit[1];
+							pures = fieldSplit[1].Split('\0');
+							HT_cap_str = pures[0];
                             break;
                     }
                 }
                 
-                if (HASH!="" && HASH.Length<40 && RSSI!="" && TIME!="" && TIME.Length==10)
+                if (HASH!="" && HASH.Length<40 && RSSI!="" && TIME!="" && TIME.Length==10 && seq_num!="")
                 {
 					if (!packets.ContainsKey(HASH))
 					{
