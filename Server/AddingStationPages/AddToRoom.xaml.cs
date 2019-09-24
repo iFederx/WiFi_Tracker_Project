@@ -59,20 +59,8 @@ namespace Panopticon.AddingStationPages
 				Canvas_Room.Height = room.size.Y * 100;
 			}
 
-			//calcolo raggio
-			ComputeRadius();
-
+			ComputeRadius(); //calcolo raggio grafico
 			LoadStations();
-
-			/*int i = FindWindowByMAC(handler.macAddress, maxN);
-			if (i != maxN)
-			{
-				Application.Current.Windows[i].MinWidth = GridRoom.Width + 100;
-				Application.Current.Windows[i].MinHeight = GridRoom.Height + 200;
-			}*/
-
-			//TODO: ci starebbe vedere le Station già presenti, magari in blu
-
 		}
 
 		void LoadStations()
@@ -80,34 +68,11 @@ namespace Panopticon.AddingStationPages
 			foreach (Station s in room.getStations())
 			{
 				//disegno stazione
-				Ellipse e = new Ellipse() { Width = 2*radius, Height = 2*radius, Fill = Brushes.Blue };
+				Ellipse e = new Ellipse() { Width = 2 * radius, Height = 2 * radius, Fill = Brushes.Blue };
 				Canvas_Room.Children.Add(e);
 				r2g(s.location.X, 0);
-				Canvas.SetLeft(e, r2g(s.location.X, 0)-radius);
-				Canvas.SetTop(e, r2g(s.location.Y, 1)-radius);
-			}
-		}
-
-		private void AdjustRoomSize(Room room)
-		{
-			//TODO: eliminare l'intero metodo
-			// ...non sapevo esistesse la ViewBox :_(
-			double maxVal = Math.Max(room.size.X, room.size.Y);
-			double minVal = Math.Min(room.size.X, room.size.Y);
-			if (maxVal > maxRoomDimension) //una delle due dimensioni supera la massima consentita
-			{
-				GridRoom.Height = maxRoomDimension;
-				GridRoom.Width = room.size.X / room.size.Y * GridRoom.Height;
-			}
-			else if (minVal < minRoomDimension) //una delle due dimensioni è troppo piccola
-			{
-				GridRoom.Height = maxRoomDimension;
-				GridRoom.Width = room.size.X / room.size.Y * GridRoom.Height;
-			}
-			else
-			{
-				GridRoom.Width = room.size.X;
-				GridRoom.Height = room.size.Y;
+				Canvas.SetLeft(e, r2g(s.location.X, 0) - radius);
+				Canvas.SetTop(e, r2g(s.location.Y, 1) - radius);
 			}
 		}
 
@@ -145,6 +110,7 @@ namespace Panopticon.AddingStationPages
 			yLabel.Content = meterY.ToString("Y: 0.## m");
 
 		}
+
 		/// <summary>
 		/// It returns a measure converted in a graphic measure (ready to be used as graphic coordinate)
 		/// The 2nd argument will be 0 for X, 1 for Y

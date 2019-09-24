@@ -17,11 +17,19 @@ namespace Panopticon
 		public delegate void SafeNewStation(string _string, Socket socket);
 
 		private const int BUFFER_SIZE = 2048;
-		static readonly Dictionary<Socket, string> macAddresses = new Dictionary<Socket,string>(); //only in this case, in the MAC addresses there aren't semi-columns (:)
-        /// <summary>
+		readonly Dictionary<Socket, string> macAddresses;
+		Context ctx;
+		
+		public Protocol(Context _ctx)
+		{
+			macAddresses = new Dictionary<Socket, string>();
+			ctx = _ctx;
+		}
+		
+		/// <summary>
         /// Interprets the command received through the socket           
         /// </summary>
-        public static int Command(string text, Socket socket, int received)
+        public int Command(string text, Socket socket, int received)
         {
             int x;
             int toReceive = 0;
@@ -233,6 +241,7 @@ namespace Panopticon
         {
             byte[] data = Encoding.UTF8.GetBytes("REBOOT\r\n");
             socket.Send(data); //blocking method
+			socket.Close(); //to delete all callbacks
         }
     }
 }

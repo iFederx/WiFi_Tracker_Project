@@ -10,18 +10,27 @@ namespace Panopticon
 {
 	class Connection
 	{
-		private static readonly Socket serverSocket = //serverSocket is used only to accept new boards asking for registration
-			new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-
-		protected static readonly List<Socket> clientSockets = new List<Socket>();
+		private readonly Socket serverSocket; //serverSocket is used only to accept new boards asking for registration
+		protected readonly List<Socket> clientSockets;
 		private const int BUFFER_SIZE = 2048;
 		private const int PORT = 1500;
-		private static readonly byte[] buffer = new byte[BUFFER_SIZE];
+		private readonly byte[] buffer;
+		private Context ctx;
+		private Protocol protocol;
+
+		public Connection(Context _ctx)
+		{
+			serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+			clientSockets = new List<Socket>();
+			buffer = new byte[BUFFER_SIZE];
+			ctx = _ctx;
+			protocol = new Protocol(ctx);
+		}
 
         /// <summary>
-        /// This static method initializes a passive listening socket for communications over internet
+        /// This method initializes a passive listening socket for communications over internet
         /// </summary>
-        public static void StartConnection()
+        public void StartConnection()
         {
             Console.WriteLine("Setting up server...");
 			
@@ -35,7 +44,7 @@ namespace Panopticon
         /// Close all connected client (we do not need to shutdown the server socket as its connections
         /// are already closed with the clients).
         /// </summary>
-        private static void CloseAllSockets()
+        private void CloseAllSockets()
         {
             foreach (Socket socket in clientSockets)
             {
@@ -46,7 +55,7 @@ namespace Panopticon
             serverSocket.Close();
         }
 
-        private static void AcceptCallback(IAsyncResult AR)
+        private void AcceptCallback(IAsyncResult AR)
         {
             Socket socket;
 
@@ -67,7 +76,7 @@ namespace Panopticon
         }
 
         //when an ESP board sends a command, this Callback manages it
-        private static void ReceiveCallback(IAsyncResult AR)
+        private void ReceiveCallback(IAsyncResult AR)
         {
             Console.WriteLine("\n--Entering in a Receive callback--");
             Socket current = (Socket)AR.AsyncState;
@@ -96,7 +105,7 @@ namespace Panopticon
             string text = Encoding.UTF8.GetString(recBuf);
             Console.WriteLine("Received Text: " + text);
 
-            int result = Protocol.Command(text, current, received);
+            int result = protocol.Command(text, current, received);
 			
             current.BeginReceive(buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, current);
         }

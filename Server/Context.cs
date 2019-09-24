@@ -83,6 +83,7 @@ namespace Panopticon
             if(s!=null) // s is reconnecting after losing contact
             {
 				//DONE_FEDE: what to do with the old and the new station handler?
+				s.handler.socket.Close();
 				s.handler = _handler; //updating handler
                 s.hearbeat();
                 locker.ExitReadLock();
@@ -191,7 +192,7 @@ namespace Panopticon
         public void removeStation(String NameMAC, bool takelock=true)
         {
             Station s;
-            stations.TryRemove(NameMAC,out s);
+            stations.TryRemove(NameMAC, out s);
             Room room=s.location.room;
             if(takelock)
                 locker.EnterWriteLock();
@@ -230,7 +231,7 @@ namespace Panopticon
                     if(s.lastHearthbeat.AddMinutes(5) < DateTime.Now) // check again: was in readmode, may have reconnected now and updated
                     {
                         ris = false;
-                        removeStation(s.NameMAC,false);
+                        removeStation(s.NameMAC, false);
                         // D: here there was a break. why? for fear of modifying the iterating collection? but it should already have been cached
 						// F: it was only for testing this portion of code. Delete all comments when you see ;)
                     }
