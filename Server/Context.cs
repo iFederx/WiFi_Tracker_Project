@@ -192,7 +192,6 @@ namespace Panopticon
         {
             Station s;
             stations.TryRemove(NameMAC,out s);
-			Protocol.ESP_Reboot(s.handler.socket); //FEDE
             Room room=s.location.room;
             if(takelock)
                 locker.EnterWriteLock();
@@ -211,6 +210,7 @@ namespace Panopticon
             {
                 removeStation(s.NameMAC, false);
                 deleteStation(s.NameMAC);
+				s.handler.reboot();
             }
             rooms.TryRemove(room.roomName, out room);
             locker.ExitWriteLock();

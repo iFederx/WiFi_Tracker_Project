@@ -205,10 +205,8 @@
     <Resource Include="Resources\refresh.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\nextMonth.png" />
     <Resource Include="Resources\pauseButton.png" />
     <Resource Include="Resources\playButton.png" />
-    <Resource Include="Resources\previousMonth.png" />
     <Resource Include="Resources\stopButton.png" />
   </ItemGroup>
   <ItemGroup>
@@ -217,6 +215,12 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\newStation64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\next10.png" />
+    <Resource Include="Resources\nextMonth.png" />
+    <Resource Include="Resources\previous10.png" />
+    <Resource Include="Resources\previousMonth.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

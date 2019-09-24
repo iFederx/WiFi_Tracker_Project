@@ -52,13 +52,13 @@
                     <TextBlock x:Name="trackrlp_time" HorizontalAlignment="Right" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Margin="0,67,55,0" Width="150" Height="21" FontSize="16"/>
                     <Grid HorizontalAlignment="Stretch" Height="33" Margin="10,67,210,0" VerticalAlignment="Top" Width="Auto">
                         <Grid Height="33" Width="170" HorizontalAlignment="Center" Name="trackrlp_controls" Visibility="Visible">
-                            <Image ToolTip="Back 10 seconds" Cursor="Hand" x:Name="back" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="20" Margin="0,8,0,0" MouseDown="back_MouseDown" Source="Resources/placeholder.png" />
+                            <Image ToolTip="Back 10 seconds" Cursor="Hand" x:Name="back" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="20" Margin="0,8,0,0" MouseDown="back_MouseDown" Source="Resources/previous10.png" />
                             <Image ToolTip="Half speed" Cursor="Hand" x:Name="slower" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="20" Margin="25,8,0,0" MouseDown="slower_MouseDown" Source="Resources/slowerButton.png" />
                             <Image ToolTip="Pause" Cursor="Hand" x:Name="pause" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="20" Margin="50,8,0,0" MouseDown="pause_MouseDown" Source="Resources/pauseButton.png" />
                             <Image ToolTip="Play" Cursor="Hand" x:Name="play" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="20" Margin="75,8,0,0" MouseDown="play_MouseDown" Source="Resources/playButton.png" />
                             <Image ToolTip="Reset" Cursor="Hand" x:Name="reset" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="20" Margin="100,8,0,0" MouseDown="reset_MouseDown" Source="Resources/stopButton.png"/>
                             <Image ToolTip="Double Speed" Cursor="Hand" x:Name="faster" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="20" Margin="125,8,0,0" MouseDown="faster_MouseDown" Source="Resources/fasterButton.png" />
-                            <Image ToolTip="Forward 10 seconds" Cursor="Hand" x:Name="forward" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="20" Margin="150,8,0,0" MouseDown="forward_MouseDown" Source="Resources/placeholder.png" />
+                            <Image ToolTip="Forward 10 seconds" Cursor="Hand" x:Name="forward" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="20" Margin="150,8,0,0" MouseDown="forward_MouseDown" Source="Resources/next10.png" />
                         </Grid>
                     </Grid>
                     <TextBlock x:Name="trackrlp_speed" HorizontalAlignment="Right" Margin="0,67,10,0" TextWrapping="Wrap" Text="" Height="21" VerticalAlignment="Top" Width="60" TextAlignment="Left" FontSize="16"/>

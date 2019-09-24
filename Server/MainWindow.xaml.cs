@@ -311,6 +311,7 @@ namespace Panopticon
             {
                 ctx.removeStation(s.NameMAC);
                 ctx.deleteStation(s.NameMAC);
+				s.handler.reboot();
             }
 		}
 

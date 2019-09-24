@@ -35,11 +35,6 @@ namespace Panopticon
                 string macAddress = text.Substring(offset+9, 17);
 				macAddresses.Add(socket, macAddress.Replace(@":", string.Empty));
                 Console.WriteLine("An ESP board with MAC: " + macAddress + " has requested access");
-				//TODO
-				//verificare se esiste già la schedina
-				//se esiste, sostituire il vecchio socket nella struttura
-				//se NON esiste
-				//aprire finestra di configurazione
 
 				//apro finestra configurazione nuova scheda
 				var d = new SafeNewStation(GuiInterface.statlinkedwindow.NewStation);
