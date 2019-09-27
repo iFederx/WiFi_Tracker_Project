@@ -78,7 +78,7 @@ namespace Panopticon
         /// <param name="condition">Function that, given the value, returns if must be removed or not</param>
         /// <param name="updateditem">The item, updated</param>
         /// <returns>True if the value has been removed from the data structure, false otherwise</returns>
-        public bool upsertAndConditionallyRemove(K k, V v, Func<V, V, V> updater,Func<V,Boolean> condition,out V updateditem)
+        public bool upsertAndConditionallyRemove(K k, V v, Func<V, V, V> updater, Func<V, Boolean> condition, out V updateditem)
         {
             LinkedNode<V> item;
             bool retval;
@@ -175,7 +175,7 @@ namespace Panopticon
         /// <param name="keyExtractor">Function that, given the value stored in the structure, returns the key under which is saved</param>
         /// <param name="peekedValue">Value peeked</param>
         /// <returns>If the item has been removed</returns>
-        public bool popConditional(Func<V,Boolean> condition,Func<V,K> keyExtractor,out V peekedValue)
+        public bool popConditional(Func<V,Boolean> condition, Func<V,K> keyExtractor, out V peekedValue)
         {
             bool removed=false;
             locker.EnterWriteLock();

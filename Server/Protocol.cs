@@ -19,11 +19,13 @@ namespace Panopticon
 		private const int BUFFER_SIZE = 2048;
 		readonly Dictionary<Socket, string> macAddresses;
 		Context ctx;
+		FileParser fileParser;
 		
 		public Protocol(Context _ctx)
 		{
 			macAddresses = new Dictionary<Socket, string>();
 			ctx = _ctx;
+			fileParser = new FileParser(ctx);
 		}
 		
 		/// <summary>
@@ -45,7 +47,7 @@ namespace Panopticon
                 Console.WriteLine("An ESP board with MAC: " + macAddress + " has requested access");
 
 				//apro finestra configurazione nuova scheda
-				var d = new SafeNewStation(GuiInterface.statlinkedwindow.NewStation);
+				var d = new SafeNewStation(ctx.guiPub.linkedwindow.NewStation);
 				Application.Current.Dispatcher.Invoke(d, macAddress.Replace(@":", string.Empty), socket);
 
 				byte[] data = Encoding.UTF8.GetBytes("ACCEPT\r\n");
@@ -56,7 +58,7 @@ namespace Panopticon
             }
             else if ((x = text.IndexOf("FILE")) > -1)
             {
-                //FILE\r\n BBBB TTTT 010101010101010101010 
+                //FILE\r\n BBBB TTTT 010101010101010101010...
                 
                 byte[] buffer = Encoding.UTF8.GetBytes(text);
                 byte[] data = new byte[BUFFER_SIZE];
@@ -94,9 +96,16 @@ namespace Panopticon
                     fileSize = BitConverter.ToInt32(fileSizeBytes, 0);
                     timestamp = BitConverter.ToInt32(timestampBytes, 0);
 					timestampDT = FileParser.TimeFromUnixTimestamp(timestamp);
-                    toReceive = fileSize - received + 14;
+                    toReceive = fileSize - received + 14; //bytes che devo ancora ricevere
 				}
 
+				string toAnalyze = Encoding.UTF8.GetString(data, 14, data.Length - 14);
+				string chunk = Chunker(toAnalyze, out toAnalyze);
+				Station station = ctx.getStation(macAddresses[socket]); //dal socket trovo la station
+				ctx.checkStationAliveness(station.location.room);
+				station.hearbeat();
+				fileParser.ParseOnTheFly(chunk, station);
+				/*
 				//creazione file di ricezione
 				string mac = macAddresses[socket];
 				if (mac == null) mac = "other";
@@ -108,25 +117,31 @@ namespace Panopticon
 				string fileName = timeString + ".txt";
                 string filePath = receivingFolderPath + fileName;
                 FileStream fs = File.Open(filePath, FileMode.Create);
-
+				*/
                 //DONE: capire se 1) si devono ricevere altri byte o 2) si ha già tutto
                 //scrivo quello che ho ricevuto
-                fs.Write(data, 14, data.Length - 14); //13 perché salto "FILE\r\n BBBB TTTT"
-                
-                while (toReceive > 0)
+                //fs.Write(data, 14, data.Length - 14); //14 perché salto "FILE\r\n BBBB TTTT"
+				
+
+				while (toReceive > 0)
                 {
+					Array.Clear(data, 0, BUFFER_SIZE); //svuoto buffer ricezione
+					var ttt = Encoding.UTF8.GetBytes(toAnalyze);
+					ttt.CopyTo(data, 0); //ripristino data con il residuo della vecchia ricezione
                     //ricevo ancora
-                    Array.Clear(data, 0, BUFFER_SIZE); //svuoto buffer ricezione
-                    int receivedBytesLen = socket.Receive(data, 0, BUFFER_SIZE, SocketFlags.None);
-                    received = receivedBytesLen;
-                    toReceive = toReceive - received;
-                    //scrivo
-                    fs.Write(data, 0, received);
-                }
+                    int receivedBytesLen = socket.Receive(data, toAnalyze.Length, BUFFER_SIZE - toAnalyze.Length, SocketFlags.None);
+                    received += receivedBytesLen;
+                    toReceive = toReceive - receivedBytesLen;
+					//scrivo
+					//fs.Write(data, 0, received);
+					toAnalyze = Encoding.UTF8.GetString(data);
+					chunk = Chunker(toAnalyze, out toAnalyze);
+					fileParser.ParseOnTheFly(chunk, station);
+				}
                 
-                fs.Close(); //chiudo il file
+                //fs.Close(); //chiudo il file
                 
-                Console.WriteLine("Client:{0} connected & File {1} started received.", socket.RemoteEndPoint, fileName);
+                Console.WriteLine("{1} Client:{0} data received.", socket.RemoteEndPoint, DateTime.Now.ToString());
 
             }
 
@@ -134,57 +149,85 @@ namespace Panopticon
         }
 
 		/// <summary>
+		/// This method returns a chunk of raw receptions, ready to be parsed in a Reception object.
+		/// </summary>
+		/// <param name="toAnalyze">input data</param>
+		/// <param name="toAnalyze2">input data - chunk</param>
+		/// <returns>chunk of data</returns>
+		private string Chunker(string toAnalyze, out string toAnalyze2)
+		{
+			int index = toAnalyze.LastIndexOf("\n");
+			if (index > 0)
+			{
+				toAnalyze2 = toAnalyze.Substring(index+1);
+				return toAnalyze.Substring(0, index);
+			}
+			else
+			{
+				toAnalyze2 = "";
+				return toAnalyze;
+			}
+		}
+
+		/// <summary>
 		/// Syncronizes clock of ESP board (Attention: it doesn't include SYNC message).
 		/// After this phase, ESP board will begin the sniffing
 		/// </summary>
 		public static int ESP_SyncClock(Socket socket)
         {
-            Console.WriteLine("Starting CLOCK sync");
-            int n=5; //number of PING-PONG repetitions
-            int received, i;
-            byte[] ping = Encoding.UTF8.GetBytes("PING\r\n");
-            byte[] clock1 = Encoding.UTF8.GetBytes("CLOCK(");
-            byte[] clock2 = Encoding.UTF8.GetBytes(")\r\n");
-            byte[] recBuf = new byte[100];
-            byte[] buffer = new byte[100];
+			try
+			{
+				Console.WriteLine("Starting CLOCK sync");
+				int n = 5; //number of PING-PONG repetitions
+				int received, i;
+				byte[] ping = Encoding.UTF8.GetBytes("PING\r\n");
+				byte[] clock1 = Encoding.UTF8.GetBytes("CLOCK(");
+				byte[] clock2 = Encoding.UTF8.GetBytes(")\r\n");
+				byte[] recBuf = new byte[100];
+				byte[] buffer = new byte[100];
 
-            long frequency = Stopwatch.Frequency;
-            Stopwatch sw = new Stopwatch();
-            sw.Start(); //--------------------------------------START_TIMER
-            for (i=0; i<n; i++)
-            {
-                socket.Send(ping); //blocking method
-                Console.WriteLine("PING sent");
+				long frequency = Stopwatch.Frequency;
+				Stopwatch sw = new Stopwatch();
+				sw.Start(); //--------------------------------------START_TIMER
+				for (i = 0; i < n; i++)
+				{
+					socket.Send(ping); //blocking method
+					Console.WriteLine("PING sent");
 
-                received = socket.Receive(recBuf); //blocking method
-                byte[] recMsg = new byte[received];
-                Array.Copy(recBuf, recMsg, received);
-                string text = Encoding.UTF8.GetString(recMsg);
+					received = socket.Receive(recBuf); //blocking method
+					byte[] recMsg = new byte[received];
+					Array.Copy(recBuf, recMsg, received);
+					string text = Encoding.UTF8.GetString(recMsg);
 
-                if (received == 0) return -1;
-                //if (received > 0) Console.WriteLine("Received " + received + "B in this buffer: " + text);
-                if (text.IndexOf("PONG") > -1)
-                {
-                    Console.WriteLine("Received PONG");
-                    continue;
-                }
-                else break;
-            }
-            sw.Stop(); //--------------------------------------STOP_TIMER
-            if (i < 5) return -1;
-            long ticksElapsed = sw.ElapsedTicks * 10000000 / frequency;
-            ticksElapsed = ticksElapsed / n / 2;
-            DateTime ESP_Time = new DateTime(DateTime.Now.Ticks + ticksElapsed);
-            //UE will be Unix Epoch version of the time
-            TimeSpan clockUE = ESP_Time - new DateTime(1970, 1, 1); //new TimeSpan(ESP_Time.Ticks);
-            uint timestamp = (uint) clockUE.TotalSeconds; //secondi totali dall'anno 0
-            byte[] toSend = Encoding.UTF8.GetBytes("CLOCK("+timestamp.ToString()+")\r\n");
-            //Console.WriteLine("Sending: " + Encoding.UTF8.GetString(toSend));
-            if (socket.Send(toSend) > 0)
-                Console.WriteLine("Clock sent to ESP board");
+					if (received == 0) return -1;
+					//if (received > 0) Console.WriteLine("Received " + received + "B in this buffer: " + text);
+					if (text.IndexOf("PONG") > -1)
+					{
+						Console.WriteLine("Received PONG");
+						continue;
+					}
+					else break;
+				}
+				sw.Stop(); //--------------------------------------STOP_TIMER
+				if (i < 5) return -1;
+				long ticksElapsed = sw.ElapsedTicks * 10000000 / frequency;
+				ticksElapsed = ticksElapsed / n / 2;
+				DateTime ESP_Time = new DateTime(DateTime.Now.Ticks + ticksElapsed);
+				//UE will be Unix Epoch version of the time
+				TimeSpan clockUE = ESP_Time - new DateTime(1970, 1, 1); //new TimeSpan(ESP_Time.Ticks);
+				uint timestamp = (uint)clockUE.TotalSeconds; //secondi totali dall'anno 0
+				byte[] toSend = Encoding.UTF8.GetBytes("CLOCK(" + timestamp.ToString() + ")\r\n");
+				//Console.WriteLine("Sending: " + Encoding.UTF8.GetString(toSend));
+				if (socket.Send(toSend) > 0)
+					Console.WriteLine("Clock sent to ESP board");
 
-            return 0;
-        }
+				return 0;
+			}
+			catch (ObjectDisposedException)
+			{
+				return -1;
+			}
+}
 
         /// <summary>
         /// Starts blinking to localize ESP board
@@ -192,7 +235,14 @@ namespace Panopticon
         public static void ESP_BlinkStart(Socket socket)
         {
             byte[] data = Encoding.UTF8.GetBytes("BLINK\r\n");
-            socket.Send(data); //blocking method
+			try
+			{
+				socket.Send(data); //blocking method
+			}
+			catch (ObjectDisposedException)
+			{
+				return;
+			}
 			Console.Write("Blinking... ");
 		}
 
@@ -202,8 +252,15 @@ namespace Panopticon
         public static void ESP_SyncClockRequest(Socket socket)
         {
             byte[] data = Encoding.UTF8.GetBytes("SYNC\r\n");
-            socket.Send(data); //blocking method
-            ESP_SyncClock(socket);
+			try
+			{
+				socket.Send(data); //blocking method
+			}
+			catch (ObjectDisposedException)
+			{
+				return;
+			}
+			ESP_SyncClock(socket);
         }
 
         /// <summary>
@@ -212,7 +269,14 @@ namespace Panopticon
         public static void ESP_BlinkStop(Socket socket)
         {
             byte[] data = Encoding.UTF8.GetBytes("OKLED\r\n");
-            socket.Send(data); //blocking method
+			try
+			{
+				socket.Send(data); //blocking method
+			}
+			catch (ObjectDisposedException)
+			{
+				return;
+			}
 			Console.WriteLine("Blinking stopped");
 		}
 
@@ -222,8 +286,15 @@ namespace Panopticon
         public static void ESP_StandBy(Socket socket)
         {
             byte[] data = Encoding.UTF8.GetBytes("STANDBY\r\n");
-            socket.Send(data); //blocking method
-        }
+			try
+			{
+				socket.Send(data); //blocking method
+			}
+			catch (ObjectDisposedException)
+			{
+				return;
+			}
+		}
 
         /// <summary>
         /// Syncronize clock of ESP board
@@ -231,8 +302,15 @@ namespace Panopticon
         public static void ESP_Resume(Socket socket)
         {
             byte[] data = Encoding.UTF8.GetBytes("RESUME\r\n");
-            socket.Send(data); //blocking method
-        }
+			try
+			{
+				socket.Send(data); //blocking method
+			}
+			catch (ObjectDisposedException)
+			{
+				return;
+			}
+		}
 
         /// <summary>
         /// Reboots ESP board
@@ -240,8 +318,16 @@ namespace Panopticon
         public static void ESP_Reboot(Socket socket)
         {
             byte[] data = Encoding.UTF8.GetBytes("REBOOT\r\n");
-            socket.Send(data); //blocking method
-			socket.Close(); //to delete all callbacks
+			try
+			{
+				socket.Send(data); //blocking method
+			}
+			catch (ObjectDisposedException)
+			{
+				return;
+			}
+			
+			socket.Close(); //to cancel all callbacks registered on old socket
         }
     }
 }

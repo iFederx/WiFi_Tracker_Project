@@ -101,10 +101,10 @@ namespace Panopticon
 		{
 			Console.WriteLine("Programma avviato");
 
-			//TODO: da aggiungere ai thread, come primo
+			/*//DONE: da aggiungere ai thread, come primo
 			Connection connection = new Connection(ctx);
 			Thread socketListener = new Thread(new ThreadStart(connection.StartConnection));
-			socketListener.Start();
+			socketListener.Start();*/
 
 		}
 

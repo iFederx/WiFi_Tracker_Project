@@ -22,7 +22,8 @@ namespace Panopticon
         List<Publisher> publishers;
         Aggregator aggregator;
 		internal FileParser packetizer;
-        LinkedList<Thread> threads = new LinkedList<Thread>();
+		Connection connection;
+		LinkedList<Thread> threads = new LinkedList<Thread>();
         internal readonly GuiInterface guiPub;
 		
         public Context()
@@ -47,13 +48,17 @@ namespace Panopticon
             aggregator = new Aggregator(publishers);
             publishers.Add(aggregator);
             analyzer = new AnalysisEngine(publishers, deviceMap);
-            //calibrator = new Calibrator(analyzer); //da merge: probabilmente da rimuovere
+            //calibrator = new Calibrator(analyzer); //DARIO: da merge, probabilmente da rimuovere
 			packetizer = new FileParser(this);
-        }
+			connection = new Connection(this);
+		}
 
         public void orchestrate()
         {
-            Thread analyzerT = new Thread(new ThreadStart(analyzer.analyzerProcess));
+            Thread socketListenerT = new Thread(new ThreadStart(connection.StartConnection));
+			socketListenerT.Name = "Server thread";
+			socketListenerT.Start();
+			Thread analyzerT = new Thread(new ThreadStart(analyzer.analyzerProcess));
             analyzerT.Name = "Analyzer thread";
             analyzerT.Start();
             Thread databaseT = new Thread(new ThreadStart(databasePub.databaseProcess));
@@ -62,13 +67,15 @@ namespace Panopticon
             Thread aggregatorT = new Thread(new ThreadStart(aggregator.aggregatorProcess));
             aggregatorT.Name = "Aggregator thread";
             aggregatorT.Start();
-			Thread packetizerT = new Thread(new ThreadStart(packetizer.packetizerProcess));
-            packetizerT.Name = "Packetizer thread";
-			packetizerT.Start();
-            threads.AddLast(analyzerT);
+			//TODO: da rimuovere a migrazione "on the fly" avvenuta
+			//Thread packetizerT = new Thread(new ThreadStart(packetizer.packetizerProcess));
+			//packetizerT.Name = "Packetizer thread";
+			//packetizerT.Start();
+			threads.AddLast(socketListenerT);
+			threads.AddLast(analyzerT);
             threads.AddLast(databaseT);
             threads.AddLast(aggregatorT);
-			threads.AddLast(packetizerT);
+			//threads.AddLast(packetizerT);
 		}
         public AnalysisEngine getAnalyzer()
         {
@@ -265,7 +272,7 @@ namespace Panopticon
             analyzer.kill();
             databasePub.kill();
             aggregator.kill();
-			packetizer.kill();
+			//packetizer.kill();
             foreach(Thread t in threads)
             {
                 t.Join();
