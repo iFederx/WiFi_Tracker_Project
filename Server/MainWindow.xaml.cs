@@ -166,7 +166,9 @@ namespace Panopticon
 
         internal void updateTenMinutesDeviceCount(Room r, double stat)
         {
-            RoomInfoGUI rg = roomToRoomInfoGUI[r];
+            RoomInfoGUI rg;
+            if (!roomToRoomInfoGUI.TryGetValue(r, out rg))
+                return;
             rg.statsqueue.Enqueue(stat);
             rg.statsTimeQueue.Enqueue(DateTime.Now);
             if (rg.statsqueue.Count > 144)
@@ -254,7 +256,9 @@ namespace Panopticon
         {
             lock (guilock)
             {
-                RoomInfoGUI rig = roomToRoomInfoGUI[r];
+                RoomInfoGUI rig;
+                if (!roomToRoomInfoGUI.TryGetValue(r, out rig))
+                    return;
                 int stationcount = r.stationcount;
                 if (selectedRoom!=null && selectedRoom.room == r)
                 {
@@ -319,7 +323,9 @@ namespace Panopticon
         {
             lock(guilock)
             {
-                RoomInfoGUI rig = roomToRoomInfoGUI[r];
+                RoomInfoGUI rig;
+                if (!roomToRoomInfoGUI.TryGetValue(r, out rig))
+                    return;
                 roomToRoomInfoGUI.Remove(r);
                 roomlistpanel.Children.Remove(rig.container);
                 dvcinfo_room.Items.Remove(r);

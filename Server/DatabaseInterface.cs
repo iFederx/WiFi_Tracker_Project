@@ -379,7 +379,7 @@ namespace Panopticon
 
             using (ConnectionHandle conn = new ConnectionHandle(connectionpool))
             {
-                String query = "select xpos,ypos,xday from devicespositions where roomname=@roomname and xmonth=@xmonth and xyear=@xyear and uncertainty<=@uncertainty";
+                String query = "select xpos,ypos,xday from devicespositions where roomname=@roomname and xmonth=@xmonth and xyear=@xyear and uncertainty<@uncertainty";
                 using (var cmd = new NpgsqlCommand(query, conn.conn))
                 {
                     addParameters(cmd,

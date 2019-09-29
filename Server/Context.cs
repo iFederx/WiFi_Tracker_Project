@@ -37,7 +37,7 @@ namespace Panopticon
             }
             catch
             {
-                App.Current.Shutdown();
+                System.Environment.Exit(1);
                 return;
             }
             publishers = new List<Publisher>();
