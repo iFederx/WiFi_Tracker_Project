@@ -191,16 +191,17 @@ namespace Panopticon
                 "roomname",roomName);
         }
 
-        internal bool addLTRoomCount(double stat, String roomname, DateTime timestamp)
+        internal bool addLTRoomCount(double stat, String roomname, DateTime timestamp, int cat)
         {
-            return performNonQuery("insert into countstats(count,roomname,tm,xhour,xday,xmonth,xyear) values(@count,@roomname,@tm,@xhour,@xday,@xmonth,@xyear)",
+            return performNonQuery("insert into countstats(count,roomname,tm,xhour,xday,xmonth,xyear,cat) values(@count,@roomname,@tm,@xhour,@xday,@xmonth,@xyear,@cat)",
                 "count",stat,
                 "roomname",roomname,
                 "tm",timestamp,
                 "xhour",timestamp.Hour,
                 "xday",timestamp.Day,
                 "xmonth",timestamp.Month,
-                "xyear",timestamp.Year);
+                "xyear",timestamp.Year,
+                "cat",cat);
         }
 
         internal bool addRequestedSSID(string identifier, string SSID)
@@ -313,7 +314,7 @@ namespace Panopticon
             bool notempty = false;
             using (ConnectionHandle conn = new ConnectionHandle(connectionpool))
             {
-                String query = "select max(count) as mcount,xday from countstats where roomname=@roomname and xmonth=@xmonth and xyear=@xyear group by xday";
+                String query = "select max(count) as mcount,xday from countstats where roomname=@roomname and xmonth=@xmonth and xyear=@xyear and cat=2 group by xday";
                 using (var cmd = new NpgsqlCommand(query, conn.conn))
                 {
                     addParameters(cmd,
@@ -343,7 +344,7 @@ namespace Panopticon
             
             using (ConnectionHandle conn = new ConnectionHandle(connectionpool))
             {
-                String query = "select avg(count) as mcount,xday,xhour from countstats where roomname=@roomname and xmonth=@xmonth and xyear=@xyear group by xhour, xday";
+                String query = "select avg(count) as mcount,xday,xhour from countstats where roomname=@roomname and xmonth=@xmonth and xyear=@xyear and cat=2 group by xhour, xday";
                 using (var cmd = new NpgsqlCommand(query, conn.conn))
                 {
                     addParameters(cmd,

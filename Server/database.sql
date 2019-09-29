@@ -4,6 +4,7 @@ create table if not exists devicespositions (identifier varchar, mac varchar, ro
 create table if not exists requestedssids (identifier varchar, ssid varchar);
 create table if not exists countstats (roomname varchar, count real, tm timestamp,xhour int, xday int,xmonth int,xyear int);
 
+alter table countstats add column cat int;
 alter table requestedssids add constraint pc unique (identifier, ssid);
 alter table rooms add constraint rnuq unique(roomname);
 alter table stations add constraint stuq unique (namemac);

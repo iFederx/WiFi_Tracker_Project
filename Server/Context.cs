@@ -61,9 +61,6 @@ namespace Panopticon
 			Thread analyzerT = new Thread(new ThreadStart(analyzer.analyzerProcess));
             analyzerT.Name = "Analyzer thread";
             analyzerT.Start();
-            Thread databaseT = new Thread(new ThreadStart(databasePub.databaseProcess));
-            databaseT.Name = "Database Thread";
-            databaseT.Start();
             Thread aggregatorT = new Thread(new ThreadStart(aggregator.aggregatorProcess));
             aggregatorT.Name = "Aggregator thread";
             aggregatorT.Start();
@@ -73,7 +70,6 @@ namespace Panopticon
 			//packetizerT.Start();
 			threads.AddLast(socketListenerT);
 			threads.AddLast(analyzerT);
-            threads.AddLast(databaseT);
             threads.AddLast(aggregatorT);
 			//threads.AddLast(packetizerT);
 		}
@@ -270,9 +266,8 @@ namespace Panopticon
         {
             guiPub.kill();
             analyzer.kill();
-            databasePub.kill();
             aggregator.kill();
-			//packetizer.kill();
+            databasePub.kill();
             foreach(Thread t in threads)
             {
                 t.Join();
@@ -280,10 +275,11 @@ namespace Panopticon
             foreach (Room r in getRooms())
             {
                 foreach (Device d in r.getDevices())
-                    databaseInt.addDevicePosition(d.identifier, d.MAC, r.roomName, 0, 0,0, DateTime.Now, Publisher.EventType.Disappear);
+                    databaseInt.addDevicePosition(d.identifier, d.MAC, r.roomName, 0, 0, 0, DateTime.Now, Publisher.EventType.Disappear); //sync push on db
                 foreach (Station s in r.getStations())
                     s.handler.reboot();
             }
+            databasePub.confirmclose(); // wait that everything has been written to the db before killing.
             databaseInt.close();
             Environment.Exit(0);
         }

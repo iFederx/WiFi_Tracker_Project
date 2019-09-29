@@ -11,8 +11,8 @@ namespace Panopticon
     class DatabasePublisher:Publisher
     {
         DatabaseInterface DBInt;
-        volatile CancellationTokenSource t = new CancellationTokenSource();
         volatile Boolean killed = false;
+        Int64 ongoingqueryes = 0;
         public DatabasePublisher(DatabaseInterface di)
         {
             DBInt = di;
@@ -25,81 +25,82 @@ namespace Panopticon
                 return (int)DisplayableType.DeviceDevicePosition | (int)DisplayableType.Rename | (int)DisplayableType.SSID | (int)DisplayableType.AggregatedStat;
             }
         }
-        BlockingCollection<Displayable> todo = new BlockingCollection<Displayable>();
         internal override void publishPosition(Device d, PositionTools.Position p, EventType e)
         {
-            todo.Add(new Displayable(d, p, e, DisplayableType.DeviceDevicePosition));
-            System.Diagnostics.Debug.Print("DEVICE POSITION: " + p.X + " " + p.Y);
+            Interlocked.Increment(ref ongoingqueryes);
+            if (!killed)
+            {
+                Task.Factory.StartNew(() =>
+                {
+                    DBInt.addDevicePosition(d.identifier, d.MAC, p.room.roomName, p.X, p.Y, p.uncertainity, p.positionDate, e);
+                    Interlocked.Decrement(ref ongoingqueryes);
+                });
+            }
+            else
+                Interlocked.Decrement(ref ongoingqueryes);
         }
         internal override void publishStat(double stat, Room r, DateTime statTime, StatType s)
         {
-            todo.Add(new Displayable(stat, r, s, DisplayableType.AggregatedStat));
-            if (s==StatType.OneSecondDeviceCount)
-                System.Diagnostics.Debug.Print("DB ROOM 1sec STAT: " + r.roomName + " count: " + stat);
+            Interlocked.Increment(ref ongoingqueryes);
+            if (!killed)
+            {
+                Task.Factory.StartNew(() =>
+                {
+                    if (s == StatType.OneSecondDeviceCount)
+                    {
+                        DBInt.updateRoomCount(stat, r.roomName);
+                        DBInt.addLTRoomCount(stat, r.roomName, statTime, 2);
+                    }
+                    else
+                        DBInt.addLTRoomCount(stat, r.roomName, statTime, 1);
+                    Interlocked.Decrement(ref ongoingqueryes);
+                });
+            }
             else
-                System.Diagnostics.Debug.Print("DB ROOM avg STAT: " + r.roomName + " count: " + stat);
+                Interlocked.Decrement(ref ongoingqueryes);
         }
         internal override void publishRename(String oldId, String newId)
         {
-            todo.Add(new Displayable(oldId, newId, null, DisplayableType.Rename));
-            System.Diagnostics.Debug.Print("RENAME: " + oldId+" -> "+newId);
+            Interlocked.Increment(ref ongoingqueryes);
+            if (!killed)
+            {
+                Task.Factory.StartNew(() =>
+                {
+                    DBInt.renameDevice(oldId, newId);
+                    Interlocked.Decrement(ref ongoingqueryes);
+                });
+            }
+            else
+                Interlocked.Decrement(ref ongoingqueryes);
         }
 
         internal override void publishSSID(Device d, String SSID)
         {
-            todo.Add(new Displayable(d, SSID, null, DisplayableType.SSID));
-            System.Diagnostics.Debug.Print("REQUESTED SSID: " + SSID);
-        }
-
-        internal void databaseProcess()
-        {
-            Displayable item;
-            while (!killed)
+            Interlocked.Increment(ref ongoingqueryes);
+            if (!killed)
             {
-                try
+                Task.Factory.StartNew(() =>
                 {
-                    item = todo.Take(t.Token);
-                }
-                catch (OperationCanceledException)
-                {
-                    continue;
-                }
-                switch (item.type)
-                {
-                    case DisplayableType.AggregatedStat:
-                        {
-                            if ((StatType)item.argtype == StatType.OneSecondDeviceCount)
-                                DBInt.updateRoomCount((double)item.arg1, ((Room)item.arg2).roomName);
-                            else
-                                DBInt.addLTRoomCount((double)item.arg1, ((Room)item.arg2).roomName, DateTime.Now);
-                            break;
-                        }
-                    case DisplayableType.SSID:
-                        {
-                            DBInt.addRequestedSSID(((Device)item.arg1).identifier, (String)item.arg2);
-                            break;
-                        }
-                    case DisplayableType.Rename:
-                        {
-                            DBInt.renameDevice((String)item.arg1, (String)item.arg2);
-                            break;
-                        }
-                    case DisplayableType.DeviceDevicePosition:
-                        {
-                            Device d = (Device)item.arg1;
-                            PositionTools.Position p = (PositionTools.Position)item.arg2;
-                            EventType e = (EventType)item.argtype;
-                            DBInt.addDevicePosition(d.identifier,d.MAC,p.room.roomName,p.X,p.Y,p.uncertainity,p.positionDate,e);
-                            break;
-                        }
-                }
+                    DBInt.addRequestedSSID(d.identifier, SSID);
+                    Interlocked.Decrement(ref ongoingqueryes);
+                });
             }
+            else
+                Interlocked.Decrement(ref ongoingqueryes);
+
         }
 
         internal void kill()
         {
             killed = true;
-            t.Cancel();
+        }
+
+        internal void confirmclose()
+        {
+            // this check should always be confirmed at the first attempt, a busy wait should be perfectly fine, anything more is just a waste of performance and code.
+            // if is > 0 there could be still a query running, so cannot confirm.
+            // if = 0 no query running, and even a new request of query would be blocked by the volatile killed. 
+            while (Interlocked.Read(ref ongoingqueryes) > 0) ;
         }
 
         
