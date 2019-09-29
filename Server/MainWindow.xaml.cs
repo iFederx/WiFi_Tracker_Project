@@ -527,7 +527,11 @@ namespace Panopticon
                     return;
                 }
                 DevicePosition[] data = ctx.databaseInt.loadDevicesPositions(selectedRoom.room.roomName, fromdate.Value, fromtime, todate.Value, totime);
-                if(data.Length>0)
+                if(data==null)
+                {
+                    updateReplayControls("Error", ReplayState.NotLoaded);
+                }
+                else if (data.Length>0)
                 {
                     loadedreplay = new Replay(data, selectedRoom.room);
                     updateReplayControls("Replay ready: " + fromdate.Value.ToString("dd / MM / yyyy ") + fromtime + " > " + todate.Value.ToString("dd / MM / yyyy ") + totime, ReplayState.Loaded);

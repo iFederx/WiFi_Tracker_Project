@@ -14,7 +14,7 @@ namespace Panopticon
     /// </summary>
     /// <typeparam name="K"></typeparam>
     /// <typeparam name="V"></typeparam>
-    class ConcurrentDictionaryStack<K, V> where V:class
+    class ConcurrentDictionaryStack<K, V>:IDisposable where V:class
     {
         class LinkedNode<T>
         {
@@ -200,7 +200,10 @@ namespace Panopticon
                 allElements.Add(val.value);
             return allElements;
         }
-        
 
+        public void Dispose()
+        {
+            locker.Dispose();
+        }
     }
 }

@@ -97,7 +97,8 @@ namespace Panopticon
 
         internal void confirmclose()
         {
-            // this check should always be confirmed at the first attempt, a busy wait should be perfectly fine, anything more is just a waste of performance and code.
+            // this check should always be confirmed at the first attempt, therefore a busy wait is perfectly fine,
+            // anything more (like a ConditionVariable signaled every time the counter is 0) is just a waste of performance and code.
             // if is > 0 there could be still a query running, so cannot confirm.
             // if = 0 no query running, and even a new request of query would be blocked by the volatile killed. 
             while (Interlocked.Read(ref ongoingqueryes) > 0) ;

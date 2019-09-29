@@ -13,6 +13,7 @@ namespace Panopticon
     class DatabaseInterface
     {
         private const int CONNPOOLSIZE = 4;
+        private volatile bool criticalstate = false;
         BlockingCollection<NpgsqlConnection> connectionpool = new BlockingCollection<NpgsqlConnection>();
         NpgsqlConnection[] allconnections = new NpgsqlConnection[CONNPOOLSIZE];
 
@@ -82,13 +83,27 @@ namespace Panopticon
                     try
                     {
                         res = cmd.ExecuteNonQuery();
+                        criticalstate = false;
                     }
                     catch (Npgsql.PostgresException ex)
                     {
                         if (ex.SqlState == "23505") //Sql state for unique constraint violation
                             res = -1;
                         else
-                            throw new Exception(ex.Message);
+                        {
+                            if(!criticalstate)
+                                MessageBox.Show(ex.Message);
+                            criticalstate = true;
+                            res = -2;
+                        }
+                            //throw new Exception(ex.Message);
+                    }
+                    catch (Exception ex)
+                    {
+                        if(!criticalstate)
+                            MessageBox.Show(ex.Message);
+                        criticalstate = true;
+                        res = -2;
                     }
 
                 }
@@ -104,27 +119,35 @@ namespace Panopticon
 
         internal Nullable<StationInfo> loadStationInfo(String NameMAC)
         {
-            Nullable<StationInfo> si;
+            Nullable<StationInfo> si = null;
             using (ConnectionHandle conn = new ConnectionHandle(connectionpool))
             {
                 String query = "select roomname,xpos,ypos from stations where namemac=@namemac";
-                using (var cmd = new NpgsqlCommand(query, conn.conn))
+                try
                 {
-                    cmd.Parameters.AddWithValue("namemac", NameMAC);
-                    using (var reader = cmd.ExecuteReader())
+                    using (var cmd = new NpgsqlCommand(query, conn.conn))
                     {
-                        if (reader.Read())
+                        cmd.Parameters.AddWithValue("namemac", NameMAC);
+                        using (var reader = cmd.ExecuteReader())
                         {
-                            StationInfo si2 = new StationInfo();
-                            si2.NameMAC = NameMAC;
-                            si2.RoomName = reader.GetString(0);
-                            si2.X = reader.GetFloat(1);
-                            si2.Y = reader.GetFloat(2);
-                            si = si2;
+                            if (reader.Read())
+                            {
+                                StationInfo si2 = new StationInfo();
+                                si2.NameMAC = NameMAC;
+                                si2.RoomName = reader.GetString(0);
+                                si2.X = reader.GetFloat(1);
+                                si2.Y = reader.GetFloat(2);
+                                si = si2;
+                            }
+                            else
+                                si = null;
                         }
-                        else
-                            si = null;
                     }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                    si = null;
                 }
             }
             return si;
@@ -136,10 +159,12 @@ namespace Panopticon
             using (ConnectionHandle conn = new ConnectionHandle(connectionpool))
             {
                 String query = "select roomname,xlength,ylength from rooms";
-                using (var cmd = new NpgsqlCommand(query, conn.conn))
+                try
                 {
-                    using (var reader = cmd.ExecuteReader())
+                    using (var cmd = new NpgsqlCommand(query, conn.conn))
                     {
+                        using (var reader = cmd.ExecuteReader())
+                        {
                             while (reader.Read())
                             {
                                 RoomInfo ri = new RoomInfo();
@@ -148,8 +173,14 @@ namespace Panopticon
                                 ri.Ylen = reader.GetFloat(2);
                                 li.AddLast(ri);
                             }
+                        }
+
                     }
-                                       
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                    li = new LinkedList<RoomInfo>();
                 }
             }
             return li;
@@ -254,44 +285,50 @@ namespace Panopticon
             using (ConnectionHandle conn = new ConnectionHandle(connectionpool))
             {
                 String query = "select identifier,xpos,ypos,tm,outmovement,uncertainty from devicespositions where roomname=@roomname and tm>=@tmstart and tm<=@tmend";
-                using (var cmd = new NpgsqlCommand(query, conn.conn))
+                try
                 {
-                    addParameters(cmd,
-                        "roomname",roomName,
-                        "tmstart", new DateTime(fromdate.Year, fromdate.Month, fromdate.Day, Convert.ToInt32(fromtime.Split(':')[0]), Convert.ToInt32(fromtime.Split(':')[1]), 0),
-                        "tmend", new DateTime(todate.Year, todate.Month, todate.Day, Convert.ToInt32(totime.Split(':')[0]), Convert.ToInt32(totime.Split(':')[1]), 0));
-                    using (var reader = cmd.ExecuteReader())
+                    using (var cmd = new NpgsqlCommand(query, conn.conn))
                     {
-                        while (reader.Read())
+                        addParameters(cmd,
+                            "roomname", roomName,
+                            "tmstart", new DateTime(fromdate.Year, fromdate.Month, fromdate.Day, Convert.ToInt32(fromtime.Split(':')[0]), Convert.ToInt32(fromtime.Split(':')[1]), 0),
+                            "tmend", new DateTime(todate.Year, todate.Month, todate.Day, Convert.ToInt32(totime.Split(':')[0]), Convert.ToInt32(totime.Split(':')[1]), 0));
+                        using (var reader = cmd.ExecuteReader())
                         {
-                            DevicePosition dp = new DevicePosition();
-                            DevicePosition dp2;
-                            dp.identifier = reader.GetString(0);
-                            dp.xpos = reader.GetDouble(1);
-                            dp.ypos = reader.GetDouble(2);
-                            dp.timestamp = reader.GetDateTime(3);
-                            dp.moveout = reader.GetBoolean(4);
-                            dp.uncertainity = reader.GetDouble(5);
-                            if (prepos.TryGetValue(dp.identifier, out dp2))
+                            while (reader.Read())
                             {
-                                dp.prexpos = dp2.xpos;
-                                dp.preypos = dp2.ypos;
-                                prepos[dp.identifier] = dp;
+                                DevicePosition dp = new DevicePosition();
+                                DevicePosition dp2;
+                                dp.identifier = reader.GetString(0);
+                                dp.xpos = reader.GetDouble(1);
+                                dp.ypos = reader.GetDouble(2);
+                                dp.timestamp = reader.GetDateTime(3);
+                                dp.moveout = reader.GetBoolean(4);
+                                dp.uncertainity = reader.GetDouble(5);
+                                if (prepos.TryGetValue(dp.identifier, out dp2))
+                                {
+                                    dp.prexpos = dp2.xpos;
+                                    dp.preypos = dp2.ypos;
+                                    prepos[dp.identifier] = dp;
+                                }
+                                else
+                                {
+                                    dp.prexpos = -1;
+                                    dp.preypos = -1;
+                                    prepos.Add(dp.identifier, dp);
+                                }
+                                li.AddLast(dp);
                             }
-                            else
-                            {
-                                dp.prexpos = -1;
-                                dp.preypos = -1;
-                                prepos.Add(dp.identifier, dp);
-                            }
-                            li.AddLast(dp);
                         }
                     }
                 }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                    return null;
+                }
             }
             return li.ToArray<DevicePosition>();
-
-
         }
 
         private int dayspermonth(int month, int year)
@@ -315,20 +352,28 @@ namespace Panopticon
             using (ConnectionHandle conn = new ConnectionHandle(connectionpool))
             {
                 String query = "select max(count) as mcount,xday from countstats where roomname=@roomname and xmonth=@xmonth and xyear=@xyear and cat=2 group by xday";
-                using (var cmd = new NpgsqlCommand(query, conn.conn))
+                try
                 {
-                    addParameters(cmd,
-                        "roomname", roomname,
-                        "xmonth", selectedmonth,
-                        "xyear", selectedyear);
-                    using (var reader = cmd.ExecuteReader())
+                    using (var cmd = new NpgsqlCommand(query, conn.conn))
                     {
-                        while (reader.Read())
+                        addParameters(cmd,
+                            "roomname", roomname,
+                            "xmonth", selectedmonth,
+                            "xyear", selectedyear);
+                        using (var reader = cmd.ExecuteReader())
                         {
-                            notempty = true;
-                            res[(int)reader.GetDouble(1)] = reader.GetDouble(0);
+                            while (reader.Read())
+                            {
+                                notempty = true;
+                                res[(int)reader.GetDouble(1)] = reader.GetDouble(0);
+                            }
                         }
                     }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                    notempty = false;
                 }
             }
             return notempty?res:null;
@@ -345,20 +390,28 @@ namespace Panopticon
             using (ConnectionHandle conn = new ConnectionHandle(connectionpool))
             {
                 String query = "select avg(count) as mcount,xday,xhour from countstats where roomname=@roomname and xmonth=@xmonth and xyear=@xyear and cat=2 group by xhour, xday";
-                using (var cmd = new NpgsqlCommand(query, conn.conn))
+                try
                 {
-                    addParameters(cmd,
-                        "roomname", roomname,
-                        "xmonth", selectedmonth,
-                        "xyear", selectedyear);
-                    using (var reader = cmd.ExecuteReader())
+                    using (var cmd = new NpgsqlCommand(query, conn.conn))
                     {
-                        while (reader.Read())
+                        addParameters(cmd,
+                            "roomname", roomname,
+                            "xmonth", selectedmonth,
+                            "xyear", selectedyear);
+                        using (var reader = cmd.ExecuteReader())
                         {
-                            res[(int)reader.GetDouble(1)][(int)reader.GetDouble(2)] = reader.GetDouble(0);
-                            hourcount[(int)reader.GetDouble(2)] += 1;
+                            while (reader.Read())
+                            {
+                                res[(int)reader.GetDouble(1)][(int)reader.GetDouble(2)] = reader.GetDouble(0);
+                                hourcount[(int)reader.GetDouble(2)] += 1;
+                            }
                         }
                     }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                    return null;
                 }
             }
             for(int hour=0;hour<24;hour++)
@@ -381,20 +434,28 @@ namespace Panopticon
             using (ConnectionHandle conn = new ConnectionHandle(connectionpool))
             {
                 String query = "select xpos,ypos,xday from devicespositions where roomname=@roomname and xmonth=@xmonth and xyear=@xyear and uncertainty<@uncertainty";
-                using (var cmd = new NpgsqlCommand(query, conn.conn))
+                try
                 {
-                    addParameters(cmd,
-                        "roomname", roomname,
-                        "xmonth", selectedmonth,
-                        "xyear", selectedyear,
-                        "uncertainty", filteruncertainity);
-                    using (var reader = cmd.ExecuteReader())
+                    using (var cmd = new NpgsqlCommand(query, conn.conn))
                     {
-                        while (reader.Read())
+                        addParameters(cmd,
+                            "roomname", roomname,
+                            "xmonth", selectedmonth,
+                            "xyear", selectedyear,
+                            "uncertainty", filteruncertainity);
+                        using (var reader = cmd.ExecuteReader())
                         {
-                            res[(int)(reader.GetDouble(2))][(int)(resolution*reader.GetDouble(0)), (int)(resolution*reader.GetDouble(1))] += 1;
+                            while (reader.Read())
+                            {
+                                res[(int)(reader.GetDouble(2))][(int)(resolution * reader.GetDouble(0)), (int)(resolution * reader.GetDouble(1))] += 1;
+                            }
                         }
                     }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                    return new int[numdays + 1][,];
                 }
             }
             for (int xpos = 0; xpos < res[0].GetLength(0); xpos++)
@@ -418,33 +479,41 @@ namespace Panopticon
             int cntperday = 0;
             using (ConnectionHandle conn = new ConnectionHandle(connectionpool))
             {
-                using (var cmd = new NpgsqlCommand(query, conn.conn))
+                try
                 {
-                    addParameters(cmd,
-                        "roomname1", roomname,
-                        "xmonth1", month,
-                        "xyear1", year,
-                        "roomname2", roomname,
-                        "xmonth2", month,
-                        "xyear2", year);
-                    using (var reader = cmd.ExecuteReader())
+                    using (var cmd = new NpgsqlCommand(query, conn.conn))
                     {
-                        while (reader.Read())
+                        addParameters(cmd,
+                            "roomname1", roomname,
+                            "xmonth1", month,
+                            "xyear1", year,
+                            "roomname2", roomname,
+                            "xmonth2", month,
+                            "xyear2", year);
+                        using (var reader = cmd.ExecuteReader())
                         {
-                            int day = (int)reader.GetDouble(2);
-                            String id = reader.GetString(0);
-                            if (preday != day)
+                            while (reader.Read())
                             {
-                                cntperday = 0;
-                                preday = day;
-                            }
-                            if(cntperday<maxres)
-                            {
-                                res[day, cntperday] = id;
-                                cntperday++;
+                                int day = (int)reader.GetDouble(2);
+                                String id = reader.GetString(0);
+                                if (preday != day)
+                                {
+                                    cntperday = 0;
+                                    preday = day;
+                                }
+                                if (cntperday < maxres)
+                                {
+                                    res[day, cntperday] = id;
+                                    cntperday++;
+                                }
                             }
                         }
                     }
+                }
+                catch(Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                    return new String[numdays + 1, maxres];
                 }
             }
             return res;
@@ -464,42 +533,50 @@ namespace Panopticon
             using (ConnectionHandle conn = new ConnectionHandle(connectionpool))
             {
                 String query = "select min(tm),max(tm) from devicespositions where identifier=@identifier";
-                using (var cmd = new NpgsqlCommand(query, conn.conn))
+                String query2 = "select ssid from requestedssids where identifier=@identifier";
+                try
                 {
-                    addParameters(cmd,
-                        "identifier", id);
-                    using (var reader = cmd.ExecuteReader())
+                    using (var cmd = new NpgsqlCommand(query, conn.conn))
                     {
-                        if (reader.Read())
+                        addParameters(cmd,
+                            "identifier", id);
+                        using (var reader = cmd.ExecuteReader())
                         {
-                            try
+                            if (reader.Read())
                             {
-                                di.FirstSeen = reader.GetDateTime(0);
-                                di.LastSeen = reader.GetDateTime(1);
+                                try
+                                {
+                                    di.FirstSeen = reader.GetDateTime(0);
+                                    di.LastSeen = reader.GetDateTime(1);
+                                }
+                                catch (Exception ex)
+                                {
+                                    return null;
+                                }
                             }
-                            catch(Exception ex)
+                            else
                             {
                                 return null;
                             }
                         }
-                        else
+                    }
+                    using (var cmd = new NpgsqlCommand(query2, conn.conn))
+                    {
+                        addParameters(cmd,
+                            "identifier", id);
+                        using (var reader = cmd.ExecuteReader())
                         {
-                            return null;
+                            while (reader.Read())
+                            {
+                                ssids.AddLast(reader.GetString(0));
+                            }
                         }
                     }
                 }
-                query = "select ssid from requestedssids where identifier=@identifier";
-                using (var cmd = new NpgsqlCommand(query, conn.conn))
+                catch(Exception ex)
                 {
-                    addParameters(cmd,
-                        "identifier", id);
-                    using (var reader = cmd.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            ssids.AddLast(reader.GetString(0));
-                        }
-                    }
+                    MessageBox.Show(ex.Message);
+                    return null;
                 }
             }
             di.ssids = ssids.ToArray<String>();
@@ -530,16 +607,16 @@ namespace Panopticon
             DateTime pre = DateTime.MinValue;
             using (ConnectionHandle conn = new ConnectionHandle(connectionpool))
             {
-                using (var cmd = new NpgsqlCommand(query, conn.conn))
+                try
                 {
-                    if (!loadroommap)
-                        cmd.Parameters.AddWithValue("roomname", roomname);
-                    addParameters(cmd,
-                        "identifier", deviceid,
-                        "tmstart", new DateTime(fromdate.Year,fromdate.Month,fromdate.Day, Convert.ToInt32(fromtime.Split(':')[0]), Convert.ToInt32(fromtime.Split(':')[1]),0),
-                        "tmend", new DateTime(todate.Year, todate.Month, todate.Day, Convert.ToInt32(totime.Split(':')[0]), Convert.ToInt32(totime.Split(':')[1]), 0));
-                    try
+                    using (var cmd = new NpgsqlCommand(query, conn.conn))
                     {
+                        if (!loadroommap)
+                            cmd.Parameters.AddWithValue("roomname", roomname);
+                        addParameters(cmd,
+                            "identifier", deviceid,
+                            "tmstart", new DateTime(fromdate.Year, fromdate.Month, fromdate.Day, Convert.ToInt32(fromtime.Split(':')[0]), Convert.ToInt32(fromtime.Split(':')[1]), 0),
+                            "tmend", new DateTime(todate.Year, todate.Month, todate.Day, Convert.ToInt32(totime.Split(':')[0]), Convert.ToInt32(totime.Split(':')[1]), 0));
                         using (var reader = cmd.ExecuteReader())
                         {
                             while (reader.Read())
@@ -562,14 +639,13 @@ namespace Panopticon
                             }
                         }
                     }
-                    catch(Exception ex)
-                    {
-                        MessageBox.Show(ex.ToString());
-                    }
-                    
                 }
+                catch (Exception ex)
+                {
+                    pre = DateTime.MinValue;
+                    MessageBox.Show(ex.Message);
+                }                    
             }
-
             return pre!=DateTime.MinValue?ds:null;
         }
     }
