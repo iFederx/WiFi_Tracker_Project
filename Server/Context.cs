@@ -110,7 +110,14 @@ namespace Panopticon
             createRoom(Room.externRoom);
             return;
         }
-
+        // true if exists, false if not
+        public Nullable<bool> checkRoomExistence(String roomName)
+        {
+            bool? val = databaseInt.checkRoomExistence(roomName);
+            if(val.HasValue)
+               val = new bool?(val.Value|| roomName == "External" || roomName == "Overall");
+            return val;
+        }
         public bool saveRoom(Room room)
         {
             return databaseInt.saveRoom(room.roomName,room.size.X,room.size.Y);
@@ -235,8 +242,6 @@ namespace Panopticon
                     {
                         ris = false;
                         removeStation(s.NameMAC, false);
-                        // D: here there was a break. why? for fear of modifying the iterating collection? but it should already have been cached
-						// F: it was only for testing this portion of code. Delete all comments when you see ;)
                     }
                     locker.ExitWriteLock();
                 }
@@ -256,9 +261,10 @@ namespace Panopticon
                 rooms[r.roomName] = r;
             }
             locker.ExitWriteLock();
-            foreach (Publisher pb in publishers)
-                if (pb.supportsOperation(Publisher.DisplayableType.RoomUpdate))
-                    pb.publishRoomUpdate(r,Publisher.EventType.Appear);
+            if(r!=null)
+                foreach (Publisher pb in publishers)
+                    if (pb.supportsOperation(Publisher.DisplayableType.RoomUpdate))
+                        pb.publishRoomUpdate(r,Publisher.EventType.Appear);
             return r;
         }
 

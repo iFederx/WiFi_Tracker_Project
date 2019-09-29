@@ -153,12 +153,35 @@ namespace Panopticon
             return si;
         }
 
+        internal Nullable<Boolean> checkRoomExistence(String roomName)
+        {
+            using (ConnectionHandle conn = new ConnectionHandle(connectionpool))
+            {
+                String query = "select * from rooms where roomname=@roomname";
+                try
+                {
+                    using (var cmd = new NpgsqlCommand(query, conn.conn))
+                    {
+                        addParameters(cmd,"roomname", roomName);
+                        using (var reader = cmd.ExecuteReader())
+                            return new bool?(reader.Read());
+                    }
+                }
+                catch(Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                    return null; //most conservative result
+                }
+            }
+
+        }
+
         internal IEnumerable<RoomInfo> loadRooms()
         {
             LinkedList<RoomInfo> li = new LinkedList<RoomInfo>();
             using (ConnectionHandle conn = new ConnectionHandle(connectionpool))
             {
-                String query = "select roomname,xlength,ylength from rooms";
+                String query = "select roomname,xlength,ylength from rooms where archived=false";
                 try
                 {
                     using (var cmd = new NpgsqlCommand(query, conn.conn))
@@ -197,7 +220,7 @@ namespace Panopticon
 
         internal bool saveRoom(String RoomName, double Xlen, double Ylen)
         {
-           return performNonQuery("insert into rooms(roomname,xlength,ylength) values (@roomname,@xlength,@ylength)",
+           return performNonQuery("insert into rooms(roomname,xlength,ylength,archived) values (@roomname,@xlength,@ylength,false)",
                 "roomname",RoomName,
                 "xlength",Xlen,
                 "ylength",Ylen);
@@ -205,7 +228,7 @@ namespace Panopticon
 
         internal bool deleteRoom(string roomName)
         {
-            return performNonQuery("delete from rooms where roomname=@roomname",
+            return performNonQuery("update rooms set archived=true where roomname=@roomname",
                 "roomname",roomName);
         }
 

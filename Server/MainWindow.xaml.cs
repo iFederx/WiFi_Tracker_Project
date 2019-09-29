@@ -363,7 +363,7 @@ namespace Panopticon
 			if (room.roomName == "External")
 				ri.container.ToolTip = "Room External";
 			else
-				ri.container.ToolTip = "Room "  + room.roomName + " - right click to delete";
+				ri.container.ToolTip = "Room "  + room.roomName + " - right click to archive";
             ri.roomname = new TextBlock();
             ri.roomname.Width = roomlistpanel.Width - 20;
             ri.roomname.TextWrapping = TextWrapping.Wrap;
@@ -408,7 +408,7 @@ namespace Panopticon
 		private void DeleteRoom_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
 		{
 			Room roomToDelete = ((RoomInfoGUI)((Border)sender).Tag).room;
-			MessageBoxResult r = MessageBox.Show("Delete room " + roomToDelete.roomName + "?", "Delete room", MessageBoxButton.YesNo);
+			MessageBoxResult r = MessageBox.Show("The room will not not displayed and loaded anymore, and will not be possible to name another room with this name. All the data will be however mantained in the database.", "Archive room " + roomToDelete.roomName + "?", MessageBoxButton.YesNo);
 			if (r == MessageBoxResult.Yes)
 			{
 				ctx.removeRoom(roomToDelete.roomName);
