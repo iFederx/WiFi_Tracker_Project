@@ -268,6 +268,8 @@ namespace Panopticon
         public void kill()
         {
 			connection.kill();
+            MainWindow wx = guiPub.linkedwindow;
+            wx.kill();
             guiPub.kill();
             analyzer.kill();
             aggregator.kill();
@@ -283,8 +285,9 @@ namespace Panopticon
                 foreach (Station s in r.getStations())
                     s.handler.reboot();
             }
+            wx.confirmclose();
             databasePub.confirmclose(); // wait that everything has been written to the db before killing.
-            databaseInt.close();
+            databaseInt.close(); //wait that no requests is in flight before killing the db
             Environment.Exit(0);
         }
 

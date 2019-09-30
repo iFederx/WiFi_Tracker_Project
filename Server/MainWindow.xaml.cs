@@ -40,7 +40,9 @@ namespace Panopticon
         private UInt64 deviceloadrequestid = 0;
         private UInt64 deviceadvancedloadrequestid = 0;
         private UInt64 roomstatloadrequestid = 0;
-        private UInt64 replaystatloadrequestid = 0; 
+        private UInt64 replaystatloadrequestid = 0;
+        private volatile bool killed = false;
+        private Int64 requestsInFlight = 0;
         internal class Stats
         {
             internal int selectedday;
@@ -540,11 +542,18 @@ namespace Panopticon
                 }
                 replaystatloadrequestid++;
                 UInt64 reqid = replaystatloadrequestid;
+                Interlocked.Increment(ref requestsInFlight);
+                if(killed)
+                {
+                    Interlocked.Decrement(ref requestsInFlight);
+                    return;
+                }
                 Task.Factory.StartNew(() =>
                 {
                     DevicePosition[] data = ctx.databaseInt.loadDevicesPositions(selectedRoom.room.roomName, fromdate.Value, fromtime, todate.Value, totime);
                     Dispatcher.BeginInvoke((Action)(() =>
                     {
+                        Interlocked.Decrement(ref requestsInFlight);
                         if (reqid != replaystatloadrequestid)
                             return;
                         if (data == null)
@@ -727,6 +736,12 @@ namespace Panopticon
             BitmapSource hmap = null;
             roomstatloadrequestid++;
             UInt64 reqid = roomstatloadrequestid;
+            Interlocked.Increment(ref requestsInFlight);
+            if (killed)
+            {
+                Interlocked.Decrement(ref requestsInFlight);
+                return;
+            }
             Task.Factory.StartNew(() =>
             {
                 stats.maxperday = ctx.databaseInt.loadMaxDevicesDay(month, year, room.roomName);
@@ -740,11 +755,12 @@ namespace Panopticon
                         hmap = Graphics.createheatmap(stats.heatmaps[stats.selectedday]);
                     }
                 }
-            Dispatcher.BeginInvoke((Action)(()=>{
-                if (reqid != roomstatloadrequestid)
-                    return;
-                updateRoomStats(true, stats, hmap);
-            }));
+                Dispatcher.BeginInvoke((Action)(()=>{
+                    Interlocked.Decrement(ref requestsInFlight);
+                    if (reqid != roomstatloadrequestid)
+                        return;
+                    updateRoomStats(true, stats, hmap);
+                }));
             });            
         }
         private void updateRoomStats(Boolean full, Stats stats, BitmapSource hmap)
@@ -904,11 +920,18 @@ namespace Panopticon
             deviceloadrequestid++;
             deviceadvancedloadrequestid++;
             UInt64 reqid = deviceloadrequestid;
+            Interlocked.Increment(ref requestsInFlight);
+            if (killed)
+            {
+                Interlocked.Decrement(ref requestsInFlight);
+                return;
+            }
             Task.Factory.StartNew(() =>
             {
                 DeviceInfo di = ctx.databaseInt.loadDeviceInfo(id);
                 Dispatcher.BeginInvoke((Action)(() =>
                 {
+                    Interlocked.Decrement(ref requestsInFlight);
                     if (reqid != deviceloadrequestid)
                         return;
                     if (di == null)
@@ -991,11 +1014,18 @@ namespace Panopticon
             deviceadvancedloadrequestid++;
             String device = dvcinfo_idtextbox.Text;
             UInt64 reqid = deviceadvancedloadrequestid;
+            Interlocked.Increment(ref requestsInFlight);
+            if (killed)
+            {
+                Interlocked.Decrement(ref requestsInFlight);
+                return;
+            }
             Task.Factory.StartNew(() =>
             {
                 DeviceStats ds = ctx.databaseInt.loadDeviceStats(fromdate.Value, fromtime, todate.Value, totime, device, dvcstatroom.roomName, dvcstatroom == Room.overallRoom, dvcstatroom != Room.externRoom && dvcstatroom != Room.overallRoom, dvcstatroom.size.X, dvcstatroom.size.Y, 2, PositionTools.UNCERTAIN_POSITION);
                 Dispatcher.BeginInvoke((Action)(() =>
                 {
+                    Interlocked.Decrement(ref requestsInFlight);
                     if (reqid != deviceadvancedloadrequestid)
                         return;
                     if (ds == null)
@@ -1048,10 +1078,22 @@ namespace Panopticon
                 dvcinfo_search_Click(null,null);
         }
 
-		/// <summary>
-		/// This method open a window dedicated to register a new Station (ESP board)
-		/// </summary>
-		public void NewStation(string _macAddress, Socket _socket)
+        internal void kill()
+        {
+            killed = true;
+        }
+        internal void confirmclose()
+        {
+            // this check should always be confirmed at the first attempt, therefore a busy wait is perfectly fine,
+            // anything more (like a ConditionVariable signaled every time the counter is 0) is just a waste of performance and code.
+            // if is > 0 there could be still a query running, so cannot confirm.
+            // if = 0 no query running, and even a new request of query would be blocked by the volatile killed. 
+            while (Interlocked.Read(ref requestsInFlight) > 0) ;
+        }
+        /// <summary>
+        /// This method open a window dedicated to register a new Station (ESP board)
+        /// </summary>
+        public void NewStation(string _macAddress, Socket _socket)
 		{
 			StationHandler handler = new StationHandler(_socket, _macAddress, ctx);
 			ctx.tryAddStation(handler.macAddress, handler, true);
