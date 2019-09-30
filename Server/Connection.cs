@@ -109,5 +109,10 @@ namespace Panopticon
 			
             current.BeginReceive(buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, current);
         }
+
+		internal void kill()
+		{
+			serverSocket.Close();
+		}
     }
 }

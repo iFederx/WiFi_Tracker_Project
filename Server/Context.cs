@@ -64,14 +64,9 @@ namespace Panopticon
             Thread aggregatorT = new Thread(new ThreadStart(aggregator.aggregatorProcess));
             aggregatorT.Name = "Aggregator thread";
             aggregatorT.Start();
-			//TODO: da rimuovere a migrazione "on the fly" avvenuta
-			//Thread packetizerT = new Thread(new ThreadStart(packetizer.packetizerProcess));
-			//packetizerT.Name = "Packetizer thread";
-			//packetizerT.Start();
 			threads.AddLast(socketListenerT);
 			threads.AddLast(analyzerT);
             threads.AddLast(aggregatorT);
-			//threads.AddLast(packetizerT);
 		}
         public AnalysisEngine getAnalyzer()
         {
@@ -80,12 +75,11 @@ namespace Panopticon
        
         public Station tryAddStation(String NameMAC, StationHandler _handler, bool AllowAsynchronous) //Replace Object with the relevant type
         {
-            // check if not attempting reconnection
+            //check if not attempting reconnection
             locker.EnterReadLock(); //lock to avoid removal if reconnecting
             Station s = getStation(NameMAC);
             if(s!=null) // s is reconnecting after losing contact
             {
-				//DONE_FEDE: what to do with the old and the new station handler?
 				s.handler.socket.Close();
 				s.handler = _handler; //updating handler
                 s.hearbeat();
@@ -98,7 +92,7 @@ namespace Panopticon
             {
 				StationAdder sa1 = new StationAdder(this, _handler);
 				sa1.Show();
-				return null; //TODO: è normale che se creo la station da GUI ritorno null?
+				return null;
             }
             return s;
         }
@@ -202,7 +196,10 @@ namespace Panopticon
         public void removeStation(String NameMAC, bool takelock=true)
         {
             Station s;
-            stations.TryRemove(NameMAC, out s);
+            if(stations.TryRemove(NameMAC, out s))
+			{
+				s.handler.socket.Close();
+			}
             Room room=s.location.room;
             if(takelock)
                 locker.EnterWriteLock();
@@ -235,7 +232,7 @@ namespace Panopticon
             locker.EnterUpgradeableReadLock();
             foreach(Station s in room.getStations())
             {
-                if (s.lastHearthbeat.AddMinutes(5)<DateTime.Now)
+                if (s.lastHearthbeat.AddMinutes(5)<DateTime.Now) //DARIO: secondo me si può ridurre a 2 minuti
                 {
                     locker.EnterWriteLock();
                     if(s.lastHearthbeat.AddMinutes(5) < DateTime.Now) // check again: was in readmode, may have reconnected now and updated
@@ -270,6 +267,7 @@ namespace Panopticon
 
         public void kill()
         {
+			connection.kill();
             guiPub.kill();
             analyzer.kill();
             aggregator.kill();

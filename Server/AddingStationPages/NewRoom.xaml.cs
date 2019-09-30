@@ -44,7 +44,7 @@ namespace Panopticon.AddingStationPages
 		{
 			//firstly, I check that all form fields are correctly filled
 			int error = 0;
-			if (TB_RoomName.Text == "Room Name")
+			if (TB_RoomName.Text == "Room Name" || ctx.checkRoomExistence(TB_RoomName.Text) == true)
 			{
 				TB_RoomName.Foreground = Brushes.Red;
 				error++;
@@ -65,7 +65,7 @@ namespace Panopticon.AddingStationPages
 			{
 				Room r = new Room(TB_RoomName.Text, float.Parse(TB_RoomWidth.Text), float.Parse(TB_RoomHeight.Text));
 				ctx.createRoom(r);
-				ctx.saveRoom(r); //TODO: de-commentare per salvare su DB
+				ctx.saveRoom(r);
 				this.NavigationService.Navigate(new AddToRoom(ctx, r, handler));
 			}
 		}

@@ -21,7 +21,7 @@ namespace Panopticon.AddingStationPages
 	public partial class SelectRoom : Page
 	{
 		Context ctx;
-		Brush defaultColor;
+		Brush defaultColor = (new Button()).Background;
 		int selected = 0;
 		StationHandler handler = null;
 
@@ -43,19 +43,27 @@ namespace Panopticon.AddingStationPages
 		/// </summary>
 		void ReloadRooms()
 		{
-			defaultColor = (new Button()).Background;
 			RoomsContainer.Children.RemoveRange(0, RoomsContainer.Children.Count);
-			foreach (Room r in ctx.getRooms())
+			Label_NoRooms.Visibility = Visibility.Hidden;
+			var rooms = ctx.getRooms();
+			if (rooms.Count<Room>() > 1)
 			{
-				Button b = new Button();
-				b.Content = r.roomName;
-				Thickness margin = b.Margin;
-				margin.Bottom = 5;
-				b.Margin = margin;
-				if (b.Content.ToString() == "External")
-					b.Visibility = Visibility.Collapsed; //non mostro la stanza External
-				b.Click += new RoutedEventHandler(Button_RoomSelected);
-				RoomsContainer.Children.Add(b);
+				foreach (Room r in rooms)
+				{
+					Button b = new Button();
+					b.Content = r.roomName;
+					Thickness margin = b.Margin;
+					margin.Bottom = 5;
+					b.Margin = margin;
+					if (b.Content.ToString() == "External")
+						b.Visibility = Visibility.Collapsed; //non mostro la stanza External
+					b.Click += new RoutedEventHandler(Button_RoomSelected);
+					RoomsContainer.Children.Add(b);
+				}
+			}
+			else
+			{
+				Label_NoRooms.Visibility = Visibility.Visible;
 			}
 		}
 

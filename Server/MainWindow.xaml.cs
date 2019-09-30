@@ -35,8 +35,8 @@ namespace Panopticon
         Stats loadedstats = null;
         Replay loadedreplay = null;
         String[] months = { "Jan.", "Feb.", "March", "Apr.", "May", "June", "July", "Aug.", "Sept.", "Oct.", "Nov.", "Dec." };
-        Brush[] weekhistcolors = { Brushes.Red, Brushes.Green, Brushes.Blue, Brushes.Brown, Brushes.Orange, Brushes.Violet, Brushes.Pink};
-        Brush[] timehistcolors = { Brushes.Red, Brushes.Green };
+        Brush[] weekhistcolors = { Brushes.CadetBlue, Brushes.LightBlue, Brushes.SteelBlue, Brushes.SaddleBrown, Brushes.Crimson, Brushes.Gold, Brushes.OliveDrab};
+		Brush[] timehistcolors = { Brushes.DodgerBlue, Brushes.LightSkyBlue, Brushes.DeepSkyBlue };
         internal class Stats
         {
             internal int selectedday;

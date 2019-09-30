@@ -13,7 +13,7 @@ namespace Panopticon
 		public delegate void SafeCaller();
 		public double dist2RSSI(double dist)
         {
-            //DARIO:
+            //DARIO: dubbio da merge
 			// è giusta la versione commentata?
 			
 			/*if (dist < 1)
@@ -101,14 +101,7 @@ namespace Panopticon
 		{
 			Console.WriteLine("Programma avviato");
 
-			/*//DONE: da aggiungere ai thread, come primo
-			Connection connection = new Connection(ctx);
-			Thread socketListener = new Thread(new ThreadStart(connection.StartConnection));
-			socketListener.Start();*/
-
 		}
-
-		
 
 	}
 }

@@ -19,12 +19,8 @@ namespace Panopticon
         {
             socket = _socket;
 			macAddress = _macAddress;
-			string receivingFolderPath = "./Received/" + macAddress + "/";
-			FileParser.CheckFolder(receivingFolderPath);
-			ctx.packetizer.AddWatcher(macAddress); //se non esiste già
         }
 
-        //DONE_FEDE: this class is used to send commands to a specific board. It will then have probably a constructor reuqesting the IP address of the remote board
         internal void switchLedBlink(bool blink)
         {
 			if (blink == false)
@@ -46,7 +42,6 @@ namespace Panopticon
 
         internal void shutdown()
         {
-			//TODO: da rivedere
             if (!isOn)
                 Protocol.ESP_StandBy(socket);
             else
