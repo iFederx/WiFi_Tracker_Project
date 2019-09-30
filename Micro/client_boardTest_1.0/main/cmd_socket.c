@@ -1,6 +1,7 @@
 #include "cmd_socket.h"
 
 const char *TAGS = "Socket";
+extern time_t server_time; //FEDE
 
 int start_socket_connection(char *ip, char *port)
 {
@@ -173,6 +174,7 @@ int send_sniffed_packages(int skt, const char *path){
 
 	FILE *f = fopen(path, "r");
 	if (f == NULL) {
+		ESP_LOGE(TAGS,"(!) Error: File does not exists.");
 		return -1;
 	}
 
@@ -184,6 +186,7 @@ int send_sniffed_packages(int skt, const char *path){
 	}else {
 		/* insert information in the designed variables */
         modification_ms = st.st_mtime;
+		modification_ms = modification_ms + server_time;
         size= st.st_size;
     }
 
@@ -199,6 +202,7 @@ int send_sniffed_packages(int skt, const char *path){
 		ESP_LOGE(TAGS,"(!) Error: Fail in sending header.");
 		success='f';
 	}
+	
 	/* send the size to the client */
 	//sending |B1|B2|B3|B4|
 	size = htonl(size);
@@ -206,6 +210,7 @@ int send_sniffed_packages(int skt, const char *path){
 		ESP_LOGE(TAGS,"(!) Error: Fail in sending size.");
 		success='f';
 	}
+	
 	/* send last modification date */
 	//sending |T1|T2|T3|T4|
 	modification_ms = htonl(modification_ms);

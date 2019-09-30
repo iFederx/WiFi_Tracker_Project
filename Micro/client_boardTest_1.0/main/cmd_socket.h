@@ -27,3 +27,4 @@ int start_socket_connection(char * ip, char *port);
 int client_register(int socket);
 unsigned long int client_timesync(int socket);
 int send_sniffed_packages(int skt, const char *path);
+time_t server_time; //FEDE

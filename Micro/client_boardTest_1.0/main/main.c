@@ -26,7 +26,7 @@
 
 const char *TAGM = "Main";
 struct tm timeinfo;
-time_t server_time;
+extern time_t server_time; //FEDE
 int s=0;	/* socket ID */
 
 /* shared resources and mutex
@@ -57,7 +57,7 @@ static EventGroupHandle_t wifi_event_group;					// Event group handling wifi con
 const int CONNECTED_BIT = BIT0;								// CONNECTION pin for wifiGroup definition
 
 /*---------------------------Sniffer group */
-const int TIMEOUT = 60000 / portTICK_RATE_MS;			    // sniffing timeout time
+const int TIMEOUT = 20000 / portTICK_RATE_MS;			    // sniffing timeout time
 #define	CHANNEL_MAX		(13)
 #define WIFI_PROMIS_FILTER_MASK_ALL         (0xFFFFFFFF)    /**< filter all packets */
 #define WIFI_PROMIS_FILTER_MASK_MGMT        (1)             /**< filter the packets with type of WIFI_PKT_MGMT */
@@ -170,7 +170,6 @@ void app_main()
 	ESP_ERROR_CHECK(ret);
 
 	//++++++++++++++++++++++ SPIFFS ++++++++++++++++++++++++++
-	printf("\r\n\n");
 	ESP_LOGI(TAGM, "[+] Starting spiffs memory function +++\n");
 
 	vfs_spiffs_register();
@@ -178,12 +177,27 @@ void app_main()
 	// the partition was mounted?
 	if(spiffs_is_mounted) {
 		ESP_LOGI(TAGM,"[*] Partition correctly mounted!\r\n");
-	}
-	else {
-		ESP_LOGE(TAGM,"[x] Error: Issues while mounting the SPIFFS partition.\n\r"
-				"REBOOTING\n");
+	}else {
+		ESP_LOGE(TAGM,"[x] Error: Issues while mounting the SPIFFS partition.\n\rREBOOTING\n");
 		esp_restart();
 	}
+	/* check if I/O function correctly work and creationj of files */
+	fSniffs = fopen(PATH_first, "w");
+	if (fSniffs == NULL) {
+		ESP_LOGE(TAGM,"[x] Error: Impossible to create the file! SPIFFS partition not working right.");
+		esp_restart();
+	}fclose(fSniffs);
+	fSniffs = fopen(PATH_second, "w");
+		if (fSniffs == NULL) {
+			ESP_LOGE(TAGM,"[x] Error: Impossible to create the file! SPIFFS partition not working right.");
+			esp_restart();
+		}fclose(fSniffs);
+
+	if (file_check(PATH_first) == -1 || file_check(PATH_second) == -1){
+		ESP_LOGE(TAGM,"[x] Error: Unknown errors with the file and Partition!");
+		esp_restart();
+	}ESP_LOGI(TAGM,"[*] Partition OK!\r\n");
+
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 	// create the event group to handle wifi events
@@ -293,10 +307,10 @@ void app_main()
 					strftime(buffer, sizeof(buffer), "%d/%m/%Y %H:%M:%S", &timeinfo);
 					ESP_LOGI(TAGM,"[*] Actual time in Italy: %s", buffer);
 					ESP_LOGI(TAGM,"[*] Timestamp synchronized correctly.");
-					pthread_mutex_unlock(&mutex);
 				}else{
 					ESP_LOGE(TAGM,"[x] Error : Sync Fail.");
 				}
+				pthread_mutex_unlock(&mutex);
 			}
 
 			if(strstr(rbuf,"STANDBY") != NULL)
@@ -366,13 +380,12 @@ void wifi_init()
 	ESP_LOGI(TAGM,"[+] Connecting to %s ... \n", DEFAULT_SSID);
 }
 
-/*void wifi_deinit()
+void wifi_deinit()
 {
-	BLINK_TIME_ON = 100 / portTICK_RATE_MS;
-	BLINK_TIME_OFF = 100 / portTICK_RATE_MS;
+	BLINK_TIME = 100 / portTICK_RATE_MS;
 	ESP_ERROR_CHECK( esp_wifi_stop() );
 	ESP_ERROR_CHECK( esp_wifi_deinit() );
-}*/
+}
 
 int esp_settings_init()
 {
@@ -486,14 +499,17 @@ void sniffer_packet_handler(void* buff, wifi_promiscuous_pkt_type_t type)
 		fprintf(fSniffs, "Type=MGMT,");
 		fprintf(fSniffs, " SubType=PROBE,");
 
-		md5((uint8_t*)buff, strlen(buff), result);
+		//md5((uint8_t*)buff, strlen(buff), result);
+		md5((uint8_t*)ipkt, sizeof(wifi_ieee80211_packet_t), result); //FEDE
+		/* ESP_LOGI(TAGM, "1. strlen(buff) = %d", strlen(buff));
+		ESP_LOGI(TAGM, "2. sizeof(buff) = %d", sizeof(buff));
+		ESP_LOGI(TAGM, "3. sizeof(wifi_promiscuous_pkt_t) = %d", sizeof(wifi_promiscuous_pkt_t)); */
 
 		fprintf(fSniffs, " RSSI=%02d,"
 			   " SRC=%02x:%02x:%02x:%02x:%02x:%02x,"
-			   " seq_num=%d"
+			   " seq_num=%d,"
 			   " TIME=%llu,"
-			   " HASH=%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x"
-			   "%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x\n",
+			   " HASH=%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x%2.2x,",
 			   ppkt->rx_ctrl.rssi,
 			   hdr->addr2[0],hdr->addr2[1],hdr->addr2[2],
 			   hdr->addr2[3],hdr->addr2[4],hdr->addr2[5],
@@ -517,16 +533,16 @@ void sniffer_packet_handler(void* buff, wifi_promiscuous_pkt_type_t type)
 			for(int j=0; j<SSID_len; j++)
 				ssid_str[j] = (char) ppkt->payload[26+j];
 			ssid_str[SSID_len] = '\0';
-			fprintf(fSniffs,"SSID_id=%d,"
-				   " SSID_lenght=%d,"
+			fprintf(fSniffs," SSID_id=%d,"
+				   " SSID_lenght=%u,"
 				   " SSID=%s,",
 				   ppkt->payload[24],
 				   SSID_len,
 				   ssid_str
 			);
 		}else{
-			fprintf(fSniffs,"SSID_id=%d,"
-				   " SSID_lenght=%d,"
+			fprintf(fSniffs," SSID_id=%d,"
+				   " SSID_lenght=%u,"
 				   " SSID=%s,",
 				   ppkt->payload[24],
 				   SSID_len,
@@ -666,11 +682,11 @@ void filesend_task(void *pvParameter)
 			int result = 0;
 			pthread_mutex_lock(&mutex);
 			if(id_sniFile == 0)
-				result = send_sniffed_packages(s, PATH_second);
-			else
 				result = send_sniffed_packages(s, PATH_first);
+			else
+				result = send_sniffed_packages(s, PATH_second);
 			pthread_mutex_unlock(&mutex);
-			if( result == -1)
+			if(result == -1)
 			{
 				ESP_LOGE(TAGM,"[x] Error: Problem opening file! I can't do anything. REBOOTING");
 				close(s);

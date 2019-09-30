@@ -1,7 +1,10 @@
 #include "cmd_file.h"
 
-int file_check(char *path){
-	ESP_LOGI(TAGH,"(->)Checking if file '%s' within the directory.\n", path);
+/*	VARIABLES	*/
+const char *TAGH = "File";
+
+int file_check(const char *path){
+	ESP_LOGI(TAGH,"[+] Checking if file '%s' within the directory.\n", path);
 	FILE *f = fopen(path, "r");
 	if (f == NULL)
 		return -1;
@@ -10,8 +13,8 @@ int file_check(char *path){
 	return 0;
 }
 
-int file_delete(char *path){
-	ESP_LOGI(TAGH,"(->)Deleting the file specified in path: '%s'.\n", path);
+int file_delete(const char *path){
+	ESP_LOGI(TAGH,"[!] Deleting the file specified in path: '%s'.\n", path);
 	int succes;
 	succes = remove(path);
 	if(succes == 0) {
@@ -21,8 +24,8 @@ int file_delete(char *path){
 	}
 }
 
-int file_read_full(char *path){
-	ESP_LOGI(TAGH,"(->)Reading the file '%s'.\n\n", path);
+int file_read_full(const char *path){
+	ESP_LOGI(TAGH,"[+] Reading the file '%s'.\n\n", path);
 	FILE *fp = fopen(path, "r");
 	size_t len = 255;
 	if (fp == NULL) {
@@ -38,8 +41,8 @@ int file_read_full(char *path){
 	return 0;
 }
 
-int printDirContent(char *path){
-	ESP_LOGI(TAGH,"Printing file in the selected directory('%s')...\n",path);
+int printDirContent(const char *path){
+	ESP_LOGI(TAGH,"[!] Printing file in the selected directory('%s')...\n",path);
 	DIR *dir;
 	struct dirent *ent;
 	if ((dir = opendir (path)) != NULL) {
