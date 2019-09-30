@@ -20,7 +20,7 @@ namespace Panopticon
         {
             get
             {
-                return (int)DisplayableType.DeviceDevicePosition | (int)DisplayableType.AggregatedStat | (int) DisplayableType.RoomUpdate | (int) DisplayableType.StationUpdate;
+                return (int)DisplayableType.DeviceDevicePosition | (int)DisplayableType.AggregatedStat | (int) DisplayableType.RoomUpdate | (int) DisplayableType.StationUpdate | (int) DisplayableType.DatabaseState;
             }
         }
 
@@ -63,6 +63,12 @@ namespace Panopticon
         {
             if(linkedwindow!=null)
                 Application.Current.Dispatcher.BeginInvoke((Action)(() => { linkedwindow.updateStation(r,s,e); }));
+        }
+
+        internal override void publishDatabaseState(bool v)
+        {
+            if (linkedwindow != null)
+                Application.Current.Dispatcher.BeginInvoke((Action)(() => { linkedwindow.updateDatabaseState(v); }));
         }
 
     }

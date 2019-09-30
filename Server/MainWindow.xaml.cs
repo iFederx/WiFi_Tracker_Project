@@ -85,6 +85,14 @@ namespace Panopticon
             internal Queue<DateTime> statsTimeQueue = new Queue<DateTime>();
         }
 
+        internal void updateDatabaseState(bool v)
+        {
+            if (v)
+                this.Title = "Panopticon";
+            else
+                this.Title = "Panopticon - DATABASE OFFLINE";
+        }
+
         internal void updateDevicePosition(Device d, PositionTools.Position lastPosition, EventType ev)
         {
             drawDevice(d.identifier, lastPosition, ev, lvtrck_canvas,lvtrck_devlist_panel,uiElements,lvtrck_people);

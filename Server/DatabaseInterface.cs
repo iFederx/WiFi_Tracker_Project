@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -13,18 +14,39 @@ namespace Panopticon
     class DatabaseInterface
     {
         private const int CONNPOOLSIZE = 4;
-        private volatile bool criticalstate = false;
+        private volatile int criticalstate = 0;
+        private readonly String connectionstring;
         BlockingCollection<NpgsqlConnection> connectionpool = new BlockingCollection<NpgsqlConnection>();
-        NpgsqlConnection[] allconnections = new NpgsqlConnection[CONNPOOLSIZE];
+        private volatile Publisher dbstatelistener = null;
 
         internal class ConnectionHandle : IDisposable
         {
             private BlockingCollection<NpgsqlConnection> cp;
             internal NpgsqlConnection conn;
-            internal ConnectionHandle(BlockingCollection<NpgsqlConnection> connectionpool)
+            internal enum ConnectionState { Recovered, Open, Broken };
+            internal ConnectionState state = ConnectionState.Open;
+            internal ConnectionHandle(BlockingCollection<NpgsqlConnection> connectionpool, String connectionstring, bool recover=true)
             {
                 cp = connectionpool;
                 conn = cp.Take();
+                if(conn.State==System.Data.ConnectionState.Broken||conn.State==System.Data.ConnectionState.Closed)
+                {
+                    if (recover)
+                    {
+                        try
+                        {
+                            conn = new NpgsqlConnection(connectionstring);
+                            conn.Open();
+                            state = ConnectionState.Recovered;
+                        }
+                        catch (Exception ex)
+                        {
+                            state = ConnectionState.Broken;
+                        }
+                    }
+                    else
+                        state = ConnectionState.Broken;
+                }
             }
             public void Dispose()
             {
@@ -44,16 +66,17 @@ namespace Panopticon
             internal double Xlen;
             internal double Ylen;
         }
-        public DatabaseInterface(String connectionstring) 
+        public DatabaseInterface(String _connectionstring) 
         {
+            connectionstring = _connectionstring;
             System.Diagnostics.Debug.Print(connectionstring);
             try
             {
                 for(int i=0;i<CONNPOOLSIZE;i++)
                 {
-                    allconnections[i] = new NpgsqlConnection(connectionstring);
-                    allconnections[i].Open();
-                    connectionpool.Add(allconnections[i]);
+                    NpgsqlConnection conn = new NpgsqlConnection(connectionstring);
+                    conn.Open();
+                    connectionpool.Add(conn);
                 }
             }
             catch(Exception ex)
@@ -63,19 +86,55 @@ namespace Panopticon
             }
             
         }
+        internal void attachStateListener(Publisher pub)
+        {
+            dbstatelistener = pub;
+        }
         internal void close()
         {
-            foreach (NpgsqlConnection conn in allconnections)
+            foreach (NpgsqlConnection conn in connectionpool.ToArray())
             {
                 conn.Close();
             }
+        }
+        private void manageDbException(Exception ex, NpgsqlConnection conn, Boolean userfacing)
+        {
+            bool connectionerror = conn.State==System.Data.ConnectionState.Broken||conn.State==System.Data.ConnectionState.Closed;
+            if (userfacing || (connectionerror && Interlocked.CompareExchange(ref criticalstate, 1, 0) == 0))
+            {
+                if (connectionerror)
+                {
+                    if (conn.State != System.Data.ConnectionState.Closed)
+                        conn.Close();
+                    dbstatelistener.publishDatabaseState(false);
+                    MessageBox.Show("Connection with the database broken. Will reconnect automatically when database returns available, however meanwhile data will be lost.");
+                }
+                else
+                    MessageBox.Show(ex.Message);
+            }
+        }
+
+        private bool connectioncheck(ConnectionHandle conn)
+        {
+            if((conn.state==ConnectionHandle.ConnectionState.Recovered)&&Interlocked.CompareExchange(ref criticalstate,0,1)==1)
+            {
+                dbstatelistener.publishDatabaseState(true);
+            }
+            else if(conn.state==ConnectionHandle.ConnectionState.Broken)
+            {
+                manageDbException(new Exception(),conn.conn,false);
+                return false;
+            }
+            return true;
         }
         
         private bool performNonQuery(String sql, params object[] parameters)
         {
             int res = 0;
-            using (ConnectionHandle conn = new ConnectionHandle(connectionpool))
+            using (ConnectionHandle conn = new ConnectionHandle(connectionpool,connectionstring))
             {
+                if (!connectioncheck(conn))
+                    return false;
                 using (var cmd = new NpgsqlCommand(sql, conn.conn))
                 {
                     for (int i = 0; i < parameters.Length; i += 2)
@@ -83,7 +142,6 @@ namespace Panopticon
                     try
                     {
                         res = cmd.ExecuteNonQuery();
-                        criticalstate = false;
                     }
                     catch (Npgsql.PostgresException ex)
                     {
@@ -91,18 +149,13 @@ namespace Panopticon
                             res = -1;
                         else
                         {
-                            if(!criticalstate)
-                                MessageBox.Show(ex.Message);
-                            criticalstate = true;
+                            manageDbException(ex, conn.conn, false);
                             res = -2;
                         }
-                            //throw new Exception(ex.Message);
                     }
                     catch (Exception ex)
                     {
-                        if(!criticalstate)
-                            MessageBox.Show(ex.Message);
-                        criticalstate = true;
+                        manageDbException(ex, conn.conn, false);
                         res = -2;
                     }
 
@@ -120,11 +173,13 @@ namespace Panopticon
         internal Nullable<StationInfo> loadStationInfo(String NameMAC)
         {
             Nullable<StationInfo> si = null;
-            using (ConnectionHandle conn = new ConnectionHandle(connectionpool))
+            using (ConnectionHandle conn = new ConnectionHandle(connectionpool,connectionstring))
             {
                 String query = "select roomname,xpos,ypos from stations where namemac=@namemac";
                 try
                 {
+                    if (!connectioncheck(conn))
+                        throw new Exception("Connection is not open");
                     using (var cmd = new NpgsqlCommand(query, conn.conn))
                     {
                         cmd.Parameters.AddWithValue("namemac", NameMAC);
@@ -146,7 +201,7 @@ namespace Panopticon
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message);
+                    manageDbException(ex, conn.conn, true);
                     si = null;
                 }
             }
@@ -155,11 +210,13 @@ namespace Panopticon
 
         internal Nullable<Boolean> checkRoomExistence(String roomName)
         {
-            using (ConnectionHandle conn = new ConnectionHandle(connectionpool))
+            using (ConnectionHandle conn = new ConnectionHandle(connectionpool,connectionstring))
             {
                 String query = "select * from rooms where roomname=@roomname";
                 try
                 {
+                    if (!connectioncheck(conn))
+                        throw new Exception("Connection is not open");
                     using (var cmd = new NpgsqlCommand(query, conn.conn))
                     {
                         addParameters(cmd,"roomname", roomName);
@@ -169,7 +226,7 @@ namespace Panopticon
                 }
                 catch(Exception ex)
                 {
-                    MessageBox.Show(ex.Message);
+                    manageDbException(ex, conn.conn, true);
                     return null; //most conservative result
                 }
             }
@@ -179,11 +236,13 @@ namespace Panopticon
         internal IEnumerable<RoomInfo> loadRooms()
         {
             LinkedList<RoomInfo> li = new LinkedList<RoomInfo>();
-            using (ConnectionHandle conn = new ConnectionHandle(connectionpool))
+            using (ConnectionHandle conn = new ConnectionHandle(connectionpool,connectionstring))
             {
                 String query = "select roomname,xlength,ylength from rooms where archived=false";
                 try
                 {
+                    if (!connectioncheck(conn))
+                        throw new Exception("Connection is not open");
                     using (var cmd = new NpgsqlCommand(query, conn.conn))
                     {
                         using (var reader = cmd.ExecuteReader())
@@ -202,7 +261,7 @@ namespace Panopticon
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message);
+                    manageDbException(ex, conn.conn, true);
                     li = new LinkedList<RoomInfo>();
                 }
             }
@@ -305,11 +364,13 @@ namespace Panopticon
         {
             LinkedList<DevicePosition> li = new LinkedList<DevicePosition>();
             Dictionary<String, DevicePosition> prepos = new Dictionary<String, DevicePosition>();
-            using (ConnectionHandle conn = new ConnectionHandle(connectionpool))
+            using (ConnectionHandle conn = new ConnectionHandle(connectionpool,connectionstring,false))
             {
                 String query = "select identifier,xpos,ypos,tm,outmovement,uncertainty from devicespositions where roomname=@roomname and tm>=@tmstart and tm<=@tmend";
                 try
                 {
+                    if (!connectioncheck(conn))
+                        throw new Exception("Connection is not open");
                     using (var cmd = new NpgsqlCommand(query, conn.conn))
                     {
                         addParameters(cmd,
@@ -347,7 +408,7 @@ namespace Panopticon
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message);
+                    manageDbException(ex, conn.conn, true);
                     return null;
                 }
             }
@@ -372,11 +433,13 @@ namespace Panopticon
         {
             double[] res = new double[dayspermonth(selectedmonth,selectedyear)+1];
             bool notempty = false;
-            using (ConnectionHandle conn = new ConnectionHandle(connectionpool))
+            using (ConnectionHandle conn = new ConnectionHandle(connectionpool,connectionstring,false))
             {
                 String query = "select max(count) as mcount,xday from countstats where roomname=@roomname and xmonth=@xmonth and xyear=@xyear and cat=2 group by xday";
                 try
                 {
+                    if (!connectioncheck(conn))
+                        throw new Exception("Connection is not open");
                     using (var cmd = new NpgsqlCommand(query, conn.conn))
                     {
                         addParameters(cmd,
@@ -395,7 +458,7 @@ namespace Panopticon
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message);
+                    manageDbException(ex, conn.conn, true);
                     notempty = false;
                 }
             }
@@ -410,11 +473,13 @@ namespace Panopticon
             for(int i=0;i<numdays+1;i++)
                 res[i]=new double[24];
             
-            using (ConnectionHandle conn = new ConnectionHandle(connectionpool))
+            using (ConnectionHandle conn = new ConnectionHandle(connectionpool,connectionstring,false))
             {
                 String query = "select avg(count) as mcount,xday,xhour from countstats where roomname=@roomname and xmonth=@xmonth and xyear=@xyear and cat=2 group by xhour, xday";
                 try
                 {
+                    if (!connectioncheck(conn))
+                        throw new Exception("Connection is not open");
                     using (var cmd = new NpgsqlCommand(query, conn.conn))
                     {
                         addParameters(cmd,
@@ -433,7 +498,7 @@ namespace Panopticon
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message);
+                    manageDbException(ex, conn.conn, true);
                     return null;
                 }
             }
@@ -454,11 +519,13 @@ namespace Panopticon
             for(int j=0;j<numdays+1;j++)
                 res[j]= new int[(int)(resolution*xlength)+1, (int)(resolution*ylength) + 1];
 
-            using (ConnectionHandle conn = new ConnectionHandle(connectionpool))
+            using (ConnectionHandle conn = new ConnectionHandle(connectionpool,connectionstring,false))
             {
                 String query = "select xpos,ypos,xday from devicespositions where roomname=@roomname and xmonth=@xmonth and xyear=@xyear and uncertainty<@uncertainty";
                 try
                 {
+                    if (!connectioncheck(conn))
+                        throw new Exception("Connection is not open");
                     using (var cmd = new NpgsqlCommand(query, conn.conn))
                     {
                         addParameters(cmd,
@@ -477,7 +544,7 @@ namespace Panopticon
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message);
+                    manageDbException(ex, conn.conn, true);
                     return new int[numdays + 1][,];
                 }
             }
@@ -500,10 +567,12 @@ namespace Panopticon
             String query = "(select identifier,count(*) as cnt,xday as dt from devicespositions where roomname=@roomname1 and xmonth=@xmonth1 and xyear=@xyear1 group by identifier, xday) union (select identifier,count(*) as cnt,0 as dt from devicespositions where roomname=@roomname2 and xmonth=@xmonth2 and xyear=@xyear2 group by identifier) order by dt,cnt desc";
             int preday = -1;
             int cntperday = 0;
-            using (ConnectionHandle conn = new ConnectionHandle(connectionpool))
+            using (ConnectionHandle conn = new ConnectionHandle(connectionpool,connectionstring,false))
             {
                 try
                 {
+                    if (!connectioncheck(conn))
+                        throw new Exception("Connection is not open");
                     using (var cmd = new NpgsqlCommand(query, conn.conn))
                     {
                         addParameters(cmd,
@@ -535,7 +604,7 @@ namespace Panopticon
                 }
                 catch(Exception ex)
                 {
-                    MessageBox.Show(ex.Message);
+                    manageDbException(ex, conn.conn, true);
                     return new String[numdays + 1, maxres];
                 }
             }
@@ -553,12 +622,14 @@ namespace Panopticon
         {
             DeviceInfo di = new DeviceInfo();
             LinkedList<String> ssids = new LinkedList<string>();
-            using (ConnectionHandle conn = new ConnectionHandle(connectionpool))
+            using (ConnectionHandle conn = new ConnectionHandle(connectionpool,connectionstring,false))
             {
                 String query = "select min(tm),max(tm) from devicespositions where identifier=@identifier";
                 String query2 = "select ssid from requestedssids where identifier=@identifier";
                 try
                 {
+                    if (!connectioncheck(conn))
+                        throw new Exception("Connection is not open");
                     using (var cmd = new NpgsqlCommand(query, conn.conn))
                     {
                         addParameters(cmd,
@@ -598,7 +669,7 @@ namespace Panopticon
                 }
                 catch(Exception ex)
                 {
-                    MessageBox.Show(ex.Message);
+                    manageDbException(ex, conn.conn, true);
                     return null;
                 }
             }
@@ -628,10 +699,12 @@ namespace Panopticon
             else
                 query = "select xpos,ypos,tm,roomname,uncertainty from devicespositions where identifier=@identifier and tm>=@tmstart and tm<=@tmend and roomname=@roomname order by tm asc";
             DateTime pre = DateTime.MinValue;
-            using (ConnectionHandle conn = new ConnectionHandle(connectionpool))
+            using (ConnectionHandle conn = new ConnectionHandle(connectionpool,connectionstring,false))
             {
                 try
                 {
+                    if (!connectioncheck(conn))
+                        throw new Exception("Connection is not open");
                     using (var cmd = new NpgsqlCommand(query, conn.conn))
                     {
                         if (!loadroommap)
@@ -666,8 +739,8 @@ namespace Panopticon
                 catch (Exception ex)
                 {
                     pre = DateTime.MinValue;
-                    MessageBox.Show(ex.Message);
-                }                    
+                    manageDbException(ex, conn.conn, true);
+                }
             }
             return pre!=DateTime.MinValue?ds:null;
         }

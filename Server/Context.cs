@@ -44,11 +44,11 @@ namespace Panopticon
             databasePub = new DatabasePublisher(databaseInt);
             publishers.Add(databasePub);
             guiPub = new GuiInterface();
+            databaseInt.attachStateListener(guiPub);
             publishers.Add(guiPub);
             aggregator = new Aggregator(publishers);
             publishers.Add(aggregator);
             analyzer = new AnalysisEngine(publishers, deviceMap);
-            //calibrator = new Calibrator(analyzer); //DARIO: da merge, probabilmente da rimuovere
 			packetizer = new FileParser(this);
 			connection = new Connection(this);
 		}
@@ -232,10 +232,10 @@ namespace Panopticon
             locker.EnterUpgradeableReadLock();
             foreach(Station s in room.getStations())
             {
-                if (s.lastHearthbeat.AddMinutes(5)<DateTime.Now) //DARIO: secondo me si può ridurre a 2 minuti
+                if (s.lastHearthbeat.AddMinutes(2.5)<DateTime.Now) 
                 {
                     locker.EnterWriteLock();
-                    if(s.lastHearthbeat.AddMinutes(5) < DateTime.Now) // check again: was in readmode, may have reconnected now and updated
+                    if(s.lastHearthbeat.AddMinutes(2.5) < DateTime.Now) // check again: was in readmode, may have reconnected now and updated
                     {
                         ris = false;
                         removeStation(s.NameMAC, false);

@@ -9,7 +9,7 @@ namespace Panopticon
 {
     abstract class Publisher
     {
-        internal enum DisplayableType: int { DeviceDevicePosition=1, SimpleStat=2,Rename=4,SSID=8,RoomUpdate=16,StationUpdate=32, AggregatedStat=64};
+        internal enum DisplayableType: int { DeviceDevicePosition=1, SimpleStat=2,Rename=4,SSID=8,RoomUpdate=16,StationUpdate=32, AggregatedStat=64,DatabaseState=128};
         internal class Displayable
         {
             internal Displayable(Object o1, Object o2, Object o3, DisplayableType t)
@@ -41,5 +41,6 @@ namespace Panopticon
 
         internal virtual void publishSSID(Device d, String SSID) { throw new NotSupportedException(); }
 
+        internal virtual void publishDatabaseState(bool v) { throw new NotSupportedException(); }
     }
 }
