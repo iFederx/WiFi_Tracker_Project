@@ -19,6 +19,7 @@
                             <Canvas x:Name="lvtrck_canvas" HorizontalAlignment="Left" VerticalAlignment="Top"/>
                         </Border>
                     </Viewbox>
+                    <Label Name="lvtrck_availablepositioning" Margin="10,250,265,200" HorizontalAlignment="Center" HorizontalContentAlignment="Center" Width="300" Height="40" VerticalAlignment="Top" Foreground="Red" FontSize="16" Visibility="Visible">Positioning needs at least 3 stations.</Label>
                     <ScrollViewer VerticalScrollBarVisibility="Auto" Width="260" Margin="10,80,10,200" HorizontalAlignment="Right">
                         <StackPanel Name="lvtrck_devlist_panel" HorizontalAlignment="Left" Width="260"/>
                     </ScrollViewer>

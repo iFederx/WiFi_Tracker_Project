@@ -213,6 +213,10 @@ namespace Panopticon
                 trackrlp_roomname.Content = selectedRoom.room.roomName;
                 rmstats_roomname.Content = selectedRoom.room.roomName;
                 lvtrck_stations.Content = selectedRoom.stationcount.Text;
+                if (selectedRoom.room.stationcount < 3)
+                    lvtrck_availablepositioning.Visibility = Visibility.Visible;
+                else
+                    lvtrck_availablepositioning.Visibility = Visibility.Hidden;
                 lvtrck_people.Content = selectedRoom.peoplecount.Text;
                 lvtrck.IsEnabled = selectedRoom.room!=Room.externRoom?true:false;
                 trackrlp.IsEnabled = selectedRoom.room != Room.externRoom ? true : false;
@@ -274,6 +278,10 @@ namespace Panopticon
                 if (!roomToRoomInfoGUI.TryGetValue(r, out rig))
                     return;
                 int stationcount = r.stationcount;
+                if (r.stationcount < 3)
+                    lvtrck_availablepositioning.Visibility = Visibility.Visible;
+                else
+                    lvtrck_availablepositioning.Visibility = Visibility.Hidden;
                 if (selectedRoom!=null && selectedRoom.room == r)
                 {
                     Station[] stations = r.getStations();
