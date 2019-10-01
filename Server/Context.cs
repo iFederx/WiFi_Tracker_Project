@@ -21,7 +21,6 @@ namespace Panopticon
         internal readonly DatabaseInterface databaseInt;
         List<Publisher> publishers;
         Aggregator aggregator;
-		internal FileParser packetizer;
 		Connection connection;
 		LinkedList<Thread> threads = new LinkedList<Thread>();
         internal readonly GuiInterface guiPub;
@@ -49,7 +48,6 @@ namespace Panopticon
             aggregator = new Aggregator(publishers);
             publishers.Add(aggregator);
             analyzer = new AnalysisEngine(publishers, deviceMap);
-			packetizer = new FileParser(this);
 			connection = new Connection(this);
 		}
 
@@ -232,7 +230,7 @@ namespace Panopticon
             locker.EnterUpgradeableReadLock();
             foreach(Station s in room.getStations())
             {
-                if (s.lastHearthbeat.AddMinutes(2.5)<DateTime.Now) 
+                if (s.lastHearthbeat.AddMinutes(2.5) < DateTime.Now) 
                 {
                     locker.EnterWriteLock();
                     if(s.lastHearthbeat.AddMinutes(2.5) < DateTime.Now) // check again: was in readmode, may have reconnected now and updated
@@ -246,6 +244,17 @@ namespace Panopticon
             locker.ExitUpgradeableReadLock();
             return ris;
         }
+
+		public void checkAllStationAliveness()
+		{
+			foreach (Room r in rooms.Values)
+			{
+				if (!checkStationAliveness(r))
+				{
+					System.Console.WriteLine("Station de-connetted in room {0}", r.roomName);
+				}
+			}
+		}
         
         public Room createRoom(Room r)
         {

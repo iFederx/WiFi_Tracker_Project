@@ -47,11 +47,12 @@ namespace Panopticon
                 }
                 catch (OperationCanceledException)
                 {
-					findSameAnonimous();
-                    householdCleaning();
+					//TODO: rispostare qua dentro findSameAnonimous e householdCleaning
                     t = new CancellationTokenSource(10000);
                 }
-            }
+				findSameAnonimous();
+				householdCleaning();
+			}
         }
 
         private void analyzePacket(Packet p)

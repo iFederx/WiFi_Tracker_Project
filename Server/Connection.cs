@@ -33,11 +33,27 @@ namespace Panopticon
         public void StartConnection()
         {
             Console.WriteLine("Setting up server...");
-			
-            serverSocket.Bind(new IPEndPoint(IPAddress.Any, PORT));
-            serverSocket.Listen(0);
-            serverSocket.BeginAccept(AcceptCallback, null);
-            Console.WriteLine("Server setup complete");
+			try
+			{
+				serverSocket.Bind(new IPEndPoint(IPAddress.Any, PORT));
+				serverSocket.Listen(0);
+				serverSocket.BeginAccept(AcceptCallback, null);
+			}
+			catch (SocketException e)
+			{
+				serverSocket.Close();
+				System.Console.WriteLine("Impossible to open server socket");
+				ctx.kill();
+				return;
+			}
+			catch (ObjectDisposedException e)
+			{
+				serverSocket.Close();
+				System.Console.WriteLine("Server socket not available");
+				ctx.kill();
+				return;
+			}
+			Console.WriteLine("Server setup complete");
         }
 
         /// <summary>
@@ -113,6 +129,7 @@ namespace Panopticon
 		internal void kill()
 		{
 			serverSocket.Close();
+			protocol.kill();
 		}
     }
 }

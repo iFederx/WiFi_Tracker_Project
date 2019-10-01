@@ -13,6 +13,8 @@ namespace Panopticon
     {
 		internal Context ctx;
 		ConcurrentDictionaryStack<string, Packet> cds;
+		int i = 0;
+		System.Timers.Timer timer1;
 
 		Func<Packet, Packet, Packet> packetReducer =
 			(a, b) =>
@@ -47,10 +49,37 @@ namespace Panopticon
 					return false;
 			};
 
+		Func<Packet, bool> isOld =
+			(pak) =>
+			{
+				if (pak.Timestamp < (DateTime.Now - TimeSpan.FromMinutes(2))) //pak timestamp is older than 5 minutes //TODO: rimettere 5
+					return true;
+				else
+					return false;
+			};
+
+		Func<Packet, string> keyOf = 
+			(pak) => 
+			{
+				return pak.SendingMAC;
+			};
+
 		public FileParser(Context _ctx)
 		{
 			ctx = _ctx;
 			cds = new ConcurrentDictionaryStack<string, Packet>();
+
+			timer1 = new System.Timers.Timer(60000); //every 60 seconds I execute MyMethod
+			timer1.Elapsed += MyMethod;
+			timer1.Enabled = true;
+		}
+
+		private void MyMethod(object sender, System.Timers.ElapsedEventArgs e)
+		{
+			System.Console.WriteLine("Prova {0}", i++);
+			ctx.checkAllStationAliveness();
+			Packet p;
+			while (cds.popConditional(isOld, keyOf, out p)) System.Console.WriteLine("Packet {0} removed from CDS", p.Hash);
 		}
 
 		public void ParseOnTheFly(String input, Station receivingStation)
@@ -67,73 +96,76 @@ namespace Panopticon
 					var fieldSplit = field.Split('=');
 
 					string fieldLabel = fieldSplit[0];
-					switch (fieldLabel)
+					if (fieldSplit.Count<string>() >= 2)
 					{
-						case "Type":
-							pures = fieldSplit[1].Split('\0');
-							Type = pures[0];
-							break;
+						switch (fieldLabel)
+						{
+							case "Type":
+								pures = fieldSplit[1].Split('\0');
+								Type = pures[0];
+								break;
 
-						case " SubType":
-							pures = fieldSplit[1].Split('\0');
-							SubType = pures[0];
-							break;
+							case " SubType":
+								pures = fieldSplit[1].Split('\0');
+								SubType = pures[0];
+								break;
 
-						case " RSSI":
-							pures = fieldSplit[1].Split('\0');
-							RSSI = pures[0];
-							break;
+							case " RSSI":
+								pures = fieldSplit[1].Split('\0');
+								RSSI = pures[0];
+								break;
 
-						case " SRC":
-							pures = fieldSplit[1].Split('\0');
-							SRC = pures[0].Replace(@":", string.Empty);
-							break;
+							case " SRC":
+								pures = fieldSplit[1].Split('\0');
+								SRC = pures[0].Replace(@":", string.Empty);
+								break;
 
-						case " seq_num":
-							pures = fieldSplit[1].Split('\0');
-							seq_num = pures[0];
-							break;
+							case " seq_num":
+								pures = fieldSplit[1].Split('\0');
+								seq_num = pures[0];
+								break;
 
-						case " TIME":
-							pures = fieldSplit[1].Split('\0');
-							TIME = pures[0];
-							break;
+							case " TIME":
+								pures = fieldSplit[1].Split('\0');
+								TIME = pures[0];
+								break;
 
-						case " HASH":
-							pures = fieldSplit[1].Split('\0');
-							HASH = pures[0];
-							break;
+							case " HASH":
+								pures = fieldSplit[1].Split('\0');
+								HASH = pures[0];
+								break;
 
-						case " SSID_id":
+							case " SSID_id":
 
-							pures = fieldSplit[1].Split('\0');
-							SSID_id = pures[0];
-							break;
+								pures = fieldSplit[1].Split('\0');
+								SSID_id = pures[0];
+								break;
 
-						case " SSID_lenght":
-							pures = fieldSplit[1].Split('\0');
-							SSID_lenght = pures[0];
-							break;
+							case " SSID_lenght":
+								pures = fieldSplit[1].Split('\0');
+								SSID_lenght = pures[0];
+								break;
 
-						case " SSID":
-							pures = fieldSplit[1].Split('\0');
-							SSID = pures[0];
-							break;
+							case " SSID":
+								pures = fieldSplit[1].Split('\0');
+								SSID = pures[0];
+								break;
 
-						case " HT_id":
-							pures = fieldSplit[1].Split('\0');
-							HT_id = pures[0];
-							break;
+							case " HT_id":
+								pures = fieldSplit[1].Split('\0');
+								HT_id = pures[0];
+								break;
 
-						case " HT_cap_len":
-							pures = fieldSplit[1].Split('\0');
-							HT_cap_len = pures[0];
-							break;
+							case " HT_cap_len":
+								pures = fieldSplit[1].Split('\0');
+								HT_cap_len = pures[0];
+								break;
 
-						case " HT_cap_str":
-							pures = fieldSplit[1].Split('\0');
-							HT_cap_str = pures[0];
-							break;
+							case " HT_cap_str":
+								pures = fieldSplit[1].Split('\0');
+								HT_cap_str = pures[0];
+								break;
+						}
 					}
 				}
 
@@ -161,5 +193,11 @@ namespace Panopticon
             DateTime dtUnix = new DateTime(unixYear0.Ticks + unixTimeStampInTicks);
             return dtUnix;
         }
+
+		internal void kill()
+		{
+			timer1.Stop();
+			timer1.Close();
+		}
     }
 }

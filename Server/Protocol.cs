@@ -115,7 +115,6 @@ namespace Panopticon
 					}
 					else
 					{
-						ctx.checkStationAliveness(station.location.room);
 						station.hearbeat();
 					}
 					
@@ -217,7 +216,7 @@ namespace Panopticon
 				uint timestamp = (uint)clockUE.TotalSeconds; //secondi totali dall'anno 0
 				byte[] toSend = Encoding.UTF8.GetBytes("CLOCK(" + timestamp.ToString() + ")\r\n");
 				if (socket.Send(toSend) > 0)
-					Console.WriteLine("Clock sent to ESP board");
+					Console.WriteLine("Clock {0} sent to ESP board", timestamp.ToString());
 
 				return 0;
 			}
@@ -326,5 +325,10 @@ namespace Panopticon
 			}
 			socket.Close(); //to cancel all callbacks registered on old socket
         }
-    }
+
+		internal void kill()
+		{
+			fileParser.kill();
+		}
+	}
 }
