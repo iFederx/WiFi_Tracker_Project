@@ -47,7 +47,7 @@ namespace Panopticon
                 if (s == StatType.OneSecondDeviceCount)
                     Application.Current.Dispatcher.BeginInvoke((Action)(() => { if (!killed) linkedwindow.updateOneSecondDeviceCount(r, stat); }));
                 else
-                    Application.Current.Dispatcher.BeginInvoke((Action)(() => { if (!killed) linkedwindow.updateTenMinutesDeviceCount(r, stat); }));
+                    Application.Current.Dispatcher.BeginInvoke((Action)(() => { if (!killed) linkedwindow.updateFiveMinutesDeviceCount(r, stat); }));
             }
             System.Diagnostics.Debug.Print("GUI ROOM STAT: " + r.roomName + " count: " + stat);
         }

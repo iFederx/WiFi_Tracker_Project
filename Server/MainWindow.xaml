@@ -26,9 +26,12 @@
                     <Label x:Name="lvtrck_roomname" Content="" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="60" Width="550" FontSize="40"/>
                     <Label x:Name="lvtrck_people" Content="Label" HorizontalAlignment="Right" Margin="0,5,10,0" VerticalAlignment="Top" Width="160" Height="40" FontSize="20"/>
                     <Label x:Name="lvtrck_stations" Content="Label" HorizontalAlignment="Right" Margin="0,35,10,0" VerticalAlignment="Top" Width="160" Height="40" FontSize="20"/>
-                    <Viewbox Margin="10,0,10,10" Height="180" HorizontalAlignment="Center" VerticalAlignment="Bottom" Stretch="Fill">
+                    <TextBlock Text="Average devices per 5 minute period" Margin="10,0,0,178" HorizontalAlignment="Left" Height="20" VerticalAlignment="Bottom"></TextBlock>
+                    <Border Margin="10,0,10,0" BorderBrush="LightGray" BorderThickness="0,1,0,0" Height="200" HorizontalAlignment="Center" VerticalAlignment="Bottom">
+                    <Viewbox Height="180" HorizontalAlignment="Center" VerticalAlignment="Bottom" Stretch="Fill">
                         <Canvas Margin="0,0,0,0" Width="720" Height="100" Name="occup_histo"></Canvas>
                     </Viewbox>
+                    </Border>
                 </Grid>
             </TabItem>
             <TabItem x:Name="trackrlp" Header="Tracking reloop">

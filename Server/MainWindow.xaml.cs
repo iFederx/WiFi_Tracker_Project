@@ -178,7 +178,7 @@ namespace Panopticon
             }
         }
 
-        internal void updateTenMinutesDeviceCount(Room r, double stat)
+        internal void updateFiveMinutesDeviceCount(Room r, double stat)
         {
             RoomInfoGUI rg;
             if (!roomToRoomInfoGUI.TryGetValue(r, out rg))
@@ -196,7 +196,7 @@ namespace Panopticon
 
         private void drawStats(RoomInfoGUI rg)
         {
-            Graphics.drawHistogram(occup_histo, rg.statsqueue, (double d, int i, object o) => { return ((DateTime[])o)[i].ToString("dd/MM HH:mm") + " - " + d.ToString("0"); }, rg.statsTimeQueue.ToArray(), null, timehistcolors, timehistcolors, 0,null,null);
+            Graphics.drawHistogram(occup_histo, rg.statsqueue, (double d, int i, object o) => { return ((DateTime[])o)[i].ToString("dd/MM HH:mm") + " - " + d.ToString("0.0"); }, rg.statsTimeQueue.ToArray(), null, timehistcolors, timehistcolors, 0,null,null);
         }
 
         private void selectRoom(object sender,MouseButtonEventArgs e)
@@ -790,7 +790,7 @@ namespace Panopticon
                     {
                         rmstats_daylabel.Text = "Max number of devices per day in " + months[stats.selectedmonth-1] + " " + stats.selectedyear;
                         int initial = (int)new DateTime(stats.selectedyear,stats.selectedmonth,1).DayOfWeek;
-                        Graphics.drawHistogram(rmstats_maxday, stats.maxperday, (double d, int i, object o) => { return (i) + (String)o + d.ToString("0"); }, "/" + stats.selectedmonth + " - ", dayStatSelect, weekhistcolors, weekhistcolors, initial,(double d, int i, object o)=> { return i; },null,true);
+                        Graphics.drawHistogram(rmstats_maxday, stats.maxperday, (double d, int i, object o) => { return (i) + (String)o + d.ToString("0.0"); }, "/" + stats.selectedmonth + " - ", dayStatSelect, weekhistcolors, weekhistcolors, initial,(double d, int i, object o)=> { return i; },null,true);
                     }
                     else
                         rmstats_daylabel.Text = "No data for " + months[stats.selectedmonth-1] + " " + stats.selectedyear;
@@ -799,7 +799,7 @@ namespace Panopticon
                 if (stats.avgperhour != null)
                 {
                     rmstats_timelabel.Text = "Avg number of devices per hour " + (stats.selectedday==0?"in ":"the "+stats.selectedday+" ") + months[stats.selectedmonth - 1] + " " + stats.selectedyear;
-                    Graphics.drawHistogram(rmstats_avgtime, stats.avgperhour[stats.selectedday], (double d, int i, object o) => { return "h" + i + " - " + d.ToString("0"); }, null, null, timehistcolors, timehistcolors, 0, null, null);
+                    Graphics.drawHistogram(rmstats_avgtime, stats.avgperhour[stats.selectedday], (double d, int i, object o) => { return "h" + i + " - " + d.ToString("0.0"); }, null, null, timehistcolors, timehistcolors, 0, null, null);
                     for (int d=0;d<stats.macs.GetLength(1);d++)
                     {
                         String mac = stats.macs[stats.selectedday, d];

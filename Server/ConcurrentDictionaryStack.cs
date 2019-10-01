@@ -202,8 +202,7 @@ namespace Panopticon
                 peekedValue = first.value;
                 if (condition(peekedValue))
                 {
-                    removeInternal(keyExtractor(peekedValue));
-                    removed = true;
+                    removed = removeInternal(keyExtractor(peekedValue)) != null ? true : false;
                 }
             }
             else

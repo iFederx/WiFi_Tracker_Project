@@ -12,10 +12,10 @@ namespace Panopticon
     {
         private class AvgBucket
         {
-            internal double tenminutestotal;
+            internal double fiveminutestotal;
             internal double onesecond;
             internal int count;
-            internal DateTime tenminutelast;
+            internal DateTime fiveminutelast;
             internal Room room;
             internal bool dirty;
         }
@@ -44,12 +44,12 @@ namespace Panopticon
                 ab = new AvgBucket();
                 lock (ab)
                 {
-                    ab.tenminutestotal = 0;
+                    ab.fiveminutestotal = 0;
                     ab.onesecond = 0;
                     ab.room = r;
                     ab.count = 0;
                     ab.dirty = true;
-                    ab.tenminutelast = DateTime.Now;
+                    ab.fiveminutelast = DateTime.Now;
                 }                
                 stats.TryAdd(r, ab);
             }
@@ -58,7 +58,7 @@ namespace Panopticon
                 stats.TryRemove(r,out ab);
                 updateRoomStat(ab, ab.onesecond, DateTime.Now);
                 foreach (Publisher pb in propagate)
-                    pb.publishStat(ab.count>0?ab.tenminutestotal/ab.count:0, ab.room, DateTime.Now, StatType.TenMinuteAverageDeviceCount);
+                    pb.publishStat(ab.count>0?ab.fiveminutestotal/ab.count:0, ab.room, DateTime.Now, StatType.FiveMinuteAverageDeviceCount);
             }
         }
 
@@ -94,17 +94,17 @@ namespace Panopticon
                     lock(ab)
                     {
                         ab.count++;
-                        ab.tenminutestotal += ab.onesecond;
+                        ab.fiveminutestotal += ab.onesecond;
                         if (ab.dirty)
                             foreach (Publisher pb in propagate)//supports stat by default, or wouldn't be here
                                 pb.publishStat(ab.onesecond, ab.room, DateTime.Now, StatType.OneSecondDeviceCount);
-                       if(ab.tenminutelast.AddMinutes(10)<DateTime.Now)
+                       if(ab.fiveminutelast.AddMinutes(5)<DateTime.Now)
                        {
                             foreach (Publisher pb in propagate)
-                                pb.publishStat(ab.count>0?ab.tenminutestotal/ab.count:0, ab.room, DateTime.Now, StatType.TenMinuteAverageDeviceCount);
-                            ab.tenminutestotal = 0;
+                                pb.publishStat(ab.count>0?ab.fiveminutestotal/ab.count:0, ab.room, DateTime.Now, StatType.FiveMinuteAverageDeviceCount);
+                            ab.fiveminutestotal = 0;
                             ab.count = 0;
-                            ab.tenminutelast = DateTime.Now;
+                            ab.fiveminutelast = DateTime.Now;
                         }
                         ab.dirty = false;                            
                     }

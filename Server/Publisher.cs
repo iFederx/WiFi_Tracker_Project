@@ -25,7 +25,7 @@ namespace Panopticon
             internal DisplayableType type;
         }
         internal enum EventType { Appear, Update, MoveOut, MoveIn, Disappear };
-        internal enum StatType { TenMinuteAverageDeviceCount, OneSecondDeviceCount, InstantaneousDeviceCount };
+        internal enum StatType { FiveMinuteAverageDeviceCount, OneSecondDeviceCount, InstantaneousDeviceCount };
 
         internal abstract int SupportedOperations { get; }
        
