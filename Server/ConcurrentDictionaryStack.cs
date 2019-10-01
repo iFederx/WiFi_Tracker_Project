@@ -28,21 +28,31 @@ namespace Panopticon
         ReaderWriterLockSlim locker = new ReaderWriterLockSlim();
         private void shiftPositionInternal(LinkedNode<V> item)
         {
-            if (first == null)
+            if (first == null) // if first not set, set item as first
                 first = item;
-            else if (item.prec == null && item.next != null)
+            else if (first == item && item.next != null) // if this is first, and there is one after, set the one after as first
                 first = item.next;
-
-            if (item.prec != null)
-                item.prec.next = item.next;
-            if (item.next != null)
-                item.next.prec = item.prec;
-            if (last != item)
+            if (item.prec == null && item.next == null && last!=item) // a new element. Put last
+            {
                 item.prec = last;
-            if (last != null && last != item)
-                last.next = item;
-            last = item;
-            item.next = null;
+                if (last != null)
+                    last.next = item;
+                last = item;
+            }
+            else if (last == item) // this is already last. Do nothing
+            { } 
+            else //this was already in the chain, shift
+            {
+                if (item.prec != null)
+                    item.prec.next = item.next;
+                if (item.next != null)
+                    item.next.prec = item.prec;
+                item.next = null;
+                item.prec = last;
+                if (last != null)
+                    last.next = item;
+                last = item;
+            }
         }
         /// <summary>
         /// Insert or update the value for the given key
@@ -135,14 +145,22 @@ namespace Panopticon
             {
                 mapper.TryRemove(k, out n);
                 retval = n.value;
-                if (n.prec == null)
-                    first = n.next;
-                else
-                    n.prec.next = n.next;
-                if (n.next == null)
-                    last = n.prec;
-                else
-                    n.next.prec = n.prec;
+                if(n.prec!=null||n.next!=null)
+                {
+                    if (n.prec == null)
+                        first = n.next;
+                    else
+                        n.prec.next = n.next;
+                    if (n.next == null)
+                        last = n.prec;
+                    else
+                        n.next.prec = n.prec;
+                }
+                else if(first==n&&last==n)
+                {
+                    first = null;
+                    last = null;
+                }                
             }
             return retval;
         }
