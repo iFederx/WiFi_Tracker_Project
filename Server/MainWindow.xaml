@@ -14,15 +14,15 @@
         <TabControl x:Name="tabControl" Margin="200,0,0,0" SelectionChanged="tabControl_SelectionChanged">
             <TabItem x:Name="lvtrck" Header="Live tracking">
                 <Grid>
-                    <Viewbox Margin="10,80,210,200" x:Name="lvtrck_viewbox" HorizontalAlignment="Center">
+                    <Viewbox Margin="10,80,265,200" x:Name="lvtrck_viewbox" HorizontalAlignment="Center">
                         <Border x:Name="lvtrck_border" BorderBrush="Black" BorderThickness="2">
                             <Canvas x:Name="lvtrck_canvas" HorizontalAlignment="Left" VerticalAlignment="Top"/>
                         </Border>
                     </Viewbox>
-                    <ScrollViewer VerticalScrollBarVisibility="Auto" Width="200" Margin="10,80,10,200" HorizontalAlignment="Right">
-                        <StackPanel Name="lvtrck_devlist_panel" HorizontalAlignment="Left" Width="200"/>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Width="260" Margin="10,80,10,200" HorizontalAlignment="Right">
+                        <StackPanel Name="lvtrck_devlist_panel" HorizontalAlignment="Left" Width="260"/>
                     </ScrollViewer>
-                    <Label x:Name="lvtrck_roomname" Content="RoomName" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="60" Width="240" FontSize="40"/>
+                    <Label x:Name="lvtrck_roomname" Content="" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="60" Width="550" FontSize="40"/>
                     <Label x:Name="lvtrck_people" Content="Label" HorizontalAlignment="Right" Margin="0,5,10,0" VerticalAlignment="Top" Width="160" Height="40" FontSize="20"/>
                     <Label x:Name="lvtrck_stations" Content="Label" HorizontalAlignment="Right" Margin="0,35,10,0" VerticalAlignment="Top" Width="160" Height="40" FontSize="20"/>
                     <Viewbox Margin="10,0,10,10" Height="180" HorizontalAlignment="Center" VerticalAlignment="Bottom" Stretch="Fill">
@@ -40,7 +40,7 @@
                     <ScrollViewer VerticalScrollBarVisibility="Auto" Width="190" Margin="0,105,10,10" HorizontalAlignment="Right">
                         <StackPanel Name="trackrlp_devlist_panel" HorizontalAlignment="Left" Width="200"/>
                     </ScrollViewer>
-                    <Label x:Name="trackrlp_roomname" Content="RoomName" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="60" Width="240" FontSize="40"/>
+                    <Label x:Name="trackrlp_roomname" Content="RoomName" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="60" Width="550" FontSize="40"/>
                     <Label HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,2,387,0">From:</Label>
                     <DatePicker Name="trackrlp_fromDate" HorizontalAlignment="Right" VerticalAlignment="Top" Width="90" SelectedDate="{x:Static sys:DateTime.Now}" SelectedDateFormat="Short" Height="24" Margin="0,4,297,0"/>
                     <ComboBox x:Name="trackrlp_fromTime" HorizontalAlignment="Right" VerticalAlignment="Top" Width="55" Height="24" IsEditable="True" Margin="0,4,237,0"/>
@@ -68,7 +68,7 @@
             </TabItem>
             <TabItem x:Name="rmstats" Header="Room stats">
                 <Grid>
-                    <Label x:Name="rmstats_roomname" Content="RoomName" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="60" Width="240" FontSize="40"/>
+                    <Label x:Name="rmstats_roomname" Content="RoomName" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="60" Width="550" FontSize="40"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="1*"/>

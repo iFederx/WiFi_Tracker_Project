@@ -42,16 +42,15 @@ namespace Panopticon
                 try
                 {
                     p = AnalysisQueue.Take(t.Token);
-                    System.Diagnostics.Debug.Print("Packet popped");
                     analyzePacket(p);                    
                 }
                 catch (OperationCanceledException)
                 {
-					//TODO: rispostare qua dentro findSameAnonimous e householdCleaning
+                    findSameAnonimous();
+                    householdCleaning();
                     t = new CancellationTokenSource(10000);
                 }
-				findSameAnonimous();
-				householdCleaning();
+				
 			}
         }
 

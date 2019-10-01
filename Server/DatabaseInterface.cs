@@ -135,30 +135,29 @@ namespace Panopticon
             {
                 if (!connectioncheck(conn))
                     return false;
-                using (var cmd = new NpgsqlCommand(sql, conn.conn))
+                try
                 {
-                    for (int i = 0; i < parameters.Length; i += 2)
-                        cmd.Parameters.AddWithValue((String)parameters[i], parameters[i + 1]);
-                    try
+                    using (var cmd = new NpgsqlCommand(sql, conn.conn))
                     {
-                        res = cmd.ExecuteNonQuery();
+                        for (int i = 0; i < parameters.Length; i += 2)
+                            cmd.Parameters.AddWithValue((String)parameters[i], parameters[i + 1]);
+                        res = cmd.ExecuteNonQuery();                
                     }
-                    catch (Npgsql.PostgresException ex)
-                    {
-                        if (ex.SqlState == "23505") //Sql state for unique constraint violation
-                            res = -1;
-                        else
-                        {
-                            manageDbException(ex, conn.conn, false);
-                            res = -2;
-                        }
-                    }
-                    catch (Exception ex)
+                }
+                catch (Npgsql.PostgresException ex)
+                {
+                    if (ex.SqlState == "23505") //Sql state for unique constraint violation
+                        res = -1;
+                    else
                     {
                         manageDbException(ex, conn.conn, false);
                         res = -2;
                     }
-
+                }
+                catch (Exception ex)
+                {
+                    manageDbException(ex, conn.conn, false);
+                    res = -2;
                 }
             }
             return res >= 0;

@@ -196,7 +196,7 @@ namespace Panopticon
 
         private void drawStats(RoomInfoGUI rg)
         {
-            Graphics.drawHistogram(occup_histo, rg.statsqueue, (double d, int i, object o) => { return ((DateTime[])o)[i].ToString("dd/MM HH:mm") + " - " + d.ToString("G2"); }, rg.statsTimeQueue.ToArray(), null, timehistcolors, timehistcolors, 0,null,null);
+            Graphics.drawHistogram(occup_histo, rg.statsqueue, (double d, int i, object o) => { return ((DateTime[])o)[i].ToString("dd/MM HH:mm") + " - " + d.ToString("0"); }, rg.statsTimeQueue.ToArray(), null, timehistcolors, timehistcolors, 0,null,null);
         }
 
         private void selectRoom(object sender,MouseButtonEventArgs e)
@@ -551,9 +551,9 @@ namespace Panopticon
                 Task.Factory.StartNew(() =>
                 {
                     DevicePosition[] data = ctx.databaseInt.loadDevicesPositions(selectedRoom.room.roomName, fromdate.Value, fromtime, todate.Value, totime);
+                    Interlocked.Decrement(ref requestsInFlight);
                     Dispatcher.BeginInvoke((Action)(() =>
                     {
-                        Interlocked.Decrement(ref requestsInFlight);
                         if (reqid != replaystatloadrequestid)
                             return;
                         if (data == null)
@@ -755,8 +755,8 @@ namespace Panopticon
                         hmap = Graphics.createheatmap(stats.heatmaps[stats.selectedday]);
                     }
                 }
+                Interlocked.Decrement(ref requestsInFlight);
                 Dispatcher.BeginInvoke((Action)(()=>{
-                    Interlocked.Decrement(ref requestsInFlight);
                     if (reqid != roomstatloadrequestid)
                         return;
                     updateRoomStats(true, stats, hmap);
@@ -782,7 +782,7 @@ namespace Panopticon
                     {
                         rmstats_daylabel.Text = "Max number of devices per day in " + months[stats.selectedmonth-1] + " " + stats.selectedyear;
                         int initial = (int)new DateTime(stats.selectedyear,stats.selectedmonth,1).DayOfWeek;
-                        Graphics.drawHistogram(rmstats_maxday, stats.maxperday, (double d, int i, object o) => { return (i) + (String)o + d.ToString("G2"); }, "/" + stats.selectedmonth + " - ", dayStatSelect, weekhistcolors, weekhistcolors, initial,(double d, int i, object o)=> { return i; },null,true);
+                        Graphics.drawHistogram(rmstats_maxday, stats.maxperday, (double d, int i, object o) => { return (i) + (String)o + d.ToString("0"); }, "/" + stats.selectedmonth + " - ", dayStatSelect, weekhistcolors, weekhistcolors, initial,(double d, int i, object o)=> { return i; },null,true);
                     }
                     else
                         rmstats_daylabel.Text = "No data for " + months[stats.selectedmonth-1] + " " + stats.selectedyear;
@@ -791,7 +791,7 @@ namespace Panopticon
                 if (stats.avgperhour != null)
                 {
                     rmstats_timelabel.Text = "Avg number of devices per hour " + (stats.selectedday==0?"in ":"the "+stats.selectedday+" ") + months[stats.selectedmonth - 1] + " " + stats.selectedyear;
-                    Graphics.drawHistogram(rmstats_avgtime, stats.avgperhour[stats.selectedday], (double d, int i, object o) => { return "h" + i + " - " + d.ToString("G2"); }, null, null, timehistcolors, timehistcolors, 0, null, null);
+                    Graphics.drawHistogram(rmstats_avgtime, stats.avgperhour[stats.selectedday], (double d, int i, object o) => { return "h" + i + " - " + d.ToString("0"); }, null, null, timehistcolors, timehistcolors, 0, null, null);
                     for (int d=0;d<stats.macs.GetLength(1);d++)
                     {
                         String mac = stats.macs[stats.selectedday, d];
@@ -929,9 +929,9 @@ namespace Panopticon
             Task.Factory.StartNew(() =>
             {
                 DeviceInfo di = ctx.databaseInt.loadDeviceInfo(id);
+                Interlocked.Decrement(ref requestsInFlight);
                 Dispatcher.BeginInvoke((Action)(() =>
                 {
-                    Interlocked.Decrement(ref requestsInFlight);
                     if (reqid != deviceloadrequestid)
                         return;
                     if (di == null)
@@ -993,7 +993,7 @@ namespace Panopticon
             String totime = dvcinfo_toTime.Text;
             if (!fromdate.HasValue || !todate.HasValue)
             {
-                dvcinfo_loadstatus.Content = "Select start and end date of relooped period";
+                dvcinfo_loadstatus.Content = "Select start and end date of statistics period";
                 dvcinfo_load.IsEnabled = true;
                 return;
             }
@@ -1023,9 +1023,9 @@ namespace Panopticon
             Task.Factory.StartNew(() =>
             {
                 DeviceStats ds = ctx.databaseInt.loadDeviceStats(fromdate.Value, fromtime, todate.Value, totime, device, dvcstatroom.roomName, dvcstatroom == Room.overallRoom, dvcstatroom != Room.externRoom && dvcstatroom != Room.overallRoom, dvcstatroom.size.X, dvcstatroom.size.Y, 2, PositionTools.UNCERTAIN_POSITION);
+                Interlocked.Decrement(ref requestsInFlight);
                 Dispatcher.BeginInvoke((Action)(() =>
                 {
-                    Interlocked.Decrement(ref requestsInFlight);
                     if (reqid != deviceadvancedloadrequestid)
                         return;
                     if (ds == null)

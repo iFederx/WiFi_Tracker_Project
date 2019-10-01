@@ -131,6 +131,11 @@ namespace Panopticon
             double x=si.Value.X;
             double y=si.Value.Y;
             Room room=getRoom(roomName);
+            if(room == null) // The room to which it was attached does not exist anymore. Reconfig
+            {
+                deleteStation(NameMAC);
+                return null;
+            }
             s.location = new PositionTools.Position(x,y,room);
             locker.EnterWriteLock();
             room.addStation(s);
@@ -189,7 +194,8 @@ namespace Panopticon
         }
         public Room getRoom(String name)
         {
-            return rooms[name];
+            Room room;
+            return rooms.TryGetValue(name, out room)?room:null;
         }
         public void removeStation(String NameMAC, bool takelock=true)
         {

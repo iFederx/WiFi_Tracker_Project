@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -11,9 +12,12 @@ namespace Panopticon
     {
         internal volatile MainWindow linkedwindow = null;
         internal volatile Room linkedroom = null;
+        internal volatile Boolean killed = false;
 
         internal void kill()
         {
+            killed = true;
+            Interlocked.MemoryBarrier();
             linkedwindow = null;
         }
         internal override int SupportedOperations
@@ -30,7 +34,7 @@ namespace Panopticon
             {
                 if (p.room == linkedroom || e == EventType.Disappear || e == EventType.MoveOut)
                 {
-                    Application.Current.Dispatcher.BeginInvoke((Action)(() => { linkedwindow.updateDevicePosition(d, p, e); }));
+                    Application.Current.Dispatcher.BeginInvoke((Action)(() => { if(!killed) linkedwindow.updateDevicePosition(d, p, e); }));
                 }
             }
             System.Diagnostics.Debug.Print("DEVICE POSITION: " + p.X + " " + p.Y);
@@ -41,9 +45,9 @@ namespace Panopticon
             if (linkedwindow!=null)
             {
                 if (s == StatType.OneSecondDeviceCount)
-                    Application.Current.Dispatcher.BeginInvoke((Action)(() => { linkedwindow.updateOneSecondDeviceCount(r, stat); }));
+                    Application.Current.Dispatcher.BeginInvoke((Action)(() => { if (!killed) linkedwindow.updateOneSecondDeviceCount(r, stat); }));
                 else
-                    Application.Current.Dispatcher.BeginInvoke((Action)(() => { linkedwindow.updateTenMinutesDeviceCount(r, stat); }));
+                    Application.Current.Dispatcher.BeginInvoke((Action)(() => { if (!killed) linkedwindow.updateTenMinutesDeviceCount(r, stat); }));
             }
             System.Diagnostics.Debug.Print("GUI ROOM STAT: " + r.roomName + " count: " + stat);
         }
@@ -53,22 +57,22 @@ namespace Panopticon
             if (linkedwindow != null)
             {
                 if (e == EventType.Appear)
-                    Application.Current.Dispatcher.BeginInvoke((Action)(() => { linkedwindow.addRoom(r); }));
+                    Application.Current.Dispatcher.BeginInvoke((Action)(() => { if (!killed) linkedwindow.addRoom(r); }));
                 else if (e == EventType.Disappear)
-                    Application.Current.Dispatcher.BeginInvoke((Action)(() => { linkedwindow.removeRoom(r); }));
+                    Application.Current.Dispatcher.BeginInvoke((Action)(() => { if (!killed) linkedwindow.removeRoom(r); }));
             }
             
         }
         internal override void publishStationUpdate(Room r, Station s, EventType e)
         {
             if(linkedwindow!=null)
-                Application.Current.Dispatcher.BeginInvoke((Action)(() => { linkedwindow.updateStation(r,s,e); }));
+                Application.Current.Dispatcher.BeginInvoke((Action)(() => { if (!killed) linkedwindow.updateStation(r,s,e); }));
         }
 
         internal override void publishDatabaseState(bool v)
         {
             if (linkedwindow != null)
-                Application.Current.Dispatcher.BeginInvoke((Action)(() => { linkedwindow.updateDatabaseState(v); }));
+                Application.Current.Dispatcher.BeginInvoke((Action)(() => { if (!killed) linkedwindow.updateDatabaseState(v); }));
         }
 
     }
