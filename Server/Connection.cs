@@ -122,8 +122,14 @@ namespace Panopticon
             Console.WriteLine("Received Text: " + text);
 
             int result = protocol.Command(text, current, received);
-			
-            current.BeginReceive(buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, current);
+			try
+			{
+				current.BeginReceive(buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, current);
+			}
+			catch (ObjectDisposedException e)
+			{
+				current.Close();
+			}
         }
 
 		internal void kill()

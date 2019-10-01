@@ -52,7 +52,7 @@ namespace Panopticon
 		Func<Packet, bool> isOld =
 			(pak) =>
 			{
-				if (pak.Timestamp < (DateTime.Now - TimeSpan.FromMinutes(2))) //pak timestamp is older than 5 minutes //TODO: rimettere 5
+				if (pak.Timestamp < (DateTime.Now - TimeSpan.FromMinutes(1))) //pak timestamp is older than 5 minutes //TODO: rimettere 5
 					return true;
 				else
 					return false;
@@ -61,7 +61,7 @@ namespace Panopticon
 		Func<Packet, string> keyOf = 
 			(pak) => 
 			{
-				return pak.SendingMAC;
+				return pak.Hash;
 			};
 
 		public FileParser(Context _ctx)
