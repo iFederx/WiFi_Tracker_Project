@@ -111,7 +111,7 @@ namespace Panopticon
             foreach (double d in data)
             {
                 Rectangle re = new Rectangle();
-                re.Height = d>0? d / max * cv.Height : 0.001 / max * cv.Height;
+                re.Height = d / max * cv.Height;
                 re.Width = (i==0&&skipfirst)?0:width;
                 re.Fill = fillcolors[(initialbrush + i) % fillcolors.Length];
                 re.Stroke = strokecolors[(i+ initialbrush) % strokecolors.Length];

@@ -729,6 +729,8 @@ namespace Panopticon
                                 DateTime detectiontime = reader.GetDateTime(2);
                                 if (detectiontime.Subtract(pre).TotalMinutes < 15)
                                     ds.timeperday[(int)detectiontime.Subtract(fromdate).TotalDays] += detectiontime.Subtract(pre).TotalMinutes;
+                                else if (ds.timeperday[(int)detectiontime.Subtract(fromdate).TotalDays]==0)
+                                    ds.timeperday[(int)detectiontime.Subtract(fromdate).TotalDays] = 0.001;
                                 ds.pingsperhour[detectiontime.Hour * 6 + detectiontime.Minute / 10]++;
                                 pre = detectiontime;
                             }
