@@ -167,7 +167,8 @@ namespace Panopticon.AddingStationPages
 			//tryAddStation è già stato chiamato (ha lanciato la GUI)
 			if (handler.isBlinking) handler.switchLedBlink(false);
 			Station s = ctx.createStation(room, handler.macAddress, meterX, meterY, handler);
-			ctx.saveStation(s); //salvataggio su DB
+            if (!ctx.saveStation(s)) //salvataggio su DB
+                MessageBox.Show("Error while saving the station association on persistant storage. The station is associated for the current session, but at reboot will have to be reconfigured");
 			int i = FindWindowByMAC(handler.macAddress, maxN);
 			if (i != maxN)
 			{

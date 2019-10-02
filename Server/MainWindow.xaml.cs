@@ -336,7 +336,8 @@ namespace Panopticon
 			if(r==MessageBoxResult.Yes)
             {
                 ctx.removeStation(s.NameMAC);
-                ctx.deleteStation(s.NameMAC);
+                if (!ctx.deleteStation(s.NameMAC))
+                    MessageBox.Show("Error while disassociating the station on persistent storage. After station reconnection, try again.");
 				s.handler.reboot();
             }
 		}
@@ -434,7 +435,8 @@ namespace Panopticon
 			if (r == MessageBoxResult.Yes)
 			{
 				ctx.removeRoom(roomToDelete.roomName);
-				ctx.deleteRoom(roomToDelete.roomName);
+                if (!ctx.deleteRoom(roomToDelete.roomName))
+                    MessageBox.Show("Error while marking the room as archived on persistent storage. The room has been archived for the current session, but could be loaded again at next application startup.");
 			}
 		}
 
