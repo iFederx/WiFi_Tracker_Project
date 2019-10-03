@@ -227,7 +227,7 @@ namespace Panopticon
                 avgrssi /= receivings.Count();
                 accumulator = accumulator.DivideScalar(vote);
                 tag += Environment.NewLine + "avg: " + accumulator.X + " " + accumulator.Y;
-                if (avgrssi < -90 || (avgrssi < -70 && minrssi < -55))
+                if (avgrssi < -105 || (avgrssi < -90 && minrssi < -70))
                     p = new Position(0, 0, Room.externRoom);
                 else
                 {

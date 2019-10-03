@@ -23,17 +23,25 @@ namespace Panopticon
 				//a è il valore che era già presente nella coda
 				bool isNewStation = true;
 
-				foreach (Packet.Reception rec in a.Receivings)
+				foreach (Packet.Reception source in b.Receivings)
 				{
-					//controllo se nel Packet c'è già una Reception dalla station di B
-					if (rec.ReceivingStation.Equals(b.Receivings[0].ReceivingStation))
-					{
-						isNewStation = false;
-						break;
-					}
-				}
-				if (isNewStation)
-					a.received(b.Receivings[0].ReceivingStation, b.Receivings[0].RSSI);
+                    //controllo se nel Packet c'è già una Reception dalla station di B
+                    isNewStation = true;
+                    foreach(Packet.Reception target in a.Receivings)
+                    {
+                        if(target.ReceivingStation.Equals(source.ReceivingStation))
+                        {
+                            isNewStation = false;
+                            if(target.RSSI<source.RSSI) // keep the smallest
+                            {
+                                target.RSSI = source.RSSI;
+                            }
+                        }
+                    }
+                    if (isNewStation)
+                        a.received(source.ReceivingStation, source.RSSI);
+                    
+				}				
 				
 				return a;
 			};
