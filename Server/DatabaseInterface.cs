@@ -694,7 +694,7 @@ namespace Panopticon
             ds.timeperday = new Double[(int)todate.Subtract(fromdate).TotalDays + 1];
             String query;
             if (loadroommap)
-                query = "select xpos,ypos,tm,roomname,uncertainty from devicespositions where identifier=@identifier and tm>=@tmstart and tm<=@tmend order by tm asc";
+                query = "select xpos,ypos,tm,roomname,uncertainty from devicespositions where identifier=@identifier and tm>=@tmstart and tm<=@tmend and roomname not in (select roomname from rooms where archived=True) order by tm asc";
             else
                 query = "select xpos,ypos,tm,roomname,uncertainty from devicespositions where identifier=@identifier and tm>=@tmstart and tm<=@tmend and roomname=@roomname order by tm asc";
             DateTime pre = DateTime.MinValue;
