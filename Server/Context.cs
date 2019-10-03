@@ -298,7 +298,7 @@ namespace Panopticon
                 foreach (Device d in r.getDevices())
                     databaseInt.addDevicePosition(d.identifier, d.MAC, r.roomName, 0, 0, 0, DateTime.Now, Publisher.EventType.Disappear); //sync push on db
                 foreach (Station s in r.getStations())
-                    s.handler.reboot();
+                    s.handler.reboot(false);
             }
             wx.confirmclose();
             databasePub.confirmclose(); // wait that everything has been written to the db before killing.
