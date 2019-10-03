@@ -39,7 +39,7 @@ namespace Panopticon
                             conn.Open();
                             state = ConnectionState.Recovered;
                         }
-                        catch (Exception ex)
+                        catch (Exception)
                         {
                             state = ConnectionState.Broken;
                         }
@@ -642,7 +642,7 @@ namespace Panopticon
                                     di.FirstSeen = reader.GetDateTime(0);
                                     di.LastSeen = reader.GetDateTime(1);
                                 }
-                                catch (Exception ex)
+                                catch (Exception)
                                 {
                                     return null;
                                 }

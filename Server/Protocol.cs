@@ -55,7 +55,7 @@ namespace Panopticon
 				{
 					socket.Send(data); //blocking method
 				}
-				catch (SocketException e)
+				catch (SocketException)
 				{
 					macAddresses.Remove(socket);
 					return -1;
@@ -134,7 +134,7 @@ namespace Panopticon
 						if (!ignoring) fileParser.ParseOnTheFly(chunk, station);
 					}
 				}
-				catch (SocketException e)
+				catch (SocketException)
 				{
 					return -1;
 				}
@@ -318,13 +318,15 @@ namespace Panopticon
         /// </summary>
         public static void ESP_Reboot(Socket socket)
         {
+			System.Console.WriteLine("Rebooting...");
             byte[] data = Encoding.UTF8.GetBytes("REBOOT\r\n");
 			int i = 0;
 			try
 			{
-				while (true)
+				while (i<10*60*5)
 				{
 					socket.Send(data); //blocking method
+                    Thread.Sleep(101);
 					i++;
 				}
 			}
@@ -333,7 +335,7 @@ namespace Panopticon
 				System.Console.WriteLine("Said {0} times", i);
 				return;
 			}
-			catch (SocketException e)
+			catch (SocketException)
 			{
 				System.Console.WriteLine("Said {0} times", i);
 				return;
