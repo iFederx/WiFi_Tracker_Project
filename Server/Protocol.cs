@@ -138,6 +138,10 @@ namespace Panopticon
 				{
 					return -1;
 				}
+				catch (ObjectDisposedException e)
+				{
+					return -1;
+				}
 
 				Console.WriteLine("{1} Client:{0} data received.", socket.RemoteEndPoint, DateTime.Now.ToString());
 
