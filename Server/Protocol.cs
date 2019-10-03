@@ -315,16 +315,23 @@ namespace Panopticon
         public static void ESP_Reboot(Socket socket)
         {
             byte[] data = Encoding.UTF8.GetBytes("REBOOT\r\n");
+			int i = 0;
 			try
 			{
-				socket.Send(data); //blocking method
+				while (true)
+				{
+					socket.Send(data); //blocking method
+					i++;
+				}
 			}
 			catch (ObjectDisposedException)
 			{
+				System.Console.WriteLine("Said {0} times", i);
 				return;
 			}
 			catch (SocketException e)
 			{
+				System.Console.WriteLine("Said {0} times", i);
 				return;
 			}
 			socket.Close(); //to cancel all callbacks registered on old socket

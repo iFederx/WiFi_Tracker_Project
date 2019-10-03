@@ -130,6 +130,10 @@ namespace Panopticon
 			{
 				current.Close();
 			}
+			catch (SocketException e)
+			{
+				current.Close();
+			}
         }
 
 		internal void kill()
