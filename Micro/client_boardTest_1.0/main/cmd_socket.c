@@ -26,7 +26,7 @@ int start_socket_connection(char *ip, char *port)
 	tport_n = htons(tport_h);
 
     skt = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if(skt<0)
+    if(skt < 0)
     {
     	ESP_LOGE(TAGS, "[x] Error: Impossible to open socket.");
         return -1;
@@ -53,7 +53,7 @@ int send_msg(int socket, char *msg)
 	strcpy(buf, msg);
 	strcat(buf, "\r\n");
 	len = strlen(buf);
-	if((n = write(socket, buf, len)) != len)
+	if ((n = write(socket, buf, len)) != len)
 	{
 		ESP_LOGE(TAGS,"Write error");
 		return -1;
@@ -142,7 +142,7 @@ unsigned long int client_timesync(int socket)
 			rbuf[n]='\0';
 			//ESP_LOGI(TAGS,"Received : [%s]\n", rbuf);
 
-			if(strstr(rbuf, "PING") != NULL){
+			if (strstr(rbuf, "PING") != NULL) {
 				ESP_LOGI(TAGS,"[*] PING received!");
 				strcpy(buf, "PONG\r\n");
 				len = strlen(buf);
@@ -154,10 +154,11 @@ unsigned long int client_timesync(int socket)
 				ESP_LOGI(TAGS, "[*] PONG sent!");
 			}
 
-			if(strstr(rbuf,"CLOCK") != NULL)
+			if (strstr(rbuf,"CLOCK") != NULL)
 			{
 				ESP_LOGI(TAGS,"[*] CLOCK ok!");
 				sscanf(rbuf, "CLOCK(%lu)\r\n", &timestamp);
+				ESP_LOGI(TAGS, "Received timepstamp: %lu", timestamp);
 				return timestamp;
 			}
 		}
@@ -183,7 +184,7 @@ int send_sniffed_packages(int skt, const char *path){
 		/* if impossible to get the info then set to 0 */
 		ESP_LOGE(TAGS,"(!) Error: Impossible to get Info about the file.");
 		success='f';
-	}else {
+	} else {
 		/* insert information in the designed variables */
         modification_ms = st.st_mtime;
 		modification_ms = modification_ms + server_time;
@@ -197,46 +198,58 @@ int send_sniffed_packages(int skt, const char *path){
 	//sending |FILE|
 	strcpy(buf, "FILE\r\n");
 	msg_len = strlen(buf);
+	int res=0;
 	//send thge starting info about the file to the server
-	if(write(skt,buf,msg_len) != msg_len){
+	res = write(skt, buf, msg_len);
+	ESP_LOGI(TAGS,"(+) DOPO n= %d", res);
+	if (res != msg_len || res == -1) {
 		ESP_LOGE(TAGS,"(!) Error: Fail in sending header.");
 		success='f';
+		esp_restart();
 	}
 	
 	/* send the size to the client */
 	//sending |B1|B2|B3|B4|
 	size = htonl(size);
-	if(write(skt,&size,sizeof(uint32_t)) != sizeof(uint32_t)){
+	if (write(skt, &size, sizeof(uint32_t)) != sizeof(uint32_t)) {
 		ESP_LOGE(TAGS,"(!) Error: Fail in sending size.");
 		success='f';
+		esp_restart();
 	}
 	
 	/* send last modification date */
 	//sending |T1|T2|T3|T4|
 	modification_ms = htonl(modification_ms);
-	if(write(skt,&modification_ms,sizeof(uint32_t)) != sizeof(uint32_t)){
+	if(write(skt,&modification_ms, sizeof(uint32_t)) != sizeof(uint32_t)){
 		ESP_LOGE(TAGS,"(!) Error: Fail in sending last_modification_time.");
 		success='f';
+		esp_restart();
 	}
 
 	/* file send loop */
 	/* send the file BUFLEN byte at time to the client until the sended
 	 * size is equal to the one obtained before from the file*/
 	uint32_t sendn_size=0;
-	while(sendn_size<ntohl(size)){
+	ESP_LOGI(TAGS,"(+) ntohl(size)_u = %u", ntohl(size));
+	while (sendn_size < ntohl(size)) {
 		msg_len = fread(buf, 1, BUFLEN, f);
-		if(write(skt,buf,msg_len) != msg_len){
+		ESP_LOGI(TAGS,"(+) msg_len=%d", msg_len);
+		int res_write = write(skt, buf, msg_len);
+		ESP_LOGI(TAGS,"(+) res_write=%d", res_write);
+		if (res_write < 0 || res_write != msg_len) {
 			ESP_LOGE(TAGS,"(!) Error: Fail in sending file content.");
 			success='f';
+			esp_restart();
 			break;
 		 }
-		 sendn_size+=msg_len;
+		 sendn_size += msg_len;
+		 ESP_LOGI(TAGS,"(+) sendn_size = %u", sendn_size);
 	}
-
-	if(f!=NULL)
+	ESP_LOGI(TAGS,"(+) DOPO del FILE vero e proprio");
+	if (f != NULL)
 		fclose(f);
-
-	if(success != 't')
+	ESP_LOGI(TAGS,"(+) PRIMA del RETURN");
+	if (success != 't')
 		return -1;
 
 	ESP_LOGI(TAGS,"(*) File sent Succesfully.");

@@ -24,7 +24,7 @@ int file_delete(const char *path){
 	}
 }
 
-int file_read_full(const char *path){
+int file_read_full(const char *path) {
 	ESP_LOGI(TAGH,"[+] Reading the file '%s'.\n\n", path);
 	FILE *fp = fopen(path, "r");
 	size_t len = 255;

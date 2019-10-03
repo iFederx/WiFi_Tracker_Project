@@ -6,6 +6,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
+#include "freertos/semphr.h"
 #include "esp_system.h"
 #include "esp_wifi.h"
 #include "esp_event_loop.h"
@@ -22,22 +23,25 @@
 /* --------------------------VFS and SPIFFS INCLUSION */
 #include "esp_vfs.h"
 #include "../components/spiffs/spiffs_vfs.h"
-
+#include "../components/spiffs/mutex.h"
+#define INCLUDE_vTaskSuspend                    1
 
 const char *TAGM = "Main";
 struct tm timeinfo;
 extern time_t server_time; //FEDE
-int s=0;	/* socket ID */
+int s = 0;	/* socket ID */
 
 /* shared resources and mutex
  * to handle the parallel storage
  * sniffed_pkg.txt is the file
  * containing the sniffed data */
 pthread_mutex_t mutex;
+SemaphoreHandle_t xMutex = NULL;
 FILE *fSniffs;
 const char *PATH_first = "/spiffs/sniffed_pkg1.txt";
 const char *PATH_second = "/spiffs/sniffed_pkg2.txt";
 int id_sniFile = 1;
+char a = 'a';
 
 /*---------------------------AP Credential */
 #define AP_WIFI_SSID "AP_ACCESS\0"
@@ -175,9 +179,9 @@ void app_main()
 	vfs_spiffs_register();
 
 	// the partition was mounted?
-	if(spiffs_is_mounted) {
+	if (spiffs_is_mounted) {
 		ESP_LOGI(TAGM,"[*] Partition correctly mounted!\r\n");
-	}else {
+	} else {
 		ESP_LOGE(TAGM,"[x] Error: Issues while mounting the SPIFFS partition.\n\rREBOOTING\n");
 		esp_restart();
 	}
@@ -186,17 +190,21 @@ void app_main()
 	if (fSniffs == NULL) {
 		ESP_LOGE(TAGM,"[x] Error: Impossible to create the file! SPIFFS partition not working right.");
 		esp_restart();
-	}fclose(fSniffs);
-	fSniffs = fopen(PATH_second, "w");
-		if (fSniffs == NULL) {
-			ESP_LOGE(TAGM,"[x] Error: Impossible to create the file! SPIFFS partition not working right.");
-			esp_restart();
-		}fclose(fSniffs);
+	}
+	fclose(fSniffs);
 
-	if (file_check(PATH_first) == -1 || file_check(PATH_second) == -1){
+	fSniffs = fopen(PATH_second, "w");
+	if (fSniffs == NULL) {
+		ESP_LOGE(TAGM,"[x] Error: Impossible to create the file! SPIFFS partition not working right.");
+		esp_restart();
+	}
+	fclose(fSniffs);
+
+	if (file_check(PATH_first) == -1 || file_check(PATH_second) == -1) {
 		ESP_LOGE(TAGM,"[x] Error: Unknown errors with the file and Partition!");
 		esp_restart();
-	}ESP_LOGI(TAGM,"[*] Partition OK!\r\n");
+	}
+	ESP_LOGI(TAGM,"[*] Partition OK!\r\n");
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -235,49 +243,61 @@ void app_main()
 	}
 
 	/* CHECK if mutex are well configured
-	 * they will be crutioal in the task synchronization */
-	if(pthread_mutex_init(&mutex, NULL) != 0)
-	{
+	 * they will be crutial in the task synchronization */
+	xMutex = xSemaphoreCreateBinary();
+	if (xMutex == NULL) {
 		ESP_LOGE(TAGM,"[x] Error: Mutex init failed. REBOOTING");
 		close(s);
 		esp_restart();
 	}
+	xSemaphoreGiveFromISR(xMutex, NULL);
+
+
+	/*if(pthread_mutex_init(&mutex, NULL) != 0)
+	{
+		ESP_LOGE(TAGM,"[x] Error: Mutex init failed. REBOOTING");
+		close(s);
+		esp_restart();
+	}*/
+	ESP_LOGW(TAGM,"MUTEX CREATO on core %d", xPortGetCoreID());
 
 	//start remaining task and creation of the group event to synchronize their workflow
 	sniff_event_group = xEventGroupCreate();
 	ESP_LOGI(TAGM,"[*] Sniffer Task -> STARTED \n");
-	xTaskCreate(&sniff_task, "sniff_task", 10000, NULL, 2, &TaskHandle_sniff);
+	xTaskCreatePinnedToCore(&sniff_task, "sniff_task", 10000, NULL, 2, &TaskHandle_sniff, 0);
+	vTaskDelay(500);
 	ESP_LOGI(TAGM,"[*] Sender Task -> STARTED \n");
-	xTaskCreate(&filesend_task, "filesend_task", 10000, NULL, 2, &TaskHandle_filesend);
+	xTaskCreatePinnedToCore(&filesend_task, "filesend_task", 10000, NULL, 2, &TaskHandle_filesend, 0);
 
 	/* program continue with the main task
 	 * it will be used for handle the commands coming
 	 * from the server like the BLINKING, REBOOTING or STANDBY etc... */
 	int n;
 	ESP_LOGI(TAGM,"[*] Commander Task -> STARTED \n");
-	while(1)
+	while (1)
 	{
 		ESP_LOGI(TAGM,"waiting for command from the server...");
-		n=recv(s, rbuf, BUFLEN-1, 0);
-		if (n==0){
+		n = recv(s, rbuf, BUFLEN-1, 0);
+		ESP_LOGI(TAGM, "received a COMMAND of N=%d BYTES", n);
+		if (n==0) {
 			ESP_LOGE(TAGM,"Error: Server shut-down during transfering, data will be broken.\n");
 			break;
 		}
-		else if(n<0){
+		else if (n < 0) {
 			ESP_LOGE(TAGM,"Write Error.\n");
 			break;
 		}
-		else{
+		else {
 			rbuf[n]='\0';
 			ESP_LOGI(TAGM,"command : [%s]\n", rbuf);
 			/* EXECUTION of commands based on text received */
 
-			if(strstr(rbuf, "BLINK") != NULL){
+			if (strstr(rbuf, "BLINK") != NULL) {
 				ESP_LOGW(TAGM,"[c] start blinking");
 				BLINK_TIME = 200;
 			}
 
-			if(strstr(rbuf, "OKLED") != NULL){
+			if (strstr(rbuf, "OKLED") != NULL) {
 				ESP_LOGW(TAGM,"[c] stop blinking");
 				BLINK_TIME = 100;
 			}
@@ -285,18 +305,18 @@ void app_main()
 			/* Only in this SYNC there is a variation: here the PING-PONG is
 			 * preceeded by another SYNC from The ESP32.
 			 * Nothing else change from the initial one */
-			if(strstr(rbuf,"SYNC") != NULL)
+			if (strstr(rbuf,"SYNC") != NULL)
 			{
 				pthread_mutex_lock(&mutex);
 				ESP_LOGW(TAGM,"[c] timestamping");
 				ESP_LOGI(TAGM,"[+] ESP timestamp SyncTask -> STARTED ");
 				/* send SYNC to start the procedure */
-				if (send_msg(s, "SYNC") != -1){
+				if (send_msg(s, "SYNC") != -1) {
 					/* client syncronization procedure */
-					if ((server_time = (time_t) client_timesync(s)) != -1){
+					if ((server_time = (time_t) client_timesync(s)) != -1) {
 						ESP_LOGI(TAGM,"[*] Timestamp Correctly exchanged! Tempt of configuration..");
 						localtime_r(&server_time, &timeinfo);
-					}else
+					} else
 						ESP_LOGE(TAGM,"[x] Error : Sync Fail... RETRYING!");
 					// change the timezone to Italy
 					setenv("TZ", "CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00", 1);
@@ -307,25 +327,25 @@ void app_main()
 					strftime(buffer, sizeof(buffer), "%d/%m/%Y %H:%M:%S", &timeinfo);
 					ESP_LOGI(TAGM,"[*] Actual time in Italy: %s", buffer);
 					ESP_LOGI(TAGM,"[*] Timestamp synchronized correctly.");
-				}else{
+				} else {
 					ESP_LOGE(TAGM,"[x] Error : Sync Fail.");
 				}
 				pthread_mutex_unlock(&mutex);
 			}
 
-			if(strstr(rbuf,"STANDBY") != NULL)
+			if (strstr(rbuf,"STANDBY") != NULL)
 			{
 				ESP_LOGW(TAGM,"[c] sniff process stop");
 				vTaskSuspend(TaskHandle_sniff);
 			}
 
-			if(strstr(rbuf,"RESUME") != NULL)
+			if (strstr(rbuf,"RESUME") != NULL)
 			{
 				ESP_LOGW(TAGM,"[c] sniff process resume");
 				vTaskResume(TaskHandle_sniff);
 			}
 
-			if(strstr(rbuf,"REBOOT") != NULL)
+			if (strstr(rbuf,"REBOOT") != NULL)
 			{
 				ESP_LOGW(TAGM,"[c] rebooting");
 				ESP_LOGI(TAGM,"[!] reboot called by the Server. Reboot of the device Started");
@@ -335,9 +355,9 @@ void app_main()
 		}
 	}
 
-	/* if we are here would be for sure for some error in code so reboot */
+	/* if we are here would be for sure for some error in code, so reboot */
 	close(s);
-	ESP_LOGE(TAGM,"[x] Error: Ops, some errors accoured. REBOOTING");
+	ESP_LOGE(TAGM,"[x] Error: Ops, some errors occurred. REBOOTING");
 	esp_restart();
 }
 
@@ -390,13 +410,13 @@ void wifi_deinit()
 int esp_settings_init()
 {
 	/* REGISTRATION to the server */
-	if (s>=0)
+	if (s >= 0) //valid socket
 	{
 		ESP_LOGI(TAGM,"[*] Socket connection -> STARTED \n");
 		ESP_LOGI(TAGM,"[+] ESP registration-> message sent \n");
 		/* client registration procedure */
-		int trials = 5;
-		while(trials != 0)
+		int trials = 5; //number of attempts to connect to server with a REGISTER message
+		while (trials != 0)
 		{
 			if (client_register(s) != -1){
 				ESP_LOGI(TAGM,"[*] REGISTERED correctly.");
@@ -407,30 +427,30 @@ int esp_settings_init()
 			}
 		}
 		//check if errors occurs during registration
-		if (trials == 0){
+		if (trials == 0) { //after n failed attempts, the ESP will reboot
 			ESP_LOGE(TAGM,"[x] Error in the socket connection... REBOOTING! \n");
 			close(s);
 			esp_restart();
 		}
-	}else{
+	} else {
 		ESP_LOGE(TAGM,"[x] Error: Impossible to reach the broker.");
 		return -1;
 	}
 
 	/* SYNCHRONIZATION of the TIMESTAMP with the server */
-	if (s>=0)
+	if (s >= 0)
 	{
 		ESP_LOGI(TAGM,"[*] Connected Successfully with Time-Server.");
 		ESP_LOGI(TAGM,"[+] ESP timestamp SyncTask -> STARTED ");
 		/* client syncronization procedure */
-		while(timeinfo.tm_year < (2018 - 1900))
+		while (timeinfo.tm_year < (2018 - 1900))
 		{
 			ESP_LOGI(TAGM,"[x] Time not set, waiting...\n");
 			// getting timestamp from the server for sync
-			if ((server_time = (time_t) client_timesync(s)) != -1){
+			if ((server_time = (time_t) client_timesync(s)) != -1) {
 				ESP_LOGI(TAGM,"[*] Timestamp Correctly exchanged! Tempt of configuration..");
 				localtime_r(&server_time, &timeinfo);
-			}else
+			} else
 				ESP_LOGE(TAGM,"[x] Error : Sync Fail... RETRYING! \n");
 		}
 		// change the timezone to Italy
@@ -443,8 +463,7 @@ int esp_settings_init()
 		strftime(buffer, sizeof(buffer), "%d/%m/%Y %H:%M:%S", &timeinfo);
 		ESP_LOGI(TAGM,"[*] Actual time in Italy: %s", buffer);
 		ESP_LOGI(TAGM,"[*] Timestamp synchronized correctly.");
-	}else
-	{
+	} else {
 		ESP_LOGE(TAGM,"[x] Error: Impossible to reach the time-server.");
 		return -1;
 	}
@@ -494,13 +513,13 @@ void sniffer_packet_handler(void* buff, wifi_promiscuous_pkt_type_t type)
 		return;
 
 	mask = 0xFF00;
-	if((ntohs(hdr->frame_ctrl) & mask) == PROBE_MASK)
+	if ((ntohs(hdr->frame_ctrl) & mask) == PROBE_MASK)
 	{
 		fprintf(fSniffs, "Type=MGMT,");
 		fprintf(fSniffs, " SubType=PROBE,");
 
 		//md5((uint8_t*)buff, strlen(buff), result);
-		md5((uint8_t*)ipkt, sizeof(wifi_ieee80211_packet_t), result); //FEDE
+		md5((uint8_t*) ipkt, sizeof(wifi_ieee80211_packet_t), result); //FEDE
 		/* ESP_LOGI(TAGM, "1. strlen(buff) = %d", strlen(buff));
 		ESP_LOGI(TAGM, "2. sizeof(buff) = %d", sizeof(buff));
 		ESP_LOGI(TAGM, "3. sizeof(wifi_promiscuous_pkt_t) = %d", sizeof(wifi_promiscuous_pkt_t)); */
@@ -540,7 +559,7 @@ void sniffer_packet_handler(void* buff, wifi_promiscuous_pkt_type_t type)
 				   SSID_len,
 				   ssid_str
 			);
-		}else{
+		} else {
 			fprintf(fSniffs," SSID_id=%d,"
 				   " SSID_lenght=%u,"
 				   " SSID=%s,",
@@ -633,21 +652,35 @@ void sniff_task(void *pvParameter)
 					"\rDURATION: %d \n"
 					"vTYPE PKG: Probe/Beacons \n",
 					DEFAULT_SSID, channel, (TIMEOUT/1000));
-	while(1){
+	while (1) {
 		if (id_sniFile == 0)
 		{
 			/* 1 is the second file is selected
 			 *  return to update the first one */
-			pthread_mutex_lock(&mutex);
+			//pthread_mutex_lock(&mutex);
+			while (xSemaphoreTake( xMutex, ( TickType_t ) 500 ) != pdTRUE) {
+				ESP_LOGW(TAGM,"tentativo di prendere il mutex - sniff_task");
+			}
+			ESP_LOGW(TAGM,"MUTEX PRESO! - sniff_task");
+			
 			id_sniFile++;
-			pthread_mutex_unlock(&mutex);
+			//pthread_mutex_unlock(&mutex);
+			xSemaphoreGiveFromISR(xMutex, NULL);
+			ESP_LOGW(TAGM,"MUTEX RILASCIATO - sniff_task");
 			fSniffs = fopen(PATH_second, "w");
-		}else{
+		} else {
 			/* otherwise write on select the
 			 * and start write it */
-			pthread_mutex_lock(&mutex);
+			//pthread_mutex_lock(&mutex);
+			while (xSemaphoreTake( xMutex, ( TickType_t ) 500 ) != pdTRUE) {
+				ESP_LOGW(TAGM,"tentativo di prendere il mutex - sniff_task");
+			}
+			ESP_LOGW(TAGM,"MUTEX PRESO! - sniff_task");
+			
 			id_sniFile--;
-			pthread_mutex_unlock(&mutex);
+			//pthread_mutex_unlock(&mutex);
+			xSemaphoreGiveFromISR(xMutex, NULL);
+			ESP_LOGW(TAGM,"MUTEX RILASCIATO - sniff_task");
 			fSniffs = fopen(PATH_first, "w");
 		}
 		esp_wifi_set_promiscuous(true);
@@ -673,26 +706,33 @@ void filesend_task(void *pvParameter)
 	while(1)
 	{
 		//sync of timestamp (after the first time the socket is just open for sending the packages!)
-		if (s>=0)
+		if (s >= 0)
 		{
 
 			ESP_LOGI(TAGM,"[+] Sniffing the network for sending data to server. \n");
 			xEventGroupWaitBits(sniff_event_group, SNIFFEND_BIT, true, true, portMAX_DELAY);
 			//sending sniffed packages
 			int result = 0;
-			pthread_mutex_lock(&mutex);
-			if(id_sniFile == 0)
+			//pthread_mutex_lock(&mutex);
+			while (xSemaphoreTake( xMutex, ( TickType_t ) 500 ) != pdTRUE) {
+				ESP_LOGW(TAGM,"tentativo di prendere il mutex - filesend_task");
+			}
+			ESP_LOGW(TAGM,"MUTEX PRESO! - filesend_task");
+			if (id_sniFile == 0)
 				result = send_sniffed_packages(s, PATH_first);
 			else
 				result = send_sniffed_packages(s, PATH_second);
-			pthread_mutex_unlock(&mutex);
-			if(result == -1)
+			//pthread_mutex_unlock(&mutex);
+			xSemaphoreGiveFromISR(xMutex, NULL);
+			ESP_LOGW(TAGM,"MUTEX RILASCIATO - filesend_task");
+			ESP_LOGI(TAGM,"(+) send_sniffed_packages returned: %d", result);
+			if (result == -1)
 			{
 				ESP_LOGE(TAGM,"[x] Error: Problem opening file! I can't do anything. REBOOTING");
 				close(s);
 				esp_restart();
 			}
-		}else
+		} else
 		{
 			ESP_LOGE(TAGM,"[x] Error: Connection fail with server. REBOOTING");
 			close(s);

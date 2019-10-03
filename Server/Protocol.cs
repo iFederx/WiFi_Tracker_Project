@@ -323,6 +323,10 @@ namespace Panopticon
 			{
 				return;
 			}
+			catch (SocketException e)
+			{
+				return;
+			}
 			socket.Close(); //to cancel all callbacks registered on old socket
         }
 
