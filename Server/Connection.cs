@@ -39,14 +39,14 @@ namespace Panopticon
 				serverSocket.Listen(0);
 				serverSocket.BeginAccept(AcceptCallback, null);
 			}
-			catch (SocketException e)
+			catch (SocketException)
 			{
 				serverSocket.Close();
 				System.Console.WriteLine("Impossible to open server socket");
 				ctx.kill();
 				return;
 			}
-			catch (ObjectDisposedException e)
+			catch (ObjectDisposedException)
 			{
 				serverSocket.Close();
 				System.Console.WriteLine("Server socket not available");
@@ -126,11 +126,11 @@ namespace Panopticon
 			{
 				current.BeginReceive(buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, current);
 			}
-			catch (ObjectDisposedException e)
+			catch (ObjectDisposedException)
 			{
 				current.Close();
 			}
-			catch (SocketException e)
+			catch (SocketException)
 			{
 				current.Close();
 			}

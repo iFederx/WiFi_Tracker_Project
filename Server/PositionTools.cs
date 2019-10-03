@@ -237,7 +237,7 @@ namespace Panopticon
                         if (tr != null)
                         {
                             tag += Environment.NewLine + "tri: " + tr.X + " " + tr.Y;
-                            accumulator = accumulator.MultiplyScalar(0.8).Add(tr.Clip(Vector2D.Zero, p.room.size).MultiplyScalar(0.2));
+                            accumulator = accumulator.MultiplyScalar(0.87).Add(tr.Clip(Vector2D.Zero, p.room.size).MultiplyScalar(0.13));
                         }
                     }
                     p._Import(accumulator);
