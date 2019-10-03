@@ -233,10 +233,12 @@ namespace Panopticon
                 {
                     if (receivings.Count() == 3)
                     {
-                        Vector2D tr = triangulate_circles(receivings).Clip(Vector2D.Zero,p.room.size);
-                        tag += Environment.NewLine + "tri: " + tr.X + " " + tr.Y;
+                        Vector2D tr = triangulate_circles(receivings);
                         if (tr != null)
-                            accumulator = accumulator.MultiplyScalar(0.8).Add(tr.MultiplyScalar(0.2));
+                        {
+                            tag += Environment.NewLine + "tri: " + tr.X + " " + tr.Y;
+                            accumulator = accumulator.MultiplyScalar(0.8).Add(tr.Clip(Vector2D.Zero, p.room.size).MultiplyScalar(0.2));
+                        }
                     }
                     p._Import(accumulator);
                 }

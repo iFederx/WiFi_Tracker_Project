@@ -4,8 +4,6 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Panopticon
 {
@@ -37,7 +35,10 @@ namespace Panopticon
 
         internal void reboot()
         {
-            Protocol.ESP_Reboot(socket);
+            Task.Factory.StartNew(() =>
+            {
+                Protocol.ESP_Reboot(socket);
+            });
         }
 
         internal void shutdown()
