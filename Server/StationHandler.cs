@@ -33,12 +33,20 @@ namespace Panopticon
 			}    
         }
 
-        internal void reboot()
+        internal void reboot(bool asynchronous=true)
         {
-            Task.Factory.StartNew(() =>
+            if(asynchronous)
+            {
+                Task.Factory.StartNew(() =>
+                {
+                    Protocol.ESP_Reboot(socket);
+                });
+            }
+            else
             {
                 Protocol.ESP_Reboot(socket);
-            });
+            }
+
         }
 
         internal void shutdown()
