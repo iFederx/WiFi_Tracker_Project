@@ -33,6 +33,7 @@ namespace Panopticon
 		{
 			InitializeComponent();
 			this.Title += " (" + _handler.macAddress + ")";
+			this.Tag = _handler.macAddress;
 			FrameNewStation.Content = new AddingStationPages.SelectRoom(_ctx, _handler);
 			ctx = _ctx;
 			handler = _handler;

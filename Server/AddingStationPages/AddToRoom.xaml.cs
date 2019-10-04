@@ -26,7 +26,7 @@ namespace Panopticon.AddingStationPages
 		StationHandler handler = null;
 		static int maxRoomDimension = 300; //dpi
 		static int minRoomDimension = 200; //dpi
-		static int maxN = 20;
+		static int maxN = 40;
 		int radius = 1;
 
 		public AddToRoom()
@@ -74,23 +74,6 @@ namespace Panopticon.AddingStationPages
 				Canvas.SetLeft(e, r2g(s.location.X, 0) - radius);
 				Canvas.SetTop(e, r2g(s.location.Y, 1) - radius);
 			}
-		}
-
-		internal int FindWindowByMAC(string _macAddress, int _maxN)
-		{
-			int i = 0;
-			foreach (Window w in Application.Current.Windows)
-			{
-				if (i < _maxN)
-					if (String.Compare(w.Title, ("Add a new Station (" + _macAddress + ")")) == 0)
-					{
-						return i;
-					}
-					else i++;
-				else
-					break;
-			}
-			return _maxN;
 		}
 
 		private void Grid_MouseMove(object sender, MouseEventArgs e)
@@ -174,6 +157,23 @@ namespace Panopticon.AddingStationPages
 			{
 				Application.Current.Windows[i].Close();
 			}
+		}
+
+		internal int FindWindowByMAC(string _macAddress, int _maxN)
+		{
+			int i = 0;
+			foreach (Window w in Application.Current.Windows)
+			{
+				if (i < _maxN)
+					if (String.Compare((string)(w.Tag), _macAddress) == 0)
+					{
+						return i;
+					}
+					else i++;
+				else
+					break;
+			}
+			return _maxN;
 		}
 	}
 }

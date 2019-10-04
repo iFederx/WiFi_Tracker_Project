@@ -15,6 +15,7 @@ using System.Windows.Shapes;
 
 namespace Panopticon.AddingStationPages
 {
+	
     /// <summary>
     /// Logica di interazione per NewRoom.xaml
     /// </summary>
@@ -22,7 +23,7 @@ namespace Panopticon.AddingStationPages
     {
 		Context ctx;
 		StationHandler handler;
-
+		static float maxMeters = 40;
         public NewRoom()
         {
             InitializeComponent();
@@ -42,6 +43,11 @@ namespace Panopticon.AddingStationPages
 
 		private void Button_Continue(object sender, RoutedEventArgs e)
 		{
+			MessageBox.Show("ciao");
+			//because '.' isn't recognized as floating point
+			TB_RoomWidth.Text = TB_RoomWidth.Text.Replace('.', ',');
+			TB_RoomHeight.Text = TB_RoomHeight.Text.Replace('.', ',');
+
 			//firstly, I check that all form fields are correctly filled
 			int error = 0;
 			if (TB_RoomName.Text == "Room Name" || ctx.checkRoomExistence(TB_RoomName.Text) == true)
@@ -116,9 +122,17 @@ namespace Panopticon.AddingStationPages
 			float f;
 			if (!float.TryParse(_text, out f))
 				return false;
-			else if (f > 0)
-				return true;
-			return false;
+			else if (f < 0)
+			{
+				MessageBox.Show("Room dimension can't be negative value", "Error");
+				return false;
+			}
+			else if (f > maxMeters)
+			{
+				MessageBox.Show(String.Format("Room dimension must be lower than {0} m", maxMeters), "Error");
+				return false;
+			}
+			return true;
 		}
 	}
 }

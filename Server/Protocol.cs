@@ -55,9 +55,10 @@ namespace Panopticon
 				{
 					socket.Send(data); //blocking method
 				}
-				catch (SocketException)
+				catch (Exception)
 				{
 					macAddresses.Remove(socket);
+					socket.Close();
 					return -1;
 				}
 				int result = ESP_SyncClock(socket);
@@ -117,7 +118,7 @@ namespace Panopticon
 					{
 						station.hearbeat();
 					}
-					
+
 					if (!ignoring) fileParser.ParseOnTheFly(chunk, station);
 
 					while (toReceive > 0)
@@ -134,12 +135,10 @@ namespace Panopticon
 						if (!ignoring) fileParser.ParseOnTheFly(chunk, station);
 					}
 				}
-				catch (SocketException)
+				catch (Exception)
 				{
-					return -1;
-				}
-				catch (ObjectDisposedException e)
-				{
+					macAddresses.Remove(socket);
+					socket.Close();
 					return -1;
 				}
 
@@ -224,8 +223,9 @@ namespace Panopticon
 
 				return 0;
 			}
-			catch (ObjectDisposedException)
+			catch (Exception)
 			{
+				socket.Close();
 				return -1;
 			}
 		}
@@ -240,8 +240,9 @@ namespace Panopticon
 			{
 				socket.Send(data); //blocking method
 			}
-			catch (ObjectDisposedException)
+			catch (Exception)
 			{
+				socket.Close();
 				return;
 			}
 			Console.Write("Blinking... ");
@@ -257,8 +258,9 @@ namespace Panopticon
 			{
 				socket.Send(data); //blocking method
 			}
-			catch (ObjectDisposedException)
+			catch (Exception)
 			{
+				socket.Close();
 				return;
 			}
 			ESP_SyncClock(socket);
@@ -274,8 +276,9 @@ namespace Panopticon
 			{
 				socket.Send(data); //blocking method
 			}
-			catch (ObjectDisposedException)
+			catch (Exception)
 			{
+				socket.Close();
 				return;
 			}
 			Console.WriteLine("Blinking stopped");
@@ -291,8 +294,9 @@ namespace Panopticon
 			{
 				socket.Send(data); //blocking method
 			}
-			catch (ObjectDisposedException)
+			catch (Exception)
 			{
+				socket.Close();
 				return;
 			}
 		}
@@ -307,8 +311,9 @@ namespace Panopticon
 			{
 				socket.Send(data); //blocking method
 			}
-			catch (ObjectDisposedException)
+			catch (Exception)
 			{
+				socket.Close();
 				return;
 			}
 		}
@@ -330,17 +335,12 @@ namespace Panopticon
 					i++;
 				}
 			}
-			catch (ObjectDisposedException)
+			catch (Exception)
 			{
 				System.Console.WriteLine("Said {0} times", i);
+				socket.Close(); //to cancel all callbacks registered on old socket
 				return;
 			}
-			catch (SocketException)
-			{
-				System.Console.WriteLine("Said {0} times", i);
-				return;
-			}
-			socket.Close(); //to cancel all callbacks registered on old socket
         }
 
 		internal void kill()

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Net.Sockets;
 using System.Net;
+using System.Windows;
 
 namespace Panopticon
 {
@@ -86,9 +87,25 @@ namespace Panopticon
             }
 
             clientSockets.Add(socket);
-            socket.BeginReceive(buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, socket);
-            Console.WriteLine("Client connected, waiting for request...");
-            serverSocket.BeginAccept(AcceptCallback, null);
+			try
+			{
+				socket.BeginReceive(buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, socket);
+			}
+			catch (Exception)
+			{
+				socket.Close();
+				clientSockets.Remove(socket);
+			}
+			Console.WriteLine("Client connected, waiting for request...");
+			try
+			{
+				serverSocket.BeginAccept(AcceptCallback, null);
+			}
+			catch (Exception)
+			{
+				serverSocket.Close();
+				MessageBox.Show("Sorry, a fatal error on server socket has occurred. Restart Panopticon to pair new stations");
+			}
         }
 
         //when an ESP board sends a command, this Callback manages it
@@ -126,11 +143,7 @@ namespace Panopticon
 			{
 				current.BeginReceive(buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, current);
 			}
-			catch (ObjectDisposedException)
-			{
-				current.Close();
-			}
-			catch (SocketException)
+			catch (Exception)
 			{
 				current.Close();
 			}

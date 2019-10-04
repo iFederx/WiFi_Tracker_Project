@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using System.Threading;
+using System.Windows;
 
 namespace Panopticon
 {
@@ -88,6 +89,12 @@ namespace Panopticon
             s = loadStation(NameMAC, _handler); //search Station in DB
             if (s==null && AllowAsynchronous) //this is already the check if a configuration for the station exists or not
             {
+				int? wId = FindWindowByMAC(_handler.macAddress);
+				if (wId != null)
+				{
+					int id = wId ?? 0;
+					Application.Current.Windows[id].Close();
+				}
 				StationAdder sa1 = new StationAdder(this, _handler);
 				sa1.Show();
 				return null;
@@ -95,7 +102,21 @@ namespace Panopticon
             return s;
         }
 
-        public void loadRooms()
+		internal int? FindWindowByMAC(string _macAddress)
+		{
+			int i = 0;
+			foreach (Window w in Application.Current.Windows)
+			{
+				if (String.Compare((string)(w.Tag), _macAddress) == 0)
+				{
+					return i;
+				}
+				else i++;
+			}
+			return null;
+		}
+
+		public void loadRooms()
         {
             foreach (DatabaseInterface.RoomInfo ri in databaseInt.loadRooms())
                 createRoom(new Room(ri.RoomName, ri.Xlen, ri.Ylen));
@@ -300,6 +321,14 @@ namespace Panopticon
                 foreach (Station s in r.getStations())
                     s.handler.reboot(false);
             }
+
+			//closing configuration prompts, if opened
+			foreach (Window w in Application.Current.Windows)
+			{
+				if (w.Tag != null)
+					w.Close();
+			}
+
             wx.confirmclose();
             databasePub.confirmclose(); // wait that everything has been written to the db before killing.
             databaseInt.close(); //wait that no requests is in flight before killing the db

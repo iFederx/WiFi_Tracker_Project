@@ -82,11 +82,6 @@ namespace Panopticon.AddingStationPages
 			But_Continue.IsEnabled = true;
 		}
 
-		private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
-		{
-
-		}
-
 		private void Button_AddNewRoom(object sender, RoutedEventArgs e)
 		{
 			this.NavigationService.Navigate(new NewRoom(ctx, handler));
