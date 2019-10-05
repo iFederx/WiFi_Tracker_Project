@@ -77,7 +77,7 @@ namespace Panopticon
 			ctx = _ctx;
 			cds = new ConcurrentDictionaryStack<string, Packet>();
 
-			timer1 = new System.Timers.Timer(60000); //every 60 seconds I execute MyMethod
+			timer1 = new System.Timers.Timer(30000); //every 30 seconds I execute MyMethod
 			timer1.Elapsed += MyMethod;
 			timer1.Enabled = true;
 		}
@@ -87,7 +87,19 @@ namespace Panopticon
 			System.Console.WriteLine("Prova {0}", i++);
 			ctx.checkAllStationAliveness();
 			Packet p;
-			while (cds.popConditional(isOld, keyOf, out p)) System.Console.WriteLine("Packet {0} removed from CDS", p.Hash);
+			while (cds.popConditional(isOld, keyOf, out p))
+				System.Console.WriteLine("Packet {0} removed from CDS", p.Hash);
+			if (i%120 == 0) //true every hour
+			{
+				foreach (Room r in ctx.getRooms())
+				{
+					foreach (Station s in r.getStations())
+					{
+						Protocol.ESP_SyncClockRequest(s.handler.socket);
+						System.Console.WriteLine("Clock sync of station {0}", s.handler.macAddress);
+					}
+				}
+			}
 		}
 
 		public void ParseOnTheFly(String input, Station receivingStation)

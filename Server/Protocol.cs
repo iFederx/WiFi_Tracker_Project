@@ -39,7 +39,7 @@ namespace Panopticon
 			DateTime timestampDT = new DateTime();
 			bool ignoring = false; //true if there's any reason to ignore the file received
 
-			if (text.IndexOf("REGISTER(") > -1)
+			if (text.IndexOf("REGISTER(") > -1) //-----------------------REGISTER------------------------
 			{
 				int offset = text.IndexOf("REGISTER(");
 				string macAddress = text.Substring(offset + 9, 17);
@@ -64,7 +64,7 @@ namespace Panopticon
 				int result = ESP_SyncClock(socket);
 				if (result == -1) return -1;
 			}
-			else if ((x = text.IndexOf("FILE")) > -1)
+			else if ((x = text.IndexOf("FILE")) > -1) //-------------------FILE----------------------------
 			{
 				//FILE\r\n BBBB TTTT 010101010101010101010...
 
@@ -144,6 +144,11 @@ namespace Panopticon
 
 				Console.WriteLine("{1} Client:{0} data received.", socket.RemoteEndPoint, DateTime.Now.ToString());
 
+			}
+			else if (text.IndexOf("SYNC") > -1) //----------------------SYNC----------------------------
+			{
+				int result = ESP_SyncClock(socket);
+				if (result == -1) return -1;
 			}
 			else return -1;
 
@@ -263,7 +268,6 @@ namespace Panopticon
 				socket.Close();
 				return;
 			}
-			ESP_SyncClock(socket);
         }
 
         /// <summary>

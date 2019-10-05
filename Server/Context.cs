@@ -304,6 +304,9 @@ namespace Panopticon
         public void kill()
         {
 			connection.kill();
+			/*System.Console.WriteLine("Sonno...");
+			Thread.Sleep(1000*60);
+			System.Console.WriteLine("Minuto passato");*/
             MainWindow wx = guiPub.linkedwindow;
             wx.kill();
             guiPub.kill();
