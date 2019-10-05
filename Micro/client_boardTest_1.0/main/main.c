@@ -29,14 +29,16 @@
 const char *TAGM = "Main";
 struct tm timeinfo;
 extern time_t server_time; //FEDE
+time_t server_time_available;
 int s = 0;	/* socket ID */
 
 /* shared resources and mutex
  * to handle the parallel storage
  * sniffed_pkg.txt is the file
  * containing the sniffed data */
-pthread_mutex_t mutex;
+//pthread_mutex_t mutex;
 SemaphoreHandle_t xMutex = NULL;
+//SemaphoreHandle_t xMutexTime = NULL;
 FILE *fSniffs;
 const char *PATH_first = "/spiffs/sniffed_pkg1.txt";
 const char *PATH_second = "/spiffs/sniffed_pkg2.txt";
@@ -140,7 +142,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 		ESP_LOGW(TAGM,"Warning: ESP is disconnected from the network!\n");
 		xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
 		// here we connect with the network and continue, if it doesn't work after portMAX_DELAY time then it abort!
-		wifi_init();
+		esp_restart();
         break;
 
 	case SYSTEM_EVENT_AP_STOP:
@@ -252,6 +254,14 @@ void app_main()
 	}
 	xSemaphoreGiveFromISR(xMutex, NULL);
 
+	/*xMutexTime = xSemaphoreCreateBinary();
+	if (xMutexTime == NULL) {
+		ESP_LOGE(TAGM,"[x] Error: Mutex time init failed. REBOOTING");
+		close(s);
+		esp_restart();
+	}
+	xSemaphoreGiveFromISR(xMutexTime, NULL);*/
+
 
 	/*if(pthread_mutex_init(&mutex, NULL) != 0)
 	{
@@ -278,7 +288,7 @@ void app_main()
 	{
 		ESP_LOGI(TAGM,"waiting for command from the server...");
 		n = recv(s, rbuf, BUFLEN-1, 0);
-		ESP_LOGI(TAGM, "received a COMMAND of N=%d BYTES", n);
+		ESP_LOGW(TAGM, "received a COMMAND of N=%d BYTES", n);
 		if (n==0) {
 			ESP_LOGE(TAGM,"Error: Server shut-down during transfering, data will be broken.\n");
 			break;
@@ -296,28 +306,34 @@ void app_main()
 				ESP_LOGW(TAGM,"[c] start blinking");
 				BLINK_TIME = 200;
 			}
-
-			if (strstr(rbuf, "OKLED") != NULL) {
+			else if (strstr(rbuf, "OKLED") != NULL) {
 				ESP_LOGW(TAGM,"[c] stop blinking");
 				BLINK_TIME = 100;
 			}
-
+			else if (strstr(rbuf,"REBOOT") != NULL)
+			{
+				ESP_LOGW(TAGM,"[c] rebooting");
+				ESP_LOGI(TAGM,"[!] reboot called by the Server. Reboot of the device Started");
+				close(s);
+				esp_restart();
+			}
 			/* Only in this SYNC there is a variation: here the PING-PONG is
 			 * preceeded by another SYNC from The ESP32.
 			 * Nothing else change from the initial one */
-			if (strstr(rbuf,"SYNC") != NULL)
+			else if (strstr(rbuf,"SYNC") != NULL)
 			{
-				pthread_mutex_lock(&mutex);
 				ESP_LOGW(TAGM,"[c] timestamping");
 				ESP_LOGI(TAGM,"[+] ESP timestamp SyncTask -> STARTED ");
 				/* send SYNC to start the procedure */
 				if (send_msg(s, "SYNC") != -1) {
 					/* client syncronization procedure */
-					if ((server_time = (time_t) client_timesync(s)) != -1) {
+					if ((server_time = (time_t) client_timesync(s)) > 0) {
 						ESP_LOGI(TAGM,"[*] Timestamp Correctly exchanged! Tempt of configuration..");
 						localtime_r(&server_time, &timeinfo);
-					} else
+					} else {
 						ESP_LOGE(TAGM,"[x] Error : Sync Fail... RETRYING!");
+						esp_restart();
+					}
 					// change the timezone to Italy
 					setenv("TZ", "CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00", 1);
 					tzset();
@@ -329,28 +345,18 @@ void app_main()
 					ESP_LOGI(TAGM,"[*] Timestamp synchronized correctly.");
 				} else {
 					ESP_LOGE(TAGM,"[x] Error : Sync Fail.");
+					esp_restart();
 				}
-				pthread_mutex_unlock(&mutex);
 			}
-
-			if (strstr(rbuf,"STANDBY") != NULL)
+			else if (strstr(rbuf,"STANDBY") != NULL)
 			{
 				ESP_LOGW(TAGM,"[c] sniff process stop");
 				vTaskSuspend(TaskHandle_sniff);
 			}
-
-			if (strstr(rbuf,"RESUME") != NULL)
+			else if (strstr(rbuf,"RESUME") != NULL)
 			{
 				ESP_LOGW(TAGM,"[c] sniff process resume");
 				vTaskResume(TaskHandle_sniff);
-			}
-
-			if (strstr(rbuf,"REBOOT") != NULL)
-			{
-				ESP_LOGW(TAGM,"[c] rebooting");
-				ESP_LOGI(TAGM,"[!] reboot called by the Server. Reboot of the device Started");
-				close(s);
-				esp_restart();
 			}
 		}
 	}
@@ -450,8 +456,10 @@ int esp_settings_init()
 			if ((server_time = (time_t) client_timesync(s)) != -1) {
 				ESP_LOGI(TAGM,"[*] Timestamp Correctly exchanged! Tempt of configuration..");
 				localtime_r(&server_time, &timeinfo);
-			} else
+			} else {
 				ESP_LOGE(TAGM,"[x] Error : Sync Fail... RETRYING! \n");
+				esp_restart();
+			}
 		}
 		// change the timezone to Italy
 		setenv("TZ", "CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00", 1);
@@ -533,7 +541,7 @@ void sniffer_packet_handler(void* buff, wifi_promiscuous_pkt_type_t type)
 			   hdr->addr2[0],hdr->addr2[1],hdr->addr2[2],
 			   hdr->addr2[3],hdr->addr2[4],hdr->addr2[5],
 			   (int)hdr->sequence_ctrl,
-			   (unsigned long long) server_time + (unsigned long long) time(NULL),
+			   (unsigned long long) server_time_available + (unsigned long long) time(NULL),
 			   result[0],result[1],result[2],result[3],result[4],result[5],result[6],result[7],
 			   result[8],result[9],result[10],result[11],result[12],result[13],result[14],result[15]
 		);
@@ -652,7 +660,9 @@ void sniff_task(void *pvParameter)
 					"\rDURATION: %d \n"
 					"vTYPE PKG: Probe/Beacons \n",
 					DEFAULT_SSID, channel, (TIMEOUT/1000));
-	while (1) {
+	while (1)
+	{
+		server_time_available = server_time; //safe update of server_time_available
 		if (id_sniFile == 0)
 		{
 			/* 1 is the second file is selected

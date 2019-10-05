@@ -32,6 +32,20 @@ int start_socket_connection(char *ip, char *port)
         return -1;
     }
 
+	struct timeval timeout;      
+    timeout.tv_sec = 5;
+    timeout.tv_usec = 0;
+
+    if (setsockopt (skt, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout, sizeof(timeout)) < 0) {
+		ESP_LOGE(TAGS, "setsockopt failed 1");
+		esp_restart();
+	}
+	int val = 1;
+	if(setsockopt(skt, SOL_SOCKET, SO_KEEPALIVE, &val, sizeof(val)) < 0) {
+		ESP_LOGE(TAGS, "setsockopt failed 2");
+		esp_restart();
+	}
+
     bzero(&saddr, sizeof(saddr));
     saddr.sin_family = AF_INET;
     saddr.sin_port = tport_n;
@@ -46,6 +60,7 @@ int start_socket_connection(char *ip, char *port)
     return skt;
 }
 
+//-1 errore
 int send_msg(int socket, char *msg)
 {
 	size_t	len, n;
@@ -56,6 +71,7 @@ int send_msg(int socket, char *msg)
 	if ((n = write(socket, buf, len)) != len)
 	{
 		ESP_LOGE(TAGS,"Write error");
+		esp_restart();
 		return -1;
 	}
 	return n;
@@ -116,7 +132,7 @@ int client_register(int socket)
 	return -1;
 }
 
-
+//ritorna 0 se fallisce, il timestamp se ha successo
 unsigned long int client_timesync(int socket)
 {
 	int n=0;
@@ -233,10 +249,7 @@ int send_sniffed_packages(int skt, const char *path){
 	ESP_LOGI(TAGS,"(+) ntohl(size)_u = %u", ntohl(size));
 	while (sendn_size < ntohl(size)) {
 		msg_len = fread(buf, 1, BUFLEN, f);
-		ESP_LOGI(TAGS,"(+) msg_len=%d", msg_len);
-		int res_write = write(skt, buf, msg_len);
-		ESP_LOGI(TAGS,"(+) res_write=%d", res_write);
-		if (res_write < 0 || res_write != msg_len) {
+		if (write(skt, buf, msg_len) != msg_len) {
 			ESP_LOGE(TAGS,"(!) Error: Fail in sending file content.");
 			success='f';
 			esp_restart();
