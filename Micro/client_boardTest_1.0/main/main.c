@@ -324,6 +324,10 @@ void app_main()
 			{
 				ESP_LOGW(TAGM,"[c] timestamping");
 				ESP_LOGI(TAGM,"[+] ESP timestamp SyncTask -> STARTED ");
+				while (xSemaphoreTake( xMutex, ( TickType_t ) 500 ) != pdTRUE) {
+					ESP_LOGW(TAGM,"tentativo di prendere il mutex - sync_task");
+				}
+				ESP_LOGW(TAGM,"MUTEX PRESO! - sync_task");
 				/* send SYNC to start the procedure */
 				if (send_msg(s, "SYNC") != -1) {
 					/* client syncronization procedure */
@@ -347,6 +351,8 @@ void app_main()
 					ESP_LOGE(TAGM,"[x] Error : Sync Fail.");
 					esp_restart();
 				}
+				xSemaphoreGiveFromISR(xMutex, NULL);
+				ESP_LOGW(TAGM,"MUTEX RILASCIATO - sync_task");
 			}
 			else if (strstr(rbuf,"STANDBY") != NULL)
 			{
@@ -674,11 +680,15 @@ void sniff_task(void *pvParameter)
 			ESP_LOGW(TAGM,"MUTEX PRESO! - sniff_task");
 			
 			id_sniFile++;
+			ESP_LOGI(TAGM,"Sniffing file %d\n", id_sniFile);
+
 			//pthread_mutex_unlock(&mutex);
 			xSemaphoreGiveFromISR(xMutex, NULL);
 			ESP_LOGW(TAGM,"MUTEX RILASCIATO - sniff_task");
 			fSniffs = fopen(PATH_second, "w");
-		} else {
+		}
+		else
+		{
 			/* otherwise write on select the
 			 * and start write it */
 			//pthread_mutex_lock(&mutex);
@@ -688,6 +698,8 @@ void sniff_task(void *pvParameter)
 			ESP_LOGW(TAGM,"MUTEX PRESO! - sniff_task");
 			
 			id_sniFile--;
+			ESP_LOGI(TAGM,"Sniffing file %d\n", id_sniFile);
+			
 			//pthread_mutex_unlock(&mutex);
 			xSemaphoreGiveFromISR(xMutex, NULL);
 			ESP_LOGW(TAGM,"MUTEX RILASCIATO - sniff_task");
@@ -728,10 +740,14 @@ void filesend_task(void *pvParameter)
 				ESP_LOGW(TAGM,"tentativo di prendere il mutex - filesend_task");
 			}
 			ESP_LOGW(TAGM,"MUTEX PRESO! - filesend_task");
-			if (id_sniFile == 0)
+			if (id_sniFile == 0) {
+				ESP_LOGI(TAGM,"Sending file %d\n", id_sniFile);
 				result = send_sniffed_packages(s, PATH_first);
-			else
+			}
+			else {
+				ESP_LOGI(TAGM,"Sending file %d\n", id_sniFile);
 				result = send_sniffed_packages(s, PATH_second);
+			}
 			//pthread_mutex_unlock(&mutex);
 			xSemaphoreGiveFromISR(xMutex, NULL);
 			ESP_LOGW(TAGM,"MUTEX RILASCIATO - filesend_task");
