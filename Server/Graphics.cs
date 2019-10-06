@@ -83,7 +83,14 @@ namespace Panopticon
                         (1 - (fx - ix) + (fy - iy)) * heatmap[ix, iy + 1] +
                         ((fx - ix) + (fy - iy)) * heatmap[ix + 1, iy + 1];
                     val /= 4;
-                    val = Math.Pow((val - min) / (max - min), 0.6);
+                    if (max > min)
+                        val = Math.Pow((val - min) / (max - min), 0.6);
+                    else
+                        val = 1;
+                    if (val > 1)
+                        val = 1;
+                    else if (val < 0)
+                        val = 0; 
                     byte G = (byte)(val < 0.25 ? 255 : 255 * 4 * (1 - val) / 3);
                     byte B = (byte)(val < 0.25 ? 255 * 4 * (0.25 - val) : 0);
                     bitmap.SetPixel(x, y, (byte)255, G, B, 1);
