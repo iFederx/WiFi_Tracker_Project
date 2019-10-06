@@ -763,6 +763,7 @@ namespace Panopticon
                     {
                         stats.heatmaps = ctx.databaseInt.loadHeathmaps(null, room.roomName, room.size.X, room.size.Y, month, year, 2, UNCERTAIN_POSITION);
                         hmap = Graphics.createheatmap(stats.heatmaps[stats.selectedday]);
+                        hmap.Freeze();
                     }
                 }
                 Interlocked.Decrement(ref requestsInFlight);
