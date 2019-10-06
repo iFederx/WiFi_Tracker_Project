@@ -72,7 +72,6 @@ namespace Panopticon
                 return;
             ab = stats[r];
             updateRoomStat(ab,stat,statTime);
-            System.Diagnostics.Debug.Print("ROOM STAT: " + r.roomName + " count: " + stat);
         }
 
         private void updateRoomStat(AvgBucket ab, double instantaneousPeopleCount, DateTime statTime)

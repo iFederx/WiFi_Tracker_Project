@@ -53,7 +53,9 @@ namespace Panopticon
 				
 			}
         }
-
+        /// <summary>
+        /// Analysis pipeline for a packet
+        /// </summary>
         private void analyzePacket(Packet p)
         {
             Device d;
@@ -89,6 +91,9 @@ namespace Panopticon
             deviceMap.upsert(d.identifier, d, (old, cur) => { return cur; });//single thread safe only. To make it multithread i should also copy other fields 
 			
 		}
+        /// <summary>
+        /// Merge two (anonymous) devices that have been detected to be the same
+        /// </summary>
         void mergeAnonimous(Device A, Device B, int score)
         {
             if (A.firstPosition.positionDate > B.firstPosition.positionDate)
@@ -116,6 +121,9 @@ namespace Panopticon
             anoniDevices.Remove(A.MAC);
             anoniDevices[B.MAC] = B.identifier;
         }
+        /// <summary>
+        /// Score the probability of two (anonymous) devices to be the same
+        /// </summary>
         private int scoreDeviceSimilarity(Device A, Device B)
         {
             int score=0;
@@ -146,6 +154,9 @@ namespace Panopticon
                 score += 30;
             return score;
         }
+        /// <summary>
+        /// Crossmatch all the detected anonymous device and found which are the same
+        /// </summary>
         private void findSameAnonimous()
         {
             List<String> anoni=anoniDevices.Values.ToList<String>();
@@ -178,12 +189,17 @@ namespace Panopticon
                 }
             }
         }
-       
+       /// <summary>
+       /// Check whether the MAC is a local/anonymous address
+       /// </summary>
         private bool isMACLocal(string sendingMAC)
         {
             long mac = Convert.ToInt64(sendingMAC, 16);
             return (mac & 0x020000000000) > 0;
         }
+        /// <summary>
+        /// Compute the device positions given the receivings of a packet
+        /// </summary>
         private void locateAndPublish(Device d,Packet p)
         {
             Room oldRoom =(d.lastPosition!=null)?d.lastPosition.room:null;
@@ -206,10 +222,11 @@ namespace Panopticon
             placeInRoomAndPublish(d.lastPosition.room, d, newposition, e);
 
         }
-
+        /// <summary>
+        /// Add the device to its room and propagate the new position to the publishers
+        /// </summary>
         private void placeInRoomAndPublish(Room room, Device d, PositionTools.Position p, Publisher.EventType action)
         {
-            //optionally here insert to update only if device has more than 5 minutes of history
             if (action == Publisher.EventType.Appear || action == Publisher.EventType.MoveIn)
                 room.addDevice(d);
             else if (action != Publisher.EventType.Update)
@@ -228,7 +245,9 @@ namespace Panopticon
             killed = true;
             t.Cancel();
         }
-        
+        /// <summary>
+        /// Remove from the device list the devices that have not been detected for a while
+        /// </summary>
         private void householdCleaning()
         {
             Device removed;

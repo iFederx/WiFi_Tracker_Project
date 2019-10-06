@@ -328,7 +328,9 @@ namespace Panopticon
                 uiElements.Add(s, lst);
             }          
         }
-
+        /// <summary>
+        /// Ask for station removal confirmation
+        /// </summary>
 		private void Rectangle_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
 		{
             Station s = ((Station)((Rectangle)sender).Tag);
@@ -359,11 +361,16 @@ namespace Panopticon
                 }
             }
         }
-
+        /// <summary>
+        ///Highlight room in the room list when mouse over
+        /// </summary>
         private void doColorIn(object sender, MouseEventArgs e)
         {
             ((Border)sender).Background = Brushes.LightGray;
         }
+        /// <summary>
+        /// Revert highlighted room back to normal
+        /// </summary>
         private void doColorOut(object sender, MouseEventArgs e)
         {
             Border b = ((Border)sender);
@@ -428,6 +435,9 @@ namespace Panopticon
             
         }
 
+        /// <summary>
+        /// Ask for room archival confirmation and execute
+        /// </summary>
 		private void DeleteRoom_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
 		{
 			Room roomToDelete = ((RoomInfoGUI)((Border)sender).Tag).room;
@@ -435,7 +445,7 @@ namespace Panopticon
 			if (r == MessageBoxResult.Yes)
 			{
 				ctx.removeRoom(roomToDelete.roomName);
-                if (!ctx.deleteRoom(roomToDelete.roomName))
+                if (!ctx.archiveRoom(roomToDelete.roomName))
                     MessageBox.Show("Error while marking the room as archived on persistent storage. The room has been archived for the current session, but could be loaded again at next application startup.");
 			}
 		}
@@ -473,7 +483,9 @@ namespace Panopticon
             dvcinfo_room.SelectedIndex = 0;
             Style = (Style)FindResource(typeof(Window));
         }
-
+        /// <summary>
+        /// Program loaded: open a tab
+        /// </summary>
         private void Window_ContentRendered(object sender, EventArgs e)
         {
             if (roomlistpanel.Children.Count > 0)
@@ -484,7 +496,9 @@ namespace Panopticon
         {
 			ctx.kill();
         }
-
+        /// <summary>
+        /// User has requested a new data view, load eventual data
+        /// </summary>
         private void tabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             lock(guilock)
@@ -525,6 +539,9 @@ namespace Panopticon
             else
                 trackrlp_load.IsEnabled = true;
         }
+        /// <summary>
+        /// Load replay
+        /// </summary>
         private void Rlp_load_Click(object sender, RoutedEventArgs e)
         {
             lock(guilock)
@@ -583,12 +600,13 @@ namespace Panopticon
                 });          
             }
         }
-
+        /// <summary>
+        /// Execute one step in the replay animation
+        /// </summary>
         private void animationstep(object obj, EventArgs ev)
         {
             lock(guilock)
             {
-                System.Diagnostics.Debug.Print(loadedreplay.at.ToString());
                 if (!loadedreplay.playing || (loadedreplay.indexupto==loadedreplay.replaydata.Length-1 && loadedreplay.replaydata[loadedreplay.indexupto].timestamp<loadedreplay.at))
                     return;
                 DevicePosition currelem = loadedreplay.replaydata[loadedreplay.indexupto];
@@ -615,13 +633,14 @@ namespace Panopticon
                 trackrlp_time.Text = loadedreplay.at.ToString();
             }
         }
-
+        /// <summary>
+        /// Go back 10 seconds in the replay animation
+        /// </summary>
         private void back_MouseDown(object sender, MouseButtonEventArgs e)
         {
             lock(guilock)
             {
                 DateTime newtime = loadedreplay.at.AddSeconds(-10);
-                System.Diagnostics.Debug.Print(loadedreplay.indexupto.ToString());
                 DevicePosition currelem = loadedreplay.replaydata[loadedreplay.indexupto];
                 while (loadedreplay.indexupto>=0 && currelem.timestamp>=newtime)
                 {
@@ -642,7 +661,9 @@ namespace Panopticon
                 trackrlp_time.Text = loadedreplay.at.ToString();
             }
         }
-
+        /// <summary>
+        /// Decrease replay animation speed
+        /// </summary>
         private void slower_MouseDown(object sender, MouseButtonEventArgs e)
         {
             lock (guilock)
@@ -652,7 +673,9 @@ namespace Panopticon
                 trackrlp_speed.Text = "@"+2 * loadedreplay.intersec + "x";
             }
         }
-
+        /// <summary>
+        /// Pause replay animation
+        /// </summary>
         private void pause_MouseDown(object sender, MouseButtonEventArgs e)
         {
             lock(guilock)
@@ -662,7 +685,9 @@ namespace Panopticon
                 loadedreplay.playing = false;
             }
         }
-
+        /// <summary>
+        /// (re)start replay animation
+        /// </summary>
         private void play_MouseDown(object sender, MouseButtonEventArgs e)
         {
             lock(guilock)
@@ -676,7 +701,9 @@ namespace Panopticon
                 animationstep(null, null);
             }
         }
-
+        /// <summary>
+        /// Reset replay animation
+        /// </summary>
         private void reset_MouseDown(object sender, MouseButtonEventArgs e)
         {
             lock(guilock)
@@ -691,6 +718,9 @@ namespace Panopticon
 
             }
         }
+        /// <summary>
+        /// Reset controls of replay animation
+        /// </summary>
         private void clearreloop()
         {
             lock(guilock)
@@ -701,6 +731,9 @@ namespace Panopticon
                 trackrlp_devlist_panel.Children.Clear();
             }
         }
+        /// <summary>
+        /// Increase replay animation speed
+        /// </summary>
         private void faster_MouseDown(object sender, MouseButtonEventArgs e)
         {
             lock(guilock)
@@ -710,7 +743,9 @@ namespace Panopticon
                 trackrlp_speed.Text = "@"+2 * loadedreplay.intersec + "x";
             }
         }
-
+        /// <summary>
+        /// Go forward 10 seconds in the replay animation
+        /// </summary>
         private void forward_MouseDown(object sender, MouseButtonEventArgs e)
         {
             lock(guilock)
@@ -844,6 +879,9 @@ namespace Panopticon
                 hmap = Graphics.createheatmap(loadedstats.heatmaps[loadedstats.selectedday]);
             updateRoomStats(false, loadedstats, hmap);
         }
+        /// <summary>
+        /// Load the room stats of the previous month 
+        /// </summary>
         private void rmstats_premonth_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if (loadedstats == null)
@@ -859,7 +897,9 @@ namespace Panopticon
             }
             loadRoomStats(newmonth,newyear,selectedRoom.room);
         }
-
+        /// <summary>
+        /// Load the room stats of the next month
+        /// </summary>
         private void rmstats_nextmonth_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if (loadedstats == null)
@@ -875,7 +915,9 @@ namespace Panopticon
             }
             loadRoomStats(newmonth, newyear,selectedRoom.room);
         }
-
+        /// <summary>
+        /// Clear the controls used for room stats
+        /// </summary>
         private void resetRmStats(Boolean resetMacs)
         {
             lock(guilock)
@@ -897,7 +939,9 @@ namespace Panopticon
             dvcinfo_search_Click(null, null);
             dvinfo.RaiseEvent(e);
         }
-
+        /// <summary>
+        /// Increase shown object for a device when the mouse is over its name
+        /// </summary>
         private void enlargedevice(object sender, RoutedEventArgs e)
         {
             String mac = (String)((FrameworkElement)sender).Tag;
@@ -907,7 +951,15 @@ namespace Panopticon
                 ((Ellipse)d_gui[0]).Width = 15;
                 ((Ellipse)d_gui[0]).Height = 15;
             }
+            if(loadedreplay!=null&&loadedreplay.uiElements!=null&&loadedreplay.uiElements.TryGetValue(mac,out d_gui))
+            {
+                ((Ellipse)d_gui[0]).Width = 15;
+                ((Ellipse)d_gui[0]).Height = 15;
+            }
         }
+        /// <summary>
+        /// Decrease enlarged object back to its size
+        /// </summary>
         private void shrinkdevice(object sender, RoutedEventArgs e)
         {
             String mac = (String)((FrameworkElement)sender).Tag;
@@ -917,7 +969,15 @@ namespace Panopticon
                 ((Ellipse)d_gui[0]).Width = 10;
                 ((Ellipse)d_gui[0]).Height = 10;
             }
+            if (loadedreplay != null && loadedreplay.uiElements != null && loadedreplay.uiElements.TryGetValue(mac, out d_gui))
+            {
+                ((Ellipse)d_gui[0]).Width = 10;
+                ((Ellipse)d_gui[0]).Height = 10;
+            }
         }
+        /// <summary>
+        /// Search for a device
+        /// </summary>
         private void dvcinfo_search_Click(object sender, RoutedEventArgs e)
         {
             dvcinfo_deviceid.Text = "Loading data...";
@@ -992,7 +1052,9 @@ namespace Panopticon
             dvcinfo_hourspresent.Children.Clear();
             dvcinfo_extralabel.Content = "";
         }
-
+        /// <summary>
+        /// Load advanced stats for a device
+        /// </summary>
         private void dvcinfo_load_Click(object sender, RoutedEventArgs e)
         {
             clearAdvancedDeviceStat();
@@ -1085,7 +1147,9 @@ namespace Panopticon
             });
             
         }
-
+        /// <summary>
+        /// Trigger search on enter in the searchbar
+        /// </summary>
         private void dvcinfo_idtextbox_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)

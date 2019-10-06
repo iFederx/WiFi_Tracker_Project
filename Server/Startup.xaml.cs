@@ -34,12 +34,6 @@ namespace Panopticon
             ctx.orchestrate();
             mn.Show();
             this.Close();
-            Thread testerT = new Thread(new ThreadStart(new Tester(ctx).testFEDE));
-            testerT.Start();
-
-			
-            
-
 		}
 	}
 }

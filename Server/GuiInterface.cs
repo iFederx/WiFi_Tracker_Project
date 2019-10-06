@@ -37,7 +37,6 @@ namespace Panopticon
                     Application.Current.Dispatcher.BeginInvoke((Action)(() => { if(!killed) linkedwindow.updateDevicePosition(d, p, e); }));
                 }
             }
-            System.Diagnostics.Debug.Print("DEVICE POSITION: " + p.X + " " + p.Y);
         }
 
         internal override void publishStat(double stat, Room r, DateTime statTime, StatType s)
@@ -49,11 +48,9 @@ namespace Panopticon
                 else
                     Application.Current.Dispatcher.BeginInvoke((Action)(() => { if (!killed) linkedwindow.updateFiveMinutesDeviceCount(r, stat); }));
             }
-            System.Diagnostics.Debug.Print("GUI ROOM STAT: " + r.roomName + " count: " + stat);
         }
         internal override void publishRoomUpdate(Room r, EventType e)
         {
-            System.Diagnostics.Debug.Print("-----------------------GI" + linkedwindow);
             if (linkedwindow != null)
             {
                 if (e == EventType.Appear)

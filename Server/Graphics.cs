@@ -138,8 +138,10 @@ namespace Panopticon
                 i++;
             }
         }
+        
         public static class FancyColorCreator
         {
+            /* This code is not owned by the authors of the application nor a work of theirs, is an edited version of a code found years ago on stack overflow or something like that, author unknown */
             const double goldenratioconiugate = 360 * 0.618033988749895;
 
             private static void HsvToRgb(double h, double S, double V, out int r, out int g, out int b)
@@ -251,7 +253,6 @@ namespace Panopticon
                 randomhue += goldenratioconiugate;
                 HsvToRgb(randomhue, 0.6, 0.85, out r, out g, out b);
                 Color newCol = Color.FromRgb((byte)r, (byte)g, (byte)b);
-                System.Diagnostics.Debug.Print(r + " " + g + " " + b + " " + randomhue);
                 Brush brush = new SolidColorBrush(newCol);
                 return brush;
             }

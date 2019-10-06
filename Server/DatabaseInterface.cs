@@ -69,7 +69,6 @@ namespace Panopticon
         public DatabaseInterface(String _connectionstring) 
         {
             connectionstring = _connectionstring;
-            System.Diagnostics.Debug.Print(connectionstring);
             try
             {
                 for(int i=0;i<CONNPOOLSIZE;i++)
@@ -284,7 +283,7 @@ namespace Panopticon
                 "ylength",Ylen);
         }
 
-        internal bool deleteRoom(string roomName)
+        internal bool archiveRoom(string roomName)
         {
             return performNonQuery("update rooms set archived=true where roomname=@roomname",
                 "roomname",roomName);

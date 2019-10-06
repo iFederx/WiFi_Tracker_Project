@@ -51,7 +51,9 @@ namespace Panopticon
             analyzer = new AnalysisEngine(publishers, deviceMap);
 			connection = new Connection(this);
 		}
-
+        /// <summary>
+        /// Initialize and start all the background threads of the application
+        /// </summary>
         public void orchestrate()
         {
             Thread socketListenerT = new Thread(new ThreadStart(connection.StartConnection));
@@ -67,11 +69,16 @@ namespace Panopticon
 			threads.AddLast(analyzerT);
             threads.AddLast(aggregatorT);
 		}
+        /// <summary>
+        /// Get the current analysis engine
+        /// </summary>
         public AnalysisEngine getAnalyzer()
         {
            return analyzer;
         }
-       
+       /// <summary>
+       /// Associate a station, if its config exists, or open the config procedure
+       /// </summary>
         public Station tryAddStation(String NameMAC, StationHandler _handler, bool AllowAsynchronous) //Replace Object with the relevant type
         {
             //check if not attempting reconnection
@@ -115,7 +122,9 @@ namespace Panopticon
 			}
 			return null;
 		}
-
+        /// <summary>
+        /// Load the rooms from persistent storage
+        /// </summary>
 		public void loadRooms()
         {
             foreach (DatabaseInterface.RoomInfo ri in databaseInt.loadRooms())
@@ -123,7 +132,9 @@ namespace Panopticon
             createRoom(Room.externRoom);
             return;
         }
-        // true if exists, false if not
+        /// <summary>
+        /// Check if a name is already used by a room in persistent storage
+        /// </summary>
         public Nullable<bool> checkRoomExistence(String roomName)
         {
             bool? val = databaseInt.checkRoomExistence(roomName);
@@ -131,14 +142,23 @@ namespace Panopticon
                val = new bool?(val.Value|| roomName == "External" || roomName == "Overall");
             return val;
         }
+        /// <summary>
+        /// Save room to persistent storage
+        /// </summary>
         public bool saveRoom(Room room)
         {
             return databaseInt.saveRoom(room.roomName,room.size.X,room.size.Y);
         }
-        public bool deleteRoom(String RoomName)
+        /// <summary>
+        /// Mark room in persistent storage as archived
+        /// </summary>
+        public bool archiveRoom(String RoomName)
         {
-            return databaseInt.deleteRoom(RoomName);
+            return databaseInt.archiveRoom(RoomName);
         }
+        /// <summary>
+        /// Try to load the configs of a station from persistent storage
+        /// </summary>
         public Station loadStation(String NameMAC, StationHandler handler)
         {
             DatabaseInterface.StationInfo? si = databaseInt.loadStationInfo(NameMAC);
@@ -167,7 +187,9 @@ namespace Panopticon
                     pb.publishStationUpdate(room,s,Publisher.EventType.Appear);
             return s;
         }
-
+        /// <summary>
+        /// Save station config to persistent storage
+        /// </summary>
         public bool saveStation(Station s)
         {
             DatabaseInterface.StationInfo si = new DatabaseInterface.StationInfo();
@@ -177,11 +199,16 @@ namespace Panopticon
             si.Y = s.location.Y;
             return databaseInt.saveStationInfo(si); ;
         }
+        /// <summary>
+        /// Remove the config of a station fro persisten storage
+        /// </summary>
         public bool deleteStation(String NameMAC)
         {
             return databaseInt.removeStation(NameMAC);
         }
-
+        /// <summary>
+        /// Create a new station object for a room
+        /// </summary>
         public Station createStation(Room room, String NameMAC, double X, double Y, StationHandler handler)
         {
             Station s = new Station();
@@ -198,26 +225,40 @@ namespace Panopticon
                     pb.publishStationUpdate(room,s,Publisher.EventType.Appear);
             return s;
         }
-
+        /// <summary>
+        /// Return the object instance for a currently associated station
+        /// </summary>
         public Station getStation(String NameMAC)
         {
             return stations.ContainsKey(NameMAC)?stations[NameMAC]:null;
         }
+        /// <summary>
+        /// Check if a station has been succesgully associated
+        /// </summary>
 		public bool StationConfigured(String NameMAC)
 		{
 			if (stations.ContainsKey(NameMAC))
 				return true;
 			else return false;
 		}
+        /// <summary>
+        /// Get all the rooms loaded
+        /// </summary>
         public IEnumerable<Room> getRooms()
         {
             return rooms.Values.ToArray<Room>();
         }
+        /// <summary>
+        /// Get the object instance for a specific room
+        /// </summary>
         public Room getRoom(String name)
         {
             Room room;
             return rooms.TryGetValue(name, out room)?room:null;
         }
+        /// <summary>
+        /// Deassociate a station
+        /// </summary>
         public void removeStation(String NameMAC, bool takelock=true)
         {
             Station s;
@@ -232,6 +273,9 @@ namespace Panopticon
                 if (pb.supportsOperation(Publisher.DisplayableType.StationUpdate))
                     pb.publishStationUpdate(room,s,Publisher.EventType.Disappear);
         }
+        /// <summary>
+        /// Unload a room
+        /// </summary>
         public void removeRoom(String RoomName)
         {
             Room room = rooms[RoomName];
@@ -248,6 +292,9 @@ namespace Panopticon
                 if (pb.supportsOperation(Publisher.DisplayableType.RoomUpdate))
                     pb.publishRoomUpdate(room, Publisher.EventType.Disappear);
         }
+        /// <summary>
+        /// Verify the status of associated stations in a room
+        /// </summary>
         public bool checkStationAliveness(Room room)
         {
             bool ris = true;
@@ -268,7 +315,9 @@ namespace Panopticon
             locker.ExitUpgradeableReadLock();
             return ris;
         }
-
+        /// <summary>
+        /// Verify the status of all associated stations
+        /// </summary>
 		public void checkAllStationAliveness()
 		{
 			foreach (Room r in rooms.Values)
@@ -279,7 +328,9 @@ namespace Panopticon
 				}
 			}
 		}
-        
+        /// <summary>
+        /// Load a new room
+        /// </summary>
         public Room createRoom(Room r)
         {
             //init station per room, user per room
@@ -297,7 +348,9 @@ namespace Panopticon
                         pb.publishRoomUpdate(r,Publisher.EventType.Appear);
             return r;
         }
-
+        /// <summary>
+        /// Orderly release resources and shutdown
+        /// </summary>
         public void kill()
         {
 			connection.kill();

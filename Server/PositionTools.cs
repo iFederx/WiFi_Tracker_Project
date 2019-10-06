@@ -204,12 +204,15 @@ namespace Panopticon
                 R = r;
             }
         }
+        /// <summary>
+        /// Compute the position given the receivings
+        /// </summary>
         internal static Position triangulate(List<Packet.Reception> receivings, DateTime receptiontime)
         {
             Position p = new Position(Vector2D.Zero, receivings[0].ReceivingStation.location.room);
             Vector2D accumulator = new Vector2D(Vector2D.Zero);
             p.positionDate = receptiontime;
-            String tag = ""; // DEBUG
+            String tag = ""; 
             if (receivings.Count() > 2)
             {
                 double minrssi = 0;
@@ -236,7 +239,7 @@ namespace Panopticon
                         Vector2D tr = triangulate_circles(receivings);
                         if (tr != null)
                         {
-                            tag += Environment.NewLine + "tri: " + tr.X + " " + tr.Y;
+                            //tag += Environment.NewLine + "tri: " + tr.X + " " + tr.Y;
                             accumulator = accumulator.MultiplyScalar(0.87).Add(tr.Clip(Vector2D.Zero, p.room.size).MultiplyScalar(0.13));
                         }
                     }
@@ -248,6 +251,9 @@ namespace Panopticon
             p.tag = tag;
             return p;
         }
+        /// <summary>
+        /// Convert the rssi to metric distance
+        /// </summary>
         private static double rssi2dis(double rssi)
         {
             rssi = -rssi - 30;
@@ -255,6 +261,11 @@ namespace Panopticon
             double dist = Math.Pow(2, rssi / 8) - 1;
             return dist;
         }
+        /// <summary>
+        /// Find the instersection between three circumferences
+        /// </summary>
+        /// <param name="receivings"></param>
+        /// <returns></returns>
         private static Vector2D triangulate_circles(List<Packet.Reception> receivings)
         {
             Circle a = new Circle(receivings[0].ReceivingStation.location, rssi2dis(receivings[0].RSSI));

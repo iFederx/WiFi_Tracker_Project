@@ -38,6 +38,5 @@ namespace Panopticon
         internal String Hash;
         internal String HTCapabilities;
         internal Int64 SequenceNumber;
-        internal PositionTools.Position testposition; //debug-testing property. To be removed
     }
 }
