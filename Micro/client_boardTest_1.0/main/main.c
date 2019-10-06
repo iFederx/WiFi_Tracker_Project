@@ -36,9 +36,9 @@ int s = 0;	/* socket ID */
  * to handle the parallel storage
  * sniffed_pkg.txt is the file
  * containing the sniffed data */
-//pthread_mutex_t mutex;
+
 SemaphoreHandle_t xMutex = NULL;
-//SemaphoreHandle_t xMutexTime = NULL;
+
 FILE *fSniffs;
 const char *PATH_first = "/spiffs/sniffed_pkg1.txt";
 const char *PATH_second = "/spiffs/sniffed_pkg2.txt";
@@ -254,21 +254,6 @@ void app_main()
 	}
 	xSemaphoreGiveFromISR(xMutex, NULL);
 
-	/*xMutexTime = xSemaphoreCreateBinary();
-	if (xMutexTime == NULL) {
-		ESP_LOGE(TAGM,"[x] Error: Mutex time init failed. REBOOTING");
-		close(s);
-		esp_restart();
-	}
-	xSemaphoreGiveFromISR(xMutexTime, NULL);*/
-
-
-	/*if(pthread_mutex_init(&mutex, NULL) != 0)
-	{
-		ESP_LOGE(TAGM,"[x] Error: Mutex init failed. REBOOTING");
-		close(s);
-		esp_restart();
-	}*/
 	ESP_LOGW(TAGM,"MUTEX CREATO on core %d", xPortGetCoreID());
 
 	//start remaining task and creation of the group event to synchronize their workflow
@@ -532,11 +517,7 @@ void sniffer_packet_handler(void* buff, wifi_promiscuous_pkt_type_t type)
 		fprintf(fSniffs, "Type=MGMT,");
 		fprintf(fSniffs, " SubType=PROBE,");
 
-		//md5((uint8_t*)buff, strlen(buff), result);
 		md5((uint8_t*) ipkt, sizeof(wifi_ieee80211_packet_t), result); //FEDE
-		/* ESP_LOGI(TAGM, "1. strlen(buff) = %d", strlen(buff));
-		ESP_LOGI(TAGM, "2. sizeof(buff) = %d", sizeof(buff));
-		ESP_LOGI(TAGM, "3. sizeof(wifi_promiscuous_pkt_t) = %d", sizeof(wifi_promiscuous_pkt_t)); */
 
 		fprintf(fSniffs, " RSSI=%02d,"
 			   " SRC=%02x:%02x:%02x:%02x:%02x:%02x,"
