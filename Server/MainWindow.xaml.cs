@@ -1065,8 +1065,11 @@ namespace Panopticon
                         dvcinfo_heatmapimage.Visibility = Visibility.Visible;
                         dvcinfo_heatmapborder.Visibility = Visibility.Visible;
                         dvcinfo_heatmapimage.Source = Graphics.createheatmap(ds.heatmap);
-                        dvcinfo_heatmapborder.Width = 20 * dvcstatroom.size.X;
-                        dvcinfo_heatmapborder.Height = 20 * dvcstatroom.size.Y;
+                        double reference = Math.Max(dvcstatroom.size.X, dvcstatroom.size.Y);
+                        double multiplier = 300; //eventually dependant on DPI
+                        Vector2D canvassize = dvcstatroom.size.MultiplyScalar(multiplier / reference);
+                        dvcinfo_heatmapborder.Width = canvassize.X;
+                        dvcinfo_heatmapborder.Height = canvassize.Y;
                         dvcinfo_extralabel.Content = "Positions heatmap";
                     }
                     dvcinfo_extralabel.Visibility = Visibility.Visible;
