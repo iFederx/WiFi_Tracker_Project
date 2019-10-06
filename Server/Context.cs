@@ -221,10 +221,7 @@ namespace Panopticon
         public void removeStation(String NameMAC, bool takelock=true)
         {
             Station s;
-            if(stations.TryRemove(NameMAC, out s))
-			{
-				s.handler.socket.Close();
-			}
+			stations.TryRemove(NameMAC, out s);
             Room room=s.location.room;
             if(takelock)
                 locker.EnterWriteLock();
@@ -257,10 +254,10 @@ namespace Panopticon
             locker.EnterUpgradeableReadLock();
             foreach(Station s in room.getStations())
             {
-                if (s.lastHearthbeat.AddMinutes(2.5) < DateTime.Now) 
+                if (s.lastHearthbeat.AddMinutes(1.1) < DateTime.Now) 
                 {
                     locker.EnterWriteLock();
-                    if(s.lastHearthbeat.AddMinutes(2.5) < DateTime.Now) // check again: was in readmode, may have reconnected now and updated
+                    if(s.lastHearthbeat.AddMinutes(1.1) < DateTime.Now) // check again: was in readmode, may have reconnected now and updated
                     {
                         ris = false;
                         removeStation(s.NameMAC, false);

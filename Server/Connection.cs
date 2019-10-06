@@ -129,6 +129,7 @@ namespace Panopticon
             }
 			catch (ObjectDisposedException)
 			{
+				Console.WriteLine("Client disconnected");
 				clientSockets.Remove(current);
 				return;
 			}

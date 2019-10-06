@@ -16,7 +16,7 @@ namespace Panopticon
     {
 		public delegate void SafeNewStation(string _string, Socket socket);
 		private const int BUFFER_SIZE = 2048;
-		readonly Dictionary<Socket, string> macAddresses;
+		internal Dictionary<Socket, string> macAddresses;
 		Context ctx;
 		FileParser fileParser;
 		
