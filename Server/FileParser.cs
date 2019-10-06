@@ -60,7 +60,7 @@ namespace Panopticon
 		Func<Packet, bool> isOld =
 			(pak) =>
 			{
-				if (pak.Timestamp < (DateTime.Now - TimeSpan.FromMinutes(1))) //pak timestamp is older than 5 minutes //TODO: rimettere 5
+				if (pak.Timestamp < (DateTime.Now - TimeSpan.FromMinutes(5))) //pak timestamp is older than 5 minutes
 					return true;
 				else
 					return false;
@@ -84,11 +84,17 @@ namespace Panopticon
 
 		private void MyMethod(object sender, System.Timers.ElapsedEventArgs e)
 		{
-			System.Console.WriteLine("Prova {0}", i++);
+			System.Console.WriteLine("Periodic task {0}", i++);
+
+			// 1. remove disconnetted stations from GUI
 			ctx.checkAllStationAliveness();
+
+			// 2. pop incomplete and old packet from data structure
 			Packet p;
 			while (cds.popConditional(isOld, keyOf, out p))
 				System.Console.WriteLine("Packet {0} removed from CDS", p.Hash);
+
+			// 3. resync clock of stations
 			if (i%120 == 0) //true every hour
 			{
 				foreach (Room r in ctx.getRooms())
@@ -101,7 +107,14 @@ namespace Panopticon
 				}
 			}
 		}
-
+		/// <summary>
+		/// When a file is received from a station, this method analyze a chunk of the
+		/// stream and parse its content, in order to create Packets that are inserted
+		/// in a special data structure, where Packets waits for being "mature" and
+		/// going to be analyzed
+		/// </summary>
+		/// <param name="input">chunck to analyze</param>
+		/// <param name="receivingStation">Station which received the file</param>
 		public void ParseOnTheFly(String input, Station receivingStation)
 		{
 			Dictionary<String, Packet> packets = new Dictionary<string, Packet>(); //the key is the hash
@@ -190,9 +203,11 @@ namespace Panopticon
 				}
 
 				int n;
-				if (HASH != "" && HASH.Length == 32 && RSSI != "" && TIME.Length == 10 && seq_num != "" && SRC.Length == 12 && SSID != "" && HT_cap_str != "" && int.TryParse(RSSI, out n)) //pre-processing
+				if (HASH != "" && HASH.Length == 32 && RSSI != "" && TIME.Length == 10 && seq_num != "" &&
+					SRC.Length == 12 && SSID != "" && HT_cap_str != "" && int.TryParse(RSSI, out n)) //pre-processing
 				{
-					Packet packet = new Packet(SRC, SSID, TimeFromUnixTimestamp(int.Parse(TIME)), HASH, HT_cap_str, long.Parse(seq_num));
+					Packet packet = new Packet(SRC, SSID, TimeFromUnixTimestamp(int.Parse(TIME)), HASH,
+						HT_cap_str, long.Parse(seq_num));
 					packet.received(receivingStation, double.Parse(RSSI));
 					if (cds.upsertAndConditionallyRemove(HASH, packet, packetReducer, isReady, out packet))
 						ctx.getAnalyzer().sendToAnalysisQueue(packet);
@@ -203,8 +218,8 @@ namespace Panopticon
 		}
 
 		/// <summary>
-		/// The aim of this method is to convert a unix timestamp, based on
-		/// seconds from the epoch, into a DateTime, based on .NET ticks (1 tick = 1 ns)
+		/// This method converts a unix timestamp, based on seconds from the epoch, into a
+		/// DateTime, based on .NET ticks (1 tick = 1 ns)
 		/// </summary>
 		public static DateTime TimeFromUnixTimestamp(int unixTimestamp)
         {
