@@ -520,7 +520,7 @@ namespace Panopticon
 
             using (ConnectionHandle conn = new ConnectionHandle(connectionpool,connectionstring,false))
             {
-                String query = "select xpos,ypos,xday from devicespositions where roomname=@roomname and xmonth=@xmonth and xyear=@xyear and uncertainty<@uncertainty";
+                String query = "select xpos,ypos,xday from devicespositions where roomname=@roomname and xmonth=@xmonth and xyear=@xyear and uncertainty<@uncertainty and outmovement=false";
                 try
                 {
                     if (!connectioncheck(conn))
@@ -696,7 +696,7 @@ namespace Panopticon
             if (loadroommap)
                 query = "select xpos,ypos,tm,roomname,uncertainty from devicespositions where identifier=@identifier and tm>=@tmstart and tm<=@tmend and roomname not in (select roomname from rooms where archived=True) order by tm asc";
             else
-                query = "select xpos,ypos,tm,roomname,uncertainty from devicespositions where identifier=@identifier and tm>=@tmstart and tm<=@tmend and roomname=@roomname order by tm asc";
+                query = "select xpos,ypos,tm,roomname,uncertainty from devicespositions where identifier=@identifier and tm>=@tmstart and tm<=@tmend and roomname=@roomname and outmovement=false order by tm asc";
             DateTime pre = DateTime.MinValue;
             using (ConnectionHandle conn = new ConnectionHandle(connectionpool,connectionstring,false))
             {
