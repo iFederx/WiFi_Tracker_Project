@@ -72,7 +72,7 @@
             </TabItem>
             <TabItem x:Name="rmstats" Header="Room stats">
                 <Grid>
-                    <Label x:Name="rmstats_roomname" Content="" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="65" Width="550" FontSize="40" MouseDown="rmstats_roomname_MouseDown" />
+                    <Label x:Name="rmstats_roomname" Content="" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="65" Width="550" FontSize="40" />
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="1*"/>
