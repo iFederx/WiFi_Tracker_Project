@@ -119,6 +119,10 @@ namespace Panopticon
 		{
 			Dictionary<String, Packet> packets = new Dictionary<string, Packet>(); //the key is the hash
 			int discarded = 0;
+
+			/* a line example:
+			 * Type=MGMT, SubType=PROBE, RSSI=-61, SRC=30:10:b3:80:b7:c3, seq_num=8192, TIME=1569423594, HASH=7b6f898c17bf24bbca2c38168645cab6, SSID_id=0, SSID_lenght=14, SSID=Alice-63800489, HT_id=32, HT_cap_len=4, HT_cap_str=3048606c
+			 */
 			foreach (string line in input.Split('\n'))
 			{
 				string Type = "", SubType = "", RSSI = "", SRC = "", seq_num = "", TIME = "", HASH = "", SSID_id = "", SSID_lenght = "", SSID = "", HT_id = "", HT_cap_len = "", HT_cap_str = "";
