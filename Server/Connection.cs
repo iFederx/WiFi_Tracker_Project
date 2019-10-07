@@ -81,11 +81,9 @@ namespace Panopticon
                 socket = serverSocket.EndAccept(AR); //the socket obtained will be always the same for connections with the requesting board
                 socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, 1);
             }
-            catch (Exception) // I cannot seem to avoid this (on exit when properly closing sockets)
+            catch (ObjectDisposedException) // I cannot seem to avoid this (on exit when properly closing sockets)
             {
-				ctx.kill();
-				MessageBox.Show("Sorry, a fatal error on server socket has occurred. Restart Panopticon to pair new stations", "Network error");
-                return;
+				return;
             }
 
             clientSockets.Add(socket);
