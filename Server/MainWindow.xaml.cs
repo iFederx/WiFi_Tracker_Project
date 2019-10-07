@@ -80,6 +80,13 @@ namespace Panopticon
                 refroom = room;
             }
         }
+
+        internal void rename(string oldId, string newId)
+        {
+            //simulate a device disappear on the old position
+            drawDevice(oldId, new Position(0, 0, Room.overallRoom, UNCERTAIN_POSITION), EventType.Disappear, lvtrck_canvas, lvtrck_devlist_panel, uiElements, lvtrck_people);
+        }
+
         class RoomInfoGUI
         {
             internal Border container;

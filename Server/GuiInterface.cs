@@ -17,20 +17,18 @@ namespace Panopticon
         internal void kill()
         {
             killed = true;
-            Interlocked.MemoryBarrier();
-            linkedwindow = null;
         }
         internal override int SupportedOperations
         {
             get
             {
-                return (int)DisplayableType.DeviceDevicePosition | (int)DisplayableType.AggregatedStat | (int) DisplayableType.RoomUpdate | (int) DisplayableType.StationUpdate | (int) DisplayableType.DatabaseState;
+                return (int)DisplayableType.DeviceDevicePosition | (int)DisplayableType.AggregatedStat | (int) DisplayableType.RoomUpdate | (int) DisplayableType.StationUpdate | (int) DisplayableType.DatabaseState | (int) DisplayableType.Rename;
             }
         }
 
         internal override void publishPosition(Device d, PositionTools.Position p, EventType e)
         {
-            if (linkedwindow != null)
+            if (linkedwindow != null&&!killed)
             {
                 if (p.room == linkedroom || e == EventType.Disappear || e == EventType.MoveOut)
                 {
@@ -41,7 +39,7 @@ namespace Panopticon
 
         internal override void publishStat(double stat, Room r, DateTime statTime, StatType s)
         {
-            if (linkedwindow!=null)
+            if (linkedwindow!=null && !killed)
             {
                 if (s == StatType.OneSecondDeviceCount)
                     Application.Current.Dispatcher.BeginInvoke((Action)(() => { if (!killed) linkedwindow.updateOneSecondDeviceCount(r, stat); }));
@@ -51,7 +49,7 @@ namespace Panopticon
         }
         internal override void publishRoomUpdate(Room r, EventType e)
         {
-            if (linkedwindow != null)
+            if (linkedwindow != null && !killed)
             {
                 if (e == EventType.Appear)
                     Application.Current.Dispatcher.BeginInvoke((Action)(() => { if (!killed) linkedwindow.addRoom(r); }));
@@ -62,14 +60,19 @@ namespace Panopticon
         }
         internal override void publishStationUpdate(Room r, Station s, EventType e)
         {
-            if(linkedwindow!=null)
+            if(linkedwindow!=null && !killed)
                 Application.Current.Dispatcher.BeginInvoke((Action)(() => { if (!killed) linkedwindow.updateStation(r,s,e); }));
         }
 
         internal override void publishDatabaseState(bool v)
         {
-            if (linkedwindow != null)
+            if (linkedwindow != null && !killed)
                 Application.Current.Dispatcher.BeginInvoke((Action)(() => { if (!killed) linkedwindow.updateDatabaseState(v); }));
+        }
+        internal override void publishRename(string oldId, string newId)
+        {
+            if (linkedwindow != null && !killed)
+                Application.Current.Dispatcher.BeginInvoke((Action)(() => { if (!killed) linkedwindow.rename(oldId,newId); }));
         }
 
     }

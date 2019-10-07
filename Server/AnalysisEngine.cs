@@ -102,24 +102,28 @@ namespace Panopticon
                 B = A;
                 A = temp;
             }
-            // B is new identity, A is old one
-            PositionTools.Position oldApos = new PositionTools.Position(A.lastPosition);
-            oldApos.positionDate = B.firstPosition.positionDate;
-            placeInRoomAndPublish(A.lastPosition.room, A, oldApos, Publisher.EventType.Disappear);
-            B.firstPosition = A.firstPosition;
-            if(A.aliases.Count>0)
-                B.aliases.PushRange(A.aliases.ToArray());
-            B.aliases.Push(new Device.Alias(A.MAC, score));
-            foreach (String ssid in A.requestedSSIDs.Keys)
-                B.requestedSSIDs.TryAdd(ssid, 0);
+            // B is most recent identity, A is original one -> match back the new data to the oldest identity
+            A.lastPosition = B.lastPosition;
+            if(B.aliases.Count>0)
+                A.aliases.PushRange(B.aliases.ToArray());
+            A.aliases.Push(new Device.Alias(B.MAC, score));
+            foreach (String ssid in B.requestedSSIDs.Keys)
+                A.requestedSSIDs.TryAdd(ssid, 0);
             deviceMap.remove(B.identifier);
+            B.lastPosition.room.removeDevice(B);
             foreach (Publisher pb in publishers)
+            {
                 if (pb.supportsOperation(Publisher.DisplayableType.Rename))
                     pb.publishRename(B.identifier, A.identifier);
-            B.identifier = A.identifier;
-            deviceMap.upsert(B.identifier, B, (d1, d2) => { return d2; });
+                if (pb.supportsOperation(Publisher.DisplayableType.DeviceDevicePosition))
+                    pb.publishPosition(A, A.lastPosition, Publisher.EventType.Update);
+                if (pb.supportsOperation(Publisher.DisplayableType.SimpleStat))
+                    pb.publishStat(A.lastPosition.room.devicecount, A.lastPosition.room, A.lastPosition.positionDate, Publisher.StatType.InstantaneousDeviceCount);
+            }
+            deviceMap.upsert(A.identifier, A, (d1, d2) => { return d2; });
             anoniDevices.Remove(A.MAC);
-            anoniDevices[B.MAC] = B.identifier;
+            A.MAC = B.MAC;
+            anoniDevices[B.MAC] = A.identifier;
         }
         /// <summary>
         /// Score the probability of two (anonymous) devices to be the same

@@ -36,13 +36,13 @@
             </TabItem>
             <TabItem x:Name="trackrlp" Header="Tracking reloop">
                 <Grid>
-                    <Viewbox Margin="10,105,210,10" x:Name="trackrlp_viewbox" HorizontalAlignment="Center" VerticalAlignment="Top">
+                    <Viewbox Margin="10,105,290,10" x:Name="trackrlp_viewbox" HorizontalAlignment="Center" VerticalAlignment="Top">
                         <Border x:Name="trackrlp_border" BorderBrush="Black" BorderThickness="2">
                             <Canvas x:Name="trackrlp_canvas" HorizontalAlignment="Left" VerticalAlignment="Top"/>
                         </Border>
                     </Viewbox>
-                    <ScrollViewer VerticalScrollBarVisibility="Auto" Width="190" Margin="0,105,10,10" HorizontalAlignment="Right">
-                        <StackPanel Name="trackrlp_devlist_panel" HorizontalAlignment="Left" Width="200"/>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Width="270" Margin="0,105,10,10" HorizontalAlignment="Right">
+                        <StackPanel Name="trackrlp_devlist_panel" HorizontalAlignment="Left" Width="270"/>
                     </ScrollViewer>
                     <Label x:Name="trackrlp_roomname" Content="" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="65" Width="550" FontSize="40"/>
                     <Label HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,2,387,0">From:</Label>
@@ -54,7 +54,7 @@
                     <Button x:Name="trackrlp_load" Content="Load" HorizontalAlignment="Right" VerticalAlignment="Top" Width="42" Height="24" Margin="0,4,10,0" Click="Rlp_load_Click"/>
                     <TextBlock x:Name="trackrlp_ReplayInfo" Text="No loaded replay." Margin="0,28,10,0" VerticalAlignment="Top" Height="20" HorizontalAlignment="Right" FontStyle="Italic" FontFamily="Segoe UI"/>
                     <TextBlock x:Name="trackrlp_time" HorizontalAlignment="Right" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Margin="0,67,55,0" Width="150" Height="21" FontSize="16"/>
-                    <Grid HorizontalAlignment="Stretch" Height="33" Margin="10,72,210,0" VerticalAlignment="Top" Width="Auto">
+                    <Grid HorizontalAlignment="Stretch" Height="33" Margin="10,72,290,0" VerticalAlignment="Top" Width="Auto">
                         <Grid Height="33" Width="170" HorizontalAlignment="Center" Name="trackrlp_controls" Visibility="Visible">
                             <Image ToolTip="Back 10 seconds" Cursor="Hand" x:Name="back" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="20" Margin="0,8,0,0" MouseDown="back_MouseDown" Source="Resources/previous10.png" />
                             <Image ToolTip="Half speed" Cursor="Hand" x:Name="slower" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="20" Margin="25,8,0,0" MouseDown="slower_MouseDown" Source="Resources/slowerButton.png" />

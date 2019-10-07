@@ -364,7 +364,7 @@ namespace Panopticon
             Dictionary<String, DevicePosition> prepos = new Dictionary<String, DevicePosition>();
             using (ConnectionHandle conn = new ConnectionHandle(connectionpool,connectionstring,false))
             {
-                String query = "select identifier,xpos,ypos,tm,outmovement,uncertainty from devicespositions where roomname=@roomname and tm>=@tmstart and tm<=@tmend";
+                String query = "select identifier,xpos,ypos,tm,outmovement,uncertainty from devicespositions where roomname=@roomname and tm>=@tmstart and tm<=@tmend order by tm asc";
                 try
                 {
                     if (!connectioncheck(conn))
@@ -399,6 +399,8 @@ namespace Panopticon
                                     dp.preypos = -1;
                                     prepos.Add(dp.identifier, dp);
                                 }
+                                if (dp.moveout)
+                                    prepos.Remove(dp.identifier);
                                 li.AddLast(dp);
                             }
                         }
