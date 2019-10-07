@@ -537,7 +537,12 @@ namespace Panopticon
                         {
                             while (reader.Read())
                             {
-                                res[(int)(reader.GetDouble(2))][(int)(resolution * reader.GetDouble(0)), (int)(resolution * reader.GetDouble(1))] += 1;
+                                int day = (int)(reader.GetDouble(2));
+                                int xpos = (int)(resolution * reader.GetDouble(0));
+                                int ypos = (int)(resolution * reader.GetDouble(1));
+                                // numeric error? Rarely has happened this condition. Should have been solved, but let's be safe
+                                if (day < res.Length && xpos < res[day].GetLength(0) && ypos < res[day].GetLength(1))
+                                    res[day][xpos, ypos] += 1;
                             }
                         }
                     }
@@ -718,7 +723,12 @@ namespace Panopticon
                             while (reader.Read())
                             {
                                 if (loadheathmap && reader.GetDouble(4) < filteruncertainity)
-                                    ds.heatmap[(int)(htresolution * reader.GetDouble(0)), (int)(htresolution * reader.GetDouble(1))] += 1;
+                                {
+                                    int xpos = (int)(htresolution * reader.GetDouble(0));
+                                    int ypos = (int)(htresolution * reader.GetDouble(1));
+                                    if(xpos<ds.heatmap.GetLength(0)&&ypos<ds.heatmap.GetLength(1))
+                                        ds.heatmap[xpos,ypos] += 1;
+                                }
                                 if (loadroommap)
                                 {
                                     ds.roommap["__OVERALL__"] += 1;

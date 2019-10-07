@@ -114,7 +114,7 @@ namespace Panopticon
                 double nx = X < min.X ? min.X : X;
                 nx = nx > max.X ? max.X : nx;
                 double ny = Y < min.Y ? min.Y : Y;
-                ny = ny > max.Y ? max.X : ny;
+                ny = ny > max.Y ? max.Y : ny;
                 return new Vector2D(nx, ny);
             }
             public Vector2D _Clip(Vector2D min, Vector2D max)
@@ -122,7 +122,7 @@ namespace Panopticon
                 double nx = X < min.X ? min.X : X;
                 nx = nx > max.X ? max.X : nx;
                 double ny = Y < min.Y ? min.Y : Y;
-                ny = ny > max.Y ? max.X : ny;
+                ny = ny > max.Y ? max.Y : ny;
                 X = nx;
                 Y = ny;
                 return this;
@@ -228,7 +228,7 @@ namespace Panopticon
                     vote += weight;
                 }
                 avgrssi /= receivings.Count();
-                accumulator = accumulator.DivideScalar(vote);
+                accumulator = accumulator.DivideScalar(vote).Clip(Vector2D.Zero, p.room.size);
                 tag += Environment.NewLine + "avg: " + accumulator.X + " " + accumulator.Y;
                 if (avgrssi < -105 || (avgrssi < -90 && minrssi < -70))
                     p = new Position(0, 0, Room.externRoom);
