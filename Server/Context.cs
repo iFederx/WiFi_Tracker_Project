@@ -354,11 +354,7 @@ namespace Panopticon
         public void kill()
         {
 			connection.kill();
-<<<<<<< HEAD
 			MainWindow wx = guiPub.linkedwindow;
-=======
-            MainWindow wx = guiPub.linkedwindow;
->>>>>>> 1b437a20b8daf62a9c68f6cc0e20290b6cfb3fa0
             wx.kill();
             guiPub.kill();
             analyzer.kill();
