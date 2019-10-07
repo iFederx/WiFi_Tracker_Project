@@ -43,7 +43,6 @@ namespace Panopticon.AddingStationPages
 
 		private void Button_Continue(object sender, RoutedEventArgs e)
 		{
-			MessageBox.Show("ciao");
 			//because '.' isn't recognized as floating point
 			TB_RoomWidth.Text = TB_RoomWidth.Text.Replace('.', ',');
 			TB_RoomHeight.Text = TB_RoomHeight.Text.Replace('.', ',');

@@ -24,8 +24,6 @@ namespace Panopticon.AddingStationPages
 		Context ctx;
 		double meterX=0, meterY=0;
 		StationHandler handler = null;
-		static int maxRoomDimension = 300; //dpi
-		static int minRoomDimension = 200; //dpi
 		static int maxN = 40;
 		int radius = 1;
 

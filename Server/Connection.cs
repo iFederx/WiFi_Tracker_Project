@@ -83,7 +83,7 @@ namespace Panopticon
             }
             catch (ObjectDisposedException) // I cannot seem to avoid this (on exit when properly closing sockets)
             {
-                return;
+				return;
             }
 
             clientSockets.Add(socket);
@@ -104,7 +104,7 @@ namespace Panopticon
 			catch (Exception)
 			{
 				serverSocket.Close();
-				MessageBox.Show("Sorry, a fatal error on server socket has occurred. Restart Panopticon to pair new stations");
+				MessageBox.Show("Sorry, a fatal error on server socket has occurred. Restart Panopticon to pair new stations", "Network error");
 			}
         }
 
@@ -119,21 +119,14 @@ namespace Panopticon
             {
                 received = current.EndReceive(AR); //it returns num of bytes received
             }
-            catch (SocketException)
+            catch (Exception)
             {
                 Console.WriteLine("Client forcefully disconnected");
-				// Don't shutdown because the socket may be disposed and its disconnected anyway.
                 current.Close();
                 clientSockets.Remove(current);
                 return;
             }
-			catch (ObjectDisposedException)
-			{
-				Console.WriteLine("Client disconnected");
-				clientSockets.Remove(current);
-				return;
-			}
-
+			
             byte[] recBuf = new byte[received];
             Array.Copy(buffer, recBuf, received);
             string text = Encoding.UTF8.GetString(recBuf);

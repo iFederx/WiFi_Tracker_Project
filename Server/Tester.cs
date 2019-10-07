@@ -83,7 +83,7 @@ namespace Panopticon
                 xt += xf;
                 yt += yf;
                 p.received(s6, dist2RSSI(pos2dist(xf, yf, 18, 6)));*/
-                p.testposition = new PositionTools.Position(x, y, r);
+                //p.testposition = new PositionTools.Position(x, y, r);
                 xt /= p.Receivings.Count;
                 yt /= p.Receivings.Count;
                 System.Diagnostics.Debug.Print("Averaged: ", xt, " ", yt);
