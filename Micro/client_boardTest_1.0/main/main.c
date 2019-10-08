@@ -30,6 +30,8 @@ const char *TAGM = "Main";
 struct tm timeinfo;
 extern time_t server_time; //FEDE
 time_t server_time_available;
+time_t offset_time_available;
+time_t offset_time;
 int s = 0;	/* socket ID */
 
 /* shared resources and mutex
@@ -317,6 +319,7 @@ void app_main()
 				if (send_msg(s, "SYNC") != -1) {
 					/* client syncronization procedure */
 					if ((server_time = (time_t) client_timesync(s)) > 0) {
+						offset_time = time(NULL);
 						ESP_LOGI(TAGM,"[*] Timestamp Correctly exchanged! Tempt of configuration..");
 						localtime_r(&server_time, &timeinfo);
 					} else {
@@ -445,6 +448,7 @@ int esp_settings_init()
 			ESP_LOGI(TAGM,"[x] Time not set, waiting...\n");
 			// getting timestamp from the server for sync
 			if ((server_time = (time_t) client_timesync(s)) != -1) {
+				offset_time = time(NULL);
 				ESP_LOGI(TAGM,"[*] Timestamp Correctly exchanged! Tempt of configuration..");
 				localtime_r(&server_time, &timeinfo);
 			} else {
@@ -528,7 +532,7 @@ void sniffer_packet_handler(void* buff, wifi_promiscuous_pkt_type_t type)
 			   hdr->addr2[0],hdr->addr2[1],hdr->addr2[2],
 			   hdr->addr2[3],hdr->addr2[4],hdr->addr2[5],
 			   (int)hdr->sequence_ctrl,
-			   (unsigned long long) server_time_available + (unsigned long long) time(NULL),
+			   (unsigned long long) server_time_available + (unsigned long long) time(NULL) - (unsigned long long) offset_time_available,
 			   result[0],result[1],result[2],result[3],result[4],result[5],result[6],result[7],
 			   result[8],result[9],result[10],result[11],result[12],result[13],result[14],result[15]
 		);
@@ -650,6 +654,7 @@ void sniff_task(void *pvParameter)
 	while (1)
 	{
 		server_time_available = server_time; //safe update of server_time_available
+		offset_time_available = offset_time;
 		if (id_sniFile == 0)
 		{
 			/* 1 is the second file is selected
