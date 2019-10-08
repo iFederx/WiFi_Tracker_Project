@@ -49,12 +49,60 @@ namespace Panopticon
 		Func<Packet, bool> isReady =
 			(pak) =>
 			{
-				//ritorno true se il packet è stato ricevuto da tutte le stazioni nella stanza
-				Room r = pak.Receivings[0].ReceivingStation.location.room;
+				//ritorno true se il packet è stato ricevuto da tutte le stazioni in una stanza
+				Room winnerRoom = null;
+				try
+				{
+					Dictionary<Room, int> counter = new Dictionary<Room, int>();
+					//count number of receptions for each room
+					foreach (Packet.Reception rec in pak.Receivings)
+					{
+						Room currentRoom = rec.ReceivingStation.location.room;
+						if (counter.ContainsKey(currentRoom))
+							counter[currentRoom]++;
+						else counter[currentRoom] = 1;
+					}
+					//check if there is a mature room
+					foreach (Room r in counter.Keys)
+					{
+						if (counter[r] == r.stationcount)
+						{
+							winnerRoom = r;
+							break;
+						}
+					}
+
+					var newReceivings = new List<Packet.Reception>();
+					if (winnerRoom != null)
+					{
+						foreach (Packet.Reception rec in pak.Receivings)
+						{
+							if (rec.ReceivingStation.location.room == winnerRoom)
+								newReceivings.Add(rec);
+						}
+						pak.Receivings = newReceivings; //sostituisco receivings
+						return true;
+					}
+					else return false;
+					
+				}
+				catch (NullReferenceException)
+				{
+					//probably, room is removed meanwhile
+					return false;
+				}
+				catch (KeyNotFoundException)
+				{
+					//probably, room is removed meanwhile
+					return false;
+				}
+
+
+				/*Room r = pak.Receivings[0].ReceivingStation.location.room;
 				if (pak.Receivings.Count == r.stationcount)
 					return true;
 				else
-					return false;
+					return false;*/
 			};
 
 		Func<Packet, bool> isOld =
@@ -210,8 +258,10 @@ namespace Panopticon
 				if (HASH != "" && HASH.Length == 32 && RSSI != "" && TIME.Length == 10 && seq_num != "" &&
 					SRC.Length == 12 && SSID != "" && HT_cap_str != "" && int.TryParse(RSSI, out n)) //pre-processing
 				{
-					Packet packet = new Packet(SRC, SSID, TimeFromUnixTimestamp(int.Parse(TIME)), HASH,
-						HT_cap_str, long.Parse(seq_num));
+					DateTime timestamp = TimeFromUnixTimestamp(int.Parse(TIME));
+					if (timestamp > DateTime.Now)
+						timestamp = DateTime.Now;
+					Packet packet = new Packet(SRC, SSID, timestamp, HASH, HT_cap_str, long.Parse(seq_num));
 					packet.received(receivingStation, double.Parse(RSSI));
 					if (cds.upsertAndConditionallyRemove(HASH, packet, packetReducer, isReady, out packet))
 						ctx.getAnalyzer().sendToAnalysisQueue(packet);
